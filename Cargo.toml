@@ -1,0 +1,11 @@
+[workspace]
+members = ["client"]
+resolver = "3"
+
+[profile.web-client]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

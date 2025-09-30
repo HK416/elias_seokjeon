@@ -1,0 +1,3 @@
+[env]
+# When cargo is run from a subdirectory, this makes it behave as if it were run from the root.
+CARGO_WORKSPACE_DIR = { value = "", relative = true }
