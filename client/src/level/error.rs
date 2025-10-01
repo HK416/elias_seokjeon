@@ -1,5 +1,6 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
+use bevy_spine::{SkeletonController, Spine, SpineBundle, SpineReadyEvent};
 
 use super::*;
 
@@ -11,8 +12,9 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(LevelStates::Error),
-            (debug_label, setup_error_screen),
-        );
+            (debug_label, test_spine_spawn, setup_error_screen),
+        )
+        .add_systems(Update, play_animation);
     }
 }
 
@@ -27,13 +29,20 @@ fn debug_label() {
     info!("Current Level: Error");
 }
 
+fn test_spine_spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(SpineBundle {
+        skeleton: asset_server.load("spine/Butter.model").into(),
+        ..default()
+    });
+}
+
 fn setup_error_screen(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     message: Option<Res<ErrorMessage>>,
 ) {
     // Debuging code
-    commands.spawn(Camera2d);
+    commands.spawn(Camera2d::default());
 
     commands
         .spawn((
@@ -80,4 +89,27 @@ fn setup_error_screen(
                     ));
                 });
         });
+}
+
+// --- UPDATE SYSTEMS ---
+
+pub fn play_animation(
+    mut spine_ready_event: EventReader<SpineReadyEvent>,
+    mut spine_query: Query<&mut Spine>,
+) {
+    for event in spine_ready_event.read() {
+        info!("on_spawn!");
+        let Ok(mut spine) = spine_query.get_mut(event.entity) else {
+            continue;
+        };
+
+        let Spine(SkeletonController {
+            skeleton,
+            animation_state,
+            ..
+        }) = spine.as_mut();
+        let _ = skeleton.set_skin_by_name("Normal");
+        skeleton.set_scale(Vec2::splat(0.5));
+        let _ = animation_state.set_animation_by_name(0, "Idle_1", true);
+    }
 }

@@ -11,6 +11,7 @@ use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
 };
+use bevy_spine::SpinePlugin;
 
 fn main() {
     App::new()
@@ -41,6 +42,8 @@ fn main() {
                     ..Default::default()
                 }),
         )
+        .add_plugins(SpinePlugin)
+        .add_plugins(assets::InnerPlugin)
         .add_plugins(level::InnerPlugin)
         .add_plugins(resizable_font::InnerPlugin)
         .run();

@@ -4,6 +4,14 @@
             "files": [
                 "NotoSans-Bold.otf"
             ]
+        },
+        "spine": {
+            "target_files": [
+                "Butter.model",
+                "Butter.s_atlas",
+                "Butter.s_skel",
+                "Butter.texture"
+            ]
         }
     }
 }
