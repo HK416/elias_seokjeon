@@ -10,23 +10,13 @@ use bevy_spine::{Atlas, rusty_spine};
 
 use super::*;
 
-#[derive(Debug, thiserror::Error)]
-pub enum AtlasLoaderError {
-    #[error("Failed to load asset for the following reason:{0}")]
-    IO(#[from] std::io::Error),
-    #[error("Spine error: {0}")]
-    Spine(#[from] rusty_spine::SpineError),
-    #[error("Failed to decrypt asset for the following reason:{0}")]
-    Crypt(#[from] anyhow::Error),
-}
-
 #[derive(Default)]
 pub struct AtlasAssetLoader;
 
 impl AssetLoader for AtlasAssetLoader {
     type Asset = Atlas;
     type Settings = ();
-    type Error = AtlasLoaderError;
+    type Error = LoaderError;
 
     fn load(
         &self,

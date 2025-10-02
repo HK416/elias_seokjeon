@@ -16,26 +16,13 @@ pub struct SpineModel {
     pub atlas: String,
 }
 
-/// An error that can occur when loading a texel data.
-#[derive(Debug, thiserror::Error)]
-pub enum SpineLoaderError {
-    /// An I/O error occurred.
-    #[error("Failed to load asset for the following reason:{0}")]
-    IO(#[from] std::io::Error),
-    /// A JSON deserialization error occurred.
-    #[error("Failed to decode asset for the following reason:{0}")]
-    Json(#[from] serde_json::Error),
-    #[error("Failed to decrypt asset for the following reason:{0}")]
-    Crypt(#[from] anyhow::Error),
-}
-
 #[derive(Default)]
 pub struct ModelAssetLoader;
 
 impl AssetLoader for ModelAssetLoader {
     type Asset = SkeletonData;
     type Settings = ();
-    type Error = SpineLoaderError;
+    type Error = LoaderError;
 
     fn load(
         &self,

@@ -10,21 +10,6 @@ use bevy::{
 
 use super::*;
 
-/// An error that can occur when loading a texel data.
-#[derive(Debug, thiserror::Error)]
-pub enum TexelLoaderError {
-    /// An I/O error occurred.
-    #[error("Failed to load asset for the following reason:{0}")]
-    IO(#[from] std::io::Error),
-    /// A JSON deserialization error occurred.
-    #[error("Failed to decode asset for the following reason:{0}")]
-    Json(#[from] serde_json::Error),
-    #[error("Failed to decode asset for the following reason:{0}")]
-    Decode(#[from] image::ImageError),
-    #[error("Failed to decrypt asset for the following reason:{0}")]
-    Crypt(#[from] anyhow::Error),
-}
-
 /// A loader for texel assets.
 #[derive(Default)]
 pub struct TexelAssetLoader;
@@ -32,7 +17,7 @@ pub struct TexelAssetLoader;
 impl AssetLoader for TexelAssetLoader {
     type Asset = Image;
     type Settings = ();
-    type Error = TexelLoaderError;
+    type Error = LoaderError;
 
     fn load(
         &self,

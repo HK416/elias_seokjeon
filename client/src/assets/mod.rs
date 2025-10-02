@@ -1,13 +1,15 @@
+pub mod atlas;
+pub mod locale;
 pub mod path;
-
-mod atlas;
-mod skeleton;
-mod spine;
-mod texture;
+pub mod skeleton;
+pub mod sound;
+pub mod spine;
+pub mod texture;
 
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
 use anyhow::anyhow;
 use bevy::prelude::*;
+use bevy_spine::rusty_spine;
 use static_assertions::const_assert_eq;
 
 // --- PLUGIN ---
@@ -16,11 +18,28 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_asset_loader(skeleton::SkelAssetLoader)
+        app.init_asset::<locale::LocalizationData>()
             .register_asset_loader(atlas::AtlasAssetLoader)
+            .register_asset_loader(locale::LocalizationDataLoader)
+            .register_asset_loader(skeleton::SkelAssetLoader)
+            .register_asset_loader(sound::SoundAssetLoader)
             .register_asset_loader(spine::ModelAssetLoader)
             .register_asset_loader(texture::TexelAssetLoader);
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum LoaderError {
+    #[error("Failed to load asset for the following reason:{0}")]
+    IO(#[from] std::io::Error),
+    #[error("Spine error: {0}")]
+    Spine(#[from] rusty_spine::SpineError),
+    #[error("Failed to decode asset for the following reason:{0}")]
+    Json(#[from] serde_json::Error),
+    #[error("Failed to decode asset for the following reason:{0}")]
+    Decode(#[from] image::ImageError),
+    #[error("Failed to decrypt asset for the following reason:{0}")]
+    Crypt(#[from] anyhow::Error),
 }
 
 // --- CRYPT KEYS ---

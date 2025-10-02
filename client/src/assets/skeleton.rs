@@ -8,21 +8,13 @@ use bevy_spine::SkeletonBinary;
 
 use super::*;
 
-#[derive(Debug, thiserror::Error)]
-pub enum SkelLoaderError {
-    #[error("Failed to load asset for the following reason:{0}")]
-    IO(#[from] std::io::Error),
-    #[error("Failed to decrypt asset for the following reason:{0}")]
-    Crypt(#[from] anyhow::Error),
-}
-
 #[derive(Default)]
 pub struct SkelAssetLoader;
 
 impl AssetLoader for SkelAssetLoader {
     type Asset = SkeletonBinary;
     type Settings = ();
-    type Error = SkelLoaderError;
+    type Error = LoaderError;
 
     fn load(
         &self,

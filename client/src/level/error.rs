@@ -41,9 +41,6 @@ fn setup_error_screen(
     asset_server: Res<AssetServer>,
     message: Option<Res<ErrorMessage>>,
 ) {
-    // Debuging code
-    commands.spawn(Camera2d::default());
-
     commands
         .spawn((
             Node {
