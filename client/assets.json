@@ -2,15 +2,24 @@
     "directories": {
         "fonts": {
             "files": [
-                "NotoSans-Bold.otf"
+                "Katuri.ttf"
             ]
         },
-        "spine": {
+        "models": {
+            "directories": {
+                "butter": {
+                    "target_files": [
+                        "Butter.model",
+                        "Butter.s_atlas",
+                        "Butter.s_skel",
+                        "Butter.texture"
+                    ]
+                }
+            }
+        },
+        "textures": {
             "target_files": [
-                "Butter.model",
-                "Butter.s_atlas",
-                "Butter.s_skel",
-                "Butter.texture"
+                "Background.texture"
             ]
         }
     }

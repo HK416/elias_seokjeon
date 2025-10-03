@@ -1,9 +1,31 @@
 // Import necessary Bevy modules.
-use bevy::prelude::*;
+use bevy::{asset::UntypedAssetId, prelude::*};
+
+pub trait AssetGroup: Resource {
+    fn push(&mut self, handle: impl Into<UntypedHandle>);
+
+    fn ids(&self) -> Vec<UntypedAssetId>;
+
+    fn len(&self) -> usize;
+}
 
 #[derive(Default, Resource)]
 pub struct SystemAssets {
     pub handles: Vec<UntypedHandle>,
+}
+
+impl AssetGroup for SystemAssets {
+    fn push(&mut self, handle: impl Into<UntypedHandle>) {
+        self.handles.push(handle.into());
+    }
+
+    fn ids(&self) -> Vec<UntypedAssetId> {
+        self.handles.iter().map(|h| h.id()).collect()
+    }
+
+    fn len(&self) -> usize {
+        self.handles.len()
+    }
 }
 
 #[derive(Default, Resource)]

@@ -1,6 +1,7 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use bevy_spine::{SkeletonController, Spine, SpineBundle, SpineReadyEvent};
+
+use crate::assets::locale::{Locale, LocalizationAssets, LocalizationData};
 
 use super::*;
 
@@ -12,16 +13,18 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(LevelStates::Error),
-            (debug_label, test_spine_spawn, setup_error_screen),
-        )
-        .add_systems(Update, play_animation);
+            (debug_label, setup_error_screen),
+        );
     }
 }
 
 // --- RESOURCES ---
 
 #[derive(Resource)]
-pub struct ErrorMessage(pub String);
+pub struct ErrorMessage {
+    pub tag: String,
+    pub message: String,
+}
 
 // --- SETUP SYSTEMS ---
 
@@ -29,17 +32,13 @@ fn debug_label() {
     info!("Current Level: Error");
 }
 
-fn test_spine_spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(SpineBundle {
-        skeleton: asset_server.load("spine/Butter.model").into(),
-        ..default()
-    });
-}
-
 fn setup_error_screen(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     message: Option<Res<ErrorMessage>>,
+    locale: Res<Locale>,
+    local_assets: Res<LocalizationAssets>,
+    locale_data: Res<Assets<LocalizationData>>,
 ) {
     commands
         .spawn((
@@ -69,11 +68,20 @@ fn setup_error_screen(
                     Visibility::Inherited,
                 ))
                 .with_children(|parent| {
-                    let font = asset_server.load(FONT_PATH_NOTOSANS_BOLD);
+                    let font = asset_server.load(FONT_PATH);
                     let message = message
                         .as_ref()
-                        .map(|s| s.0.as_str())
-                        .unwrap_or("Unknown error.");
+                        .map(|m| {
+                            if let Some(handle) = local_assets.locale.get(&*locale)
+                                && let Some(data) = locale_data.get(handle.id())
+                                && let Some(message) = data.0.get(&m.tag)
+                            {
+                                message.clone()
+                            } else {
+                                m.message.clone()
+                            }
+                        })
+                        .unwrap_or("Unknown error.".to_string());
 
                     parent.spawn((
                         Text::new(message),
@@ -86,27 +94,4 @@ fn setup_error_screen(
                     ));
                 });
         });
-}
-
-// --- UPDATE SYSTEMS ---
-
-pub fn play_animation(
-    mut spine_ready_event: EventReader<SpineReadyEvent>,
-    mut spine_query: Query<&mut Spine>,
-) {
-    for event in spine_ready_event.read() {
-        info!("on_spawn!");
-        let Ok(mut spine) = spine_query.get_mut(event.entity) else {
-            continue;
-        };
-
-        let Spine(SkeletonController {
-            skeleton,
-            animation_state,
-            ..
-        }) = spine.as_mut();
-        let _ = skeleton.set_skin_by_name("Normal");
-        skeleton.set_scale(Vec2::splat(0.5));
-        let _ = animation_state.set_animation_by_name(0, "Idle_1", true);
-    }
 }
