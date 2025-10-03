@@ -5,6 +5,13 @@
                 "Katuri.ttf"
             ]
         },
+        "locale": {
+            "files": [
+                "en.json",
+                "ja.json",
+                "ko.json"
+            ]
+        },
         "models": {
             "directories": {
                 "butter": {

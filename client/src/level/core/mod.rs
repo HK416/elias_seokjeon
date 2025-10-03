@@ -1,3 +1,4 @@
+mod connect;
 mod error;
 mod setup;
 
@@ -14,7 +15,8 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(error::InnerPlugin)
+        app.add_plugins(connect::InnerPlugin)
+            .add_plugins(error::InnerPlugin)
             .add_plugins(setup::InnerPlugin);
     }
 }
