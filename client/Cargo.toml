@@ -70,6 +70,7 @@ web-sys = { version = "0.3", features = [
     "MessageEvent",
     "Storage",
     "WebSocket", 
+    "BinaryType",
     "Window",
 ] }
 js-sys = "0.3"

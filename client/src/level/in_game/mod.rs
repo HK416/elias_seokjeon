@@ -1,0 +1,16 @@
+mod load;
+
+// Import necessary Bevy modules.
+use bevy::prelude::*;
+
+use super::*;
+
+// --- PLUGIN ---
+
+pub struct InnerPlugin;
+
+impl Plugin for InnerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(load::InnerPlugin);
+    }
+}

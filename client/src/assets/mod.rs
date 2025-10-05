@@ -1,4 +1,5 @@
 pub mod atlas;
+pub mod config;
 pub mod locale;
 pub mod path;
 pub mod skeleton;
@@ -18,8 +19,10 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<locale::LocalizationData>()
+        app.init_asset::<config::ConfigData>()
+            .init_asset::<locale::LocalizationData>()
             .register_asset_loader(atlas::AtlasAssetLoader)
+            .register_asset_loader(config::ConfigAssetLoader)
             .register_asset_loader(locale::LocalizationDataLoader)
             .register_asset_loader(skeleton::SkelAssetLoader)
             .register_asset_loader(sound::SoundAssetLoader)

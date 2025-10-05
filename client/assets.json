@@ -1,4 +1,7 @@
 {
+    "target_files": [
+        "config.json"
+    ],
     "directories": {
         "fonts": {
             "files": [

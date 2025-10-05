@@ -1,8 +1,9 @@
 mod core;
-mod system;
+mod in_game;
 
 mod constants;
 mod resource;
+mod system;
 mod types;
 
 // Import necessary Bevy modules.
@@ -22,7 +23,8 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<LevelStates>()
-            .add_plugins(core::InnerPlugin);
+            .add_plugins(core::InnerPlugin)
+            .add_plugins(in_game::InnerPlugin);
     }
 }
 
@@ -34,4 +36,6 @@ pub enum LevelStates {
     #[default]
     Setup,
     Connect,
+
+    LoadGame,
 }

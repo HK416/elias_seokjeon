@@ -5,7 +5,7 @@ use super::*;
 
 // --- SETUP SYSTEMS ---
 
-pub fn setup_asset_load_timeout_retry(mut commands: Commands) {
+pub fn setup_timeout_retry(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
     commands.insert_resource(RetryCounter::default());
 }
@@ -87,7 +87,7 @@ pub fn setup_loading_screen(mut commands: Commands, asset_server: Res<AssetServe
 
 // --- CLEANUP SYSTEMS ---
 
-pub fn cleanup_asset_load_timeout_retry(mut commands: Commands) {
+pub fn cleanup_timeout_retry(mut commands: Commands) {
     commands.remove_resource::<SceneTimer>();
     commands.remove_resource::<RetryCounter>();
 }

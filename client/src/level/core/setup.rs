@@ -2,6 +2,7 @@
 use bevy::prelude::*;
 
 use crate::assets::{
+    config::ConfigData,
     locale::{Locale, LocalizationAssets, LocalizationData},
     sound::SystemVolume,
 };
@@ -26,14 +27,14 @@ impl Plugin for InnerPlugin {
             OnEnter(LevelStates::Setup),
             (
                 debug_label,
-                setup_asset_load_timeout_retry,
+                setup_timeout_retry,
                 setup_loading_screen,
                 load_necessary_assets,
                 setup_locale,
                 setup_volume,
             ),
         )
-        .add_systems(OnExit(LevelStates::Setup), cleanup_asset_load_timeout_retry)
+        .add_systems(OnExit(LevelStates::Setup), cleanup_timeout_retry)
         .add_systems(
             Update,
             (
@@ -59,6 +60,10 @@ fn load_necessary_assets(mut commands: Commands, asset_server: Res<AssetServer>)
 fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     let mut loading_assets = SystemAssets::default();
     let mut localizations = LocalizationAssets::default();
+
+    // --- Config Loading ---
+    let handle: Handle<ConfigData> = asset_server.load(CONFIG_PATH);
+    loading_assets.push(handle);
 
     // --- Locale Loading ---
     // Load localization data for each supported language.
@@ -141,7 +146,7 @@ fn check_loading_progress(
     }
 }
 
-pub fn check_and_retry_asset_load_timeout(
+fn check_and_retry_asset_load_timeout(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut next_state: ResMut<NextState<LevelStates>>,
