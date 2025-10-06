@@ -8,8 +8,8 @@ use super::*;
 
 // --- CONSTANTS ---
 
-const TIMEOUT: f32 = 5.0;
-const MAX_RETRY_COUNT: u32 = 3;
+const TIMEOUT: f32 = 15.0;
+const MAX_RETRY_COUNT: u32 = 1;
 
 // --- PLUGIN ---
 
@@ -19,17 +19,23 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(LevelStates::Connect),
-            (debug_label, connect_game_server, setup_timeout_retry),
+            (debug_label, setup_timeout_retry),
         )
         .add_systems(OnExit(LevelStates::Connect), cleanup_timeout_retry)
         .add_systems(
             Update,
-            (
-                check_and_retry_connection_timeout,
-                check_connection_progress,
-            )
-                .run_if(in_state(LevelStates::Connect)),
+            check_connection.run_if(in_state(LevelStates::Connect)),
         );
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            app.add_systems(OnEnter(LevelStates::Connect), connect_game_server)
+                .add_systems(
+                    Update,
+                    (packet_receive_loop, check_connection_progress)
+                        .run_if(in_state(LevelStates::Connect)),
+                );
+        }
     }
 }
 
@@ -37,14 +43,6 @@ impl Plugin for InnerPlugin {
 
 fn debug_label() {
     info!("Current Level: Connect");
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn connect_game_server(mut commands: Commands) {
-    commands.insert_resource(ErrorMessage {
-        tag: "unsupport_platform".into(),
-        message: "This platform is not supported.".into(),
-    });
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -62,43 +60,73 @@ fn connect_game_server(
         return;
     };
 
-    let result = WebSocketManager::connect(&config.server_url);
-    let ws = match result {
-        Ok(ws) => ws,
+    let result = WebSocket::new(&config.server_url);
+    let socket = match result {
+        Ok(socket) => socket,
         Err(e) => {
             error!("Failed to connect to the game server: {:?}", e);
             commands.insert_resource(ErrorMessage {
                 tag: "connection_failed".into(),
-                message: "Failed to connect to the game server.".into(),
+                message: "Failed to connect to the game server".into(),
             });
             return;
         }
     };
 
-    commands.insert_resource(ws);
+    use protocol::Message;
+    let (sender, receiver) = flume::unbounded();
+    let closure = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
+        if let Ok(text) = e.data().dyn_into::<js_sys::JsString>()
+            && let Ok(msg) = serde_json::from_str::<Message>(&text.as_string().unwrap())
+        {
+            info!("Received message: {:?}", msg);
+            let _ = sender.send(msg);
+        }
+    });
+    socket.set_binary_type(BinaryType::Arraybuffer);
+    socket.set_onmessage(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    commands.insert_resource(Network { socket, receiver });
 }
 
 // --- UPDATE SYSTEMS ---
 
-#[cfg(not(target_arch = "wasm32"))]
-fn check_connection_progress(mut commands: Commands) {
-    commands.insert_resource(ErrorMessage {
-        tag: "unsupport_platform".into(),
-        message: "This platform is not supported.".into(),
-    });
+#[cfg(target_arch = "wasm32")]
+fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
+    use protocol::{ConnectionMessage, Header};
+    if let Some(network) = network.as_ref() {
+        for msg in network.receiver.try_iter() {
+            match msg.header {
+                Header::Connection => {
+                    let connection = serde_json::from_str::<ConnectionMessage>(&msg.json).unwrap();
+                    commands.insert_resource(PlayerInfo {
+                        uuid: connection.uuid,
+                        username: connection.username,
+                    });
+                }
+            }
+        }
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
 fn check_connection_progress(
-    ws: Option<Res<WebSocketManager>>,
+    player_info: Option<Res<PlayerInfo>>,
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
-    if ws.is_some() {
-        next_state.set(LevelStates::LoadGame);
+    if let Some(player_info) = &player_info {
+        info!("Connected to the game server.");
+        info!(
+            "UUID: {}, Username:{}",
+            player_info.uuid.urn(),
+            player_info.username
+        );
+        next_state.set(LevelStates::LoadTitle);
     }
 }
 
-fn check_and_retry_connection_timeout(
+fn check_connection(
     mut commands: Commands,
     message: Option<Res<ErrorMessage>>,
     mut next_state: ResMut<NextState<LevelStates>>,

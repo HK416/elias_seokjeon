@@ -1,5 +1,6 @@
 mod core;
 mod in_game;
+mod title;
 
 mod constants;
 mod resource;
@@ -24,7 +25,8 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<LevelStates>()
             .add_plugins(core::InnerPlugin)
-            .add_plugins(in_game::InnerPlugin);
+            .add_plugins(in_game::InnerPlugin)
+            .add_plugins(title::InnerPlugin);
     }
 }
 
@@ -36,6 +38,10 @@ pub enum LevelStates {
     #[default]
     Setup,
     Connect,
+
+    LoadTitle,
+    InitTitle,
+    InTitle,
 
     LoadGame,
 }

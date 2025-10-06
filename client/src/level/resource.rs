@@ -1,5 +1,6 @@
 // Import necessary Bevy modules.
-use bevy::{asset::UntypedAssetId, prelude::*};
+use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
+use protocol::uuid::Uuid;
 
 pub trait AssetGroup: Resource {
     fn push(&mut self, handle: impl Into<UntypedHandle>);
@@ -11,7 +12,7 @@ pub trait AssetGroup: Resource {
 
 #[derive(Default, Resource)]
 pub struct SystemAssets {
-    pub handles: Vec<UntypedHandle>,
+    handles: Vec<UntypedHandle>,
 }
 
 impl AssetGroup for SystemAssets {
@@ -25,6 +26,55 @@ impl AssetGroup for SystemAssets {
 
     fn len(&self) -> usize {
         self.handles.len()
+    }
+}
+
+#[derive(Default, Resource)]
+pub struct TitleAssets {
+    handles: Vec<UntypedHandle>,
+}
+
+impl AssetGroup for TitleAssets {
+    fn push(&mut self, handle: impl Into<UntypedHandle>) {
+        self.handles.push(handle.into());
+    }
+
+    fn ids(&self) -> Vec<UntypedAssetId> {
+        self.handles.iter().map(|h| h.id()).collect()
+    }
+
+    fn len(&self) -> usize {
+        self.handles.len()
+    }
+}
+
+#[derive(Default, Resource)]
+pub struct LoadingEntities {
+    entities: HashSet<Entity>,
+    total: usize,
+}
+
+impl LoadingEntities {
+    pub fn insert(&mut self, entity: Entity) {
+        self.entities.insert(entity);
+        self.total += 1;
+    }
+
+    pub fn remove(&mut self, entity: Entity) {
+        self.entities.remove(&entity);
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entities.is_empty()
+    }
+
+    pub fn percent(&self) -> f32 {
+        if self.total > 0 {
+            let remaining = self.total.saturating_sub(self.entities.len());
+            remaining as f32 / self.total as f32
+        } else {
+            1.0
+        }
     }
 }
 
@@ -54,4 +104,10 @@ impl Default for SceneTimer {
     fn default() -> Self {
         Self { elapsed_time: 0.0 }
     }
+}
+
+#[derive(Resource)]
+pub struct PlayerInfo {
+    pub uuid: Uuid,
+    pub username: String,
 }

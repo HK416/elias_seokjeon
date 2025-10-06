@@ -1,5 +1,5 @@
 [workspace]
-members = ["client", "server"]
+members = ["client", "protocol", "server"]
 resolver = "3"
 
 [profile.web-client]

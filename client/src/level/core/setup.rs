@@ -39,7 +39,7 @@ impl Plugin for InnerPlugin {
             Update,
             (
                 check_loading_progress,
-                update_loading_progress::<SystemAssets>,
+                update_asset_loading_progress::<SystemAssets>,
                 check_and_retry_asset_load_timeout,
             )
                 .run_if(in_state(LevelStates::Setup)),
@@ -137,9 +137,9 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     let all_loaded = loading_assets
-        .handles
+        .ids()
         .iter()
-        .all(|h| asset_server.is_loaded_with_dependencies(h.id()));
+        .all(|&id| asset_server.is_loaded_with_dependencies(id));
 
     if all_loaded {
         next_state.set(LevelStates::Connect);

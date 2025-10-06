@@ -103,7 +103,7 @@ pub fn cleanup_loading_screen(
 
 // --- UPDATE SYSTEMS ---
 
-pub fn update_loading_progress<T: AssetGroup>(
+pub fn update_asset_loading_progress<T: AssetGroup>(
     asset_server: Res<AssetServer>,
     loading_assets: Res<T>,
     mut query: Query<&mut Node, With<LoadingBar>>,
@@ -124,5 +124,17 @@ pub fn update_loading_progress<T: AssetGroup>(
         1.0
     };
 
+    node.width = Val::Percent(progress * 100.0);
+}
+
+pub fn update_entity_spawn_progress(
+    loading_assets: Res<LoadingEntities>,
+    mut query: Query<&mut Node, With<LoadingBar>>,
+) {
+    let Ok(mut node) = query.single_mut() else {
+        return;
+    };
+
+    let progress = loading_assets.percent();
     node.width = Val::Percent(progress * 100.0);
 }

@@ -1,27 +1,49 @@
-use futures_util::{SinkExt, StreamExt};
-use tokio::net::TcpListener;
-use tokio_tungstenite::accept_async;
+use std::net::SocketAddr;
+
+use futures_util::SinkExt;
+use protocol::{ConnectionMessage, Header, Message, serde_json, uuid::Uuid};
+use tokio::net::{TcpListener, TcpStream};
+use tokio_tungstenite::{accept_async, tungstenite};
 
 #[tokio::main]
 async fn main() {
     let listener = TcpListener::bind("127.0.0.1:8889").await.unwrap();
     println!("WebSocket server listening on ws://127.0.0.1:8889");
 
-    while let Ok((stream, _)) = listener.accept().await {
-        tokio::spawn(async move {
-            let ws_stream = accept_async(stream).await.unwrap();
-            println!("New WebSocket connection");
+    while let Ok((stream, addr)) = listener.accept().await {
+        tokio::spawn(handle_initial_connection(stream, addr));
+    }
+}
 
-            let (mut write, mut read) = ws_stream.split();
+pub async fn handle_initial_connection(stream: TcpStream, addr: SocketAddr) {
+    let result = accept_async(stream).await;
+    let mut ws_stream = match result {
+        Ok(ws_stream) => {
+            println!("New WebSocket connection (Address:{addr})");
+            ws_stream
+        }
+        Err(e) => {
+            eprintln!("Failed to accept WebSocket connection (Address:{addr}): {e}");
+            return;
+        }
+    };
 
-            while let Some(msg) = read.next().await {
-                let msg = msg.unwrap();
-                println!("Received: {:?}", msg);
+    let message = Message {
+        header: Header::Connection,
+        json: serde_json::to_string(&ConnectionMessage {
+            uuid: Uuid::new_v4(),
+            username: "Test".to_string(),
+        })
+        .unwrap(),
+    };
 
-                if msg.is_text() || msg.is_binary() {
-                    write.send(msg).await.unwrap();
-                }
-            }
-        });
+    let result = ws_stream
+        .send(tungstenite::Message::text(
+            serde_json::to_string(&message).unwrap(),
+        ))
+        .await;
+    if let Err(e) = result {
+        eprintln!("Failed to send message to WebSocket (Address:{addr}): {e}");
+        return;
     }
 }
