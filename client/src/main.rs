@@ -1,6 +1,7 @@
 mod assets;
 mod level;
 mod resizable_font;
+mod translatable_text;
 mod web;
 
 use std::num::NonZeroU32;
@@ -46,5 +47,6 @@ fn main() {
         .add_plugins(assets::InnerPlugin)
         .add_plugins(level::InnerPlugin)
         .add_plugins(resizable_font::InnerPlugin)
+        .add_plugins(translatable_text::InnerPlugin)
         .run();
 }

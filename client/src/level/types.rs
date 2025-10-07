@@ -1,3 +1,4 @@
+// Import necessary Bevy modules.
 use bevy::prelude::*;
 
 #[derive(Component)]

@@ -1,5 +1,6 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
+use bevy_spine::SkeletonData;
 
 use super::*;
 
@@ -52,6 +53,13 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     let handle: Handle<Image> = asset_server.load(IMG_PATH_BACKGROUND);
     loading_assets.push(handle);
 
+    // --- Model Loading ---
+    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_BUTTER);
+    loading_assets.push(handle);
+
+    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_KOMMY);
+    loading_assets.push(handle);
+
     // --- Resource Insersion ---
     commands.insert_resource(loading_assets);
 }
@@ -60,7 +68,7 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
 
 fn check_loading_progress(
     asset_server: Res<AssetServer>,
-    loading_assets: Res<SystemAssets>,
+    loading_assets: Res<TitleAssets>,
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     let all_loaded = loading_assets

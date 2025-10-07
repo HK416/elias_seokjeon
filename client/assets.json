@@ -24,6 +24,14 @@
                         "Butter.s_skel",
                         "Butter.texture"
                     ]
+                },
+                "kommy": {
+                    "target_files": [
+                        "Kommy.model",
+                        "Kommy.s_atlas",
+                        "Kommy.s_skel",
+                        "Kommy.texture"
+                    ]
                 }
             }
         },

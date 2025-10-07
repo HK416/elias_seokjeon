@@ -107,6 +107,7 @@ impl Default for SceneTimer {
 }
 
 #[derive(Resource)]
+#[allow(dead_code)]
 pub struct PlayerInfo {
     pub uuid: Uuid,
     pub username: String,

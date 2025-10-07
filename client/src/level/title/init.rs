@@ -37,31 +37,92 @@ fn debug_label() {
 
 fn setup_title_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut loading_entities = LoadingEntities::default();
+
+    let texture = asset_server.load(IMG_PATH_BACKGROUND);
     let entity = commands
         .spawn((
+            ImageNode::new(texture),
             Node {
                 position_type: PositionType::Absolute,
                 width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+                aspect_ratio: Some(1593.0 / 1019.0),
                 ..Default::default()
             },
+            ZIndex(5),
             Visibility::Hidden,
             SpawnRequest,
         ))
         .with_children(|parent| {
-            let texture = asset_server.load(IMG_PATH_BACKGROUND);
             let entity = parent
                 .spawn((
-                    ImageNode::new(texture),
                     Node {
-                        width: Val::Percent(100.0),
-                        aspect_ratio: Some(1593.0 / 1019.0),
+                        width: Val::Vw(100.0),
+                        height: Val::Vh(100.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..Default::default()
                     },
-                    ZIndex(5),
                     Visibility::Inherited,
                     SpawnRequest,
                 ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(26.0),
+                                height: Val::Percent(80.0),
+                                flex_direction: FlexDirection::Row,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        height: Val::Percent(16.0),
+                                        ..Default::default()
+                                    },
+                                    ZIndex(4),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    create_button(
+                                        &mut loading_entities,
+                                        parent,
+                                        BTN_BG_BORDER_COLOR,
+                                        BTN_BG_COLOR,
+                                        BoxShadow::new(
+                                            Color::BLACK.with_alpha(0.8),
+                                            Val::Percent(2.0),
+                                            Val::Percent(10.0),
+                                            Val::Percent(5.0),
+                                            Val::Px(1.0),
+                                        ),
+                                        |commands| {
+                                            let font = asset_server.load(FONT_PATH);
+                                            commands.insert((
+                                                Text::new("Game Start"),
+                                                TextFont::from_font(font),
+                                                TextLayout::new_with_justify(JustifyText::Center),
+                                                TextColor::BLACK,
+                                                TranslatableText("game_start".into()),
+                                                ResizableFont::vertical(1280.0, 52.0),
+                                            ));
+                                        },
+                                    );
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
                 .id();
             loading_entities.insert(entity);
         })

@@ -6,16 +6,17 @@ mod constants;
 mod resource;
 mod system;
 mod types;
+mod utils;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
-use crate::{assets::path::*, resizable_font::*};
+use crate::{assets::path::*, resizable_font::*, translatable_text::*};
 
 #[cfg(target_arch = "wasm32")]
 use crate::web::*;
 
-use self::{constants::*, core::ErrorMessage, resource::*, system::*, types::*};
+use self::{constants::*, core::ErrorMessage, resource::*, system::*, types::*, utils::*};
 
 // --- PLUGIN ---
 
