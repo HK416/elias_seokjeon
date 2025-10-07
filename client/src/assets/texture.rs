@@ -47,7 +47,7 @@ impl AssetLoader for TexelAssetLoader {
             let dimension = TextureDimension::D2;
             let data = image.to_rgba8().to_vec();
             let format = TextureFormat::Rgba8UnormSrgb;
-            let asset_usage = RenderAssetUsages::RENDER_WORLD;
+            let asset_usage = RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD;
 
             let mut image_asset = Image::new(size, dimension, data, format, asset_usage);
             // Set the sampler to `Nearest` for a pixelated look, which is common for sprites.

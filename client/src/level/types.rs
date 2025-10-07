@@ -18,3 +18,20 @@ pub struct TitleLevelRoot;
 
 #[derive(Component)]
 pub struct TitleLevelSub;
+
+#[derive(Component)]
+pub struct OriginColor(pub Color);
+
+#[derive(Component, PartialEq, Eq)]
+#[allow(clippy::enum_variant_names)]
+pub enum UI {
+    InTitleGameStartButton,
+    InTitleOptionButton,
+    InTitleHowToPlayButton,
+}
+
+#[derive(Component, PartialEq, Eq)]
+pub enum Character {
+    Butter,
+    Kommy,
+}

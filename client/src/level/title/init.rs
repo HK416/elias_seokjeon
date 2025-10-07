@@ -1,5 +1,6 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
+use bevy_spine::SpineBundle;
 
 use super::*;
 
@@ -9,23 +10,20 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(LevelStates::InitTitle),
-            (debug_label, setup_title_screen),
-        )
-        .add_systems(
-            OnExit(LevelStates::InitTitle),
-            (remove_resource, cleanup_loading_screen),
-        )
-        .add_systems(
-            Update,
-            (
-                observe_entity_creation,
-                update_entity_spawn_progress,
-                check_loading_progress,
+        app.add_systems(OnEnter(LevelStates::InitTitle), (debug_label, setup_title))
+            .add_systems(
+                OnExit(LevelStates::InitTitle),
+                (remove_resource, cleanup_loading_screen),
             )
-                .run_if(in_state(LevelStates::InitTitle)),
-        );
+            .add_systems(
+                Update,
+                (
+                    observe_entity_creation,
+                    update_entity_spawn_progress,
+                    check_loading_progress,
+                )
+                    .run_if(in_state(LevelStates::InitTitle)),
+            );
     }
 }
 
@@ -35,29 +33,97 @@ fn debug_label() {
     info!("Current Level: InitTitle");
 }
 
-fn setup_title_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_title(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    image_assets: Res<Assets<Image>>,
+) {
     let mut loading_entities = LoadingEntities::default();
+    setup_title_screen(
+        &mut commands,
+        &asset_server,
+        &image_assets,
+        &mut loading_entities,
+    );
+    setup_title_interface(&mut commands, &asset_server, &mut loading_entities);
 
-    let texture = asset_server.load(IMG_PATH_BACKGROUND);
+    // --- Resource Insersion ---
+    commands.insert_resource(loading_entities);
+}
+
+fn setup_title_screen(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    image_assets: &Assets<Image>,
+    loading_entities: &mut LoadingEntities,
+) {
+    let handle = asset_server.load(IMG_PATH_BACKGROUND);
+    let image = image_assets.get(handle.id()).unwrap();
+    let aspect_ratio = image.aspect_ratio().ratio();
     let entity = commands
         .spawn((
-            ImageNode::new(texture),
-            Node {
-                position_type: PositionType::Absolute,
-                width: Val::Percent(100.0),
-                aspect_ratio: Some(1593.0 / 1019.0),
+            Sprite {
+                image: asset_server.load(IMG_PATH_BACKGROUND),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                custom_size: Some((1920.0, 1920.0 / aspect_ratio).into()),
                 ..Default::default()
             },
-            ZIndex(5),
+            Transform::from_xyz(0.0, 540.0, 0.0),
             Visibility::Hidden,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let skeleton = asset_server.load(MODEL_PATH_BUTTER).into();
+    let entity = commands
+        .spawn(SpineBundle {
+            skeleton,
+            transform: Transform::from_xyz(640.0, 0.0, 1.0).with_scale((1.0, 1.0, 1.0).into()),
+            visibility: Visibility::Hidden,
+            ..Default::default()
+        })
+        .insert((Character::Butter, SpawnRequest))
+        .id();
+    loading_entities.insert(entity);
+
+    let skeleton = asset_server.load(MODEL_PATH_KOMMY).into();
+    let entity = commands
+        .spawn(SpineBundle {
+            skeleton,
+            transform: Transform::from_xyz(-640.0, 0.0, 1.0).with_scale((-1.0, 1.0, 1.0).into()),
+            visibility: Visibility::Hidden,
+            ..Default::default()
+        })
+        .insert((Character::Kommy, SpawnRequest))
+        .id();
+    loading_entities.insert(entity);
+}
+
+fn setup_title_interface(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    loading_entities: &mut LoadingEntities,
+) {
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Vw(100.0),
+                height: Val::Vh(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            Visibility::Inherited,
             SpawnRequest,
         ))
         .with_children(|parent| {
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Vw(100.0),
-                        height: Val::Vh(100.0),
+                        width: Val::Percent(26.0),
+                        height: Val::Percent(80.0),
+                        flex_direction: FlexDirection::Column,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
@@ -66,59 +132,134 @@ fn setup_title_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
+                    add_vertical_space(loading_entities, parent, Val::Percent(20.0));
                     let entity = parent
                         .spawn((
                             Node {
-                                width: Val::Percent(26.0),
-                                height: Val::Percent(80.0),
-                                flex_direction: FlexDirection::Row,
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(16.0),
                                 ..Default::default()
                             },
-                            Visibility::Inherited,
+                            ZIndex(4),
+                            UI::InTitleGameStartButton,
+                            Visibility::Hidden,
                             SpawnRequest,
+                            Button,
                         ))
                         .with_children(|parent| {
-                            let entity = parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(16.0),
-                                        ..Default::default()
-                                    },
-                                    ZIndex(4),
-                                    Visibility::Inherited,
-                                    SpawnRequest,
-                                ))
-                                .with_children(|parent| {
-                                    create_button(
-                                        &mut loading_entities,
-                                        parent,
-                                        BTN_BG_BORDER_COLOR,
-                                        BTN_BG_COLOR,
-                                        BoxShadow::new(
-                                            Color::BLACK.with_alpha(0.8),
-                                            Val::Percent(2.0),
-                                            Val::Percent(10.0),
-                                            Val::Percent(5.0),
-                                            Val::Px(1.0),
-                                        ),
-                                        |commands| {
-                                            let font = asset_server.load(FONT_PATH);
-                                            commands.insert((
-                                                Text::new("Game Start"),
-                                                TextFont::from_font(font),
-                                                TextLayout::new_with_justify(JustifyText::Center),
-                                                TextColor::BLACK,
-                                                TranslatableText("game_start".into()),
-                                                ResizableFont::vertical(1280.0, 52.0),
-                                            ));
-                                        },
-                                    );
-                                })
-                                .id();
-                            loading_entities.insert(entity);
+                            create_button(
+                                loading_entities,
+                                parent,
+                                BTN_BG_BORDER_COLOR,
+                                BTN_BG_COLOR,
+                                BoxShadow::new(
+                                    Color::BLACK.with_alpha(0.8),
+                                    Val::Percent(2.0),
+                                    Val::Percent(10.0),
+                                    Val::Percent(5.0),
+                                    Val::Px(1.0),
+                                ),
+                                |commands| {
+                                    let font = asset_server.load(FONT_PATH);
+                                    commands.insert((
+                                        Text::new("Game Start"),
+                                        TextFont::from_font(font),
+                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextColor::BLACK,
+                                        OriginColor(Color::BLACK),
+                                        TranslatableText("game_start".into()),
+                                        ResizableFont::vertical(1280.0, 52.0),
+                                    ));
+                                },
+                            );
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(16.0),
+                                ..Default::default()
+                            },
+                            ZIndex(4),
+                            UI::InTitleOptionButton,
+                            Visibility::Hidden,
+                            SpawnRequest,
+                            Button,
+                        ))
+                        .with_children(|parent| {
+                            create_button(
+                                loading_entities,
+                                parent,
+                                BTN_BG_BORDER_COLOR,
+                                BTN_BG_COLOR,
+                                BoxShadow::new(
+                                    Color::BLACK.with_alpha(0.8),
+                                    Val::Percent(2.0),
+                                    Val::Percent(10.0),
+                                    Val::Percent(5.0),
+                                    Val::Px(1.0),
+                                ),
+                                |commands| {
+                                    let font = asset_server.load(FONT_PATH);
+                                    commands.insert((
+                                        Text::new("Settings"),
+                                        TextFont::from_font(font),
+                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextColor::BLACK,
+                                        OriginColor(Color::BLACK),
+                                        TranslatableText("game_settings".into()),
+                                        ResizableFont::vertical(1280.0, 52.0),
+                                    ));
+                                },
+                            );
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(16.0),
+                                ..Default::default()
+                            },
+                            ZIndex(4),
+                            UI::InTitleHowToPlayButton,
+                            Visibility::Hidden,
+                            SpawnRequest,
+                            Button,
+                        ))
+                        .with_children(|parent| {
+                            create_button(
+                                loading_entities,
+                                parent,
+                                BTN_BG_BORDER_COLOR,
+                                BTN_BG_COLOR,
+                                BoxShadow::new(
+                                    Color::BLACK.with_alpha(0.8),
+                                    Val::Percent(2.0),
+                                    Val::Percent(10.0),
+                                    Val::Percent(5.0),
+                                    Val::Px(1.0),
+                                ),
+                                |commands| {
+                                    let font = asset_server.load(FONT_PATH);
+                                    commands.insert((
+                                        Text::new("How to play"),
+                                        TextFont::from_font(font),
+                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextColor::BLACK,
+                                        OriginColor(Color::BLACK),
+                                        TranslatableText("how_to_play".into()),
+                                        ResizableFont::vertical(1280.0, 52.0),
+                                    ));
+                                },
+                            );
                         })
                         .id();
                     loading_entities.insert(entity);
@@ -128,9 +269,6 @@ fn setup_title_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .id();
     loading_entities.insert(entity);
-
-    // --- Resource Insersion ---
-    commands.insert_resource(loading_entities);
 }
 
 // --- CLEANUP SYSTEMS ---
