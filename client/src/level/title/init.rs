@@ -2,6 +2,8 @@
 use bevy::prelude::*;
 use bevy_spine::SpineBundle;
 
+use crate::assets::collider::{ColliderGroup, ColliderGroupHandle};
+
 use super::*;
 
 // --- PLUGIN ---
@@ -18,9 +20,11 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 Update,
                 (
+                    handle_entity_collider,
                     observe_entity_creation,
                     update_entity_spawn_progress,
                     check_loading_progress,
+                    play_animation,
                 )
                     .run_if(in_state(LevelStates::InitTitle)),
             );
@@ -75,27 +79,31 @@ fn setup_title_screen(
         .id();
     loading_entities.insert(entity);
 
-    let skeleton = asset_server.load(MODEL_PATH_BUTTER).into();
     let entity = commands
         .spawn(SpineBundle {
-            skeleton,
+            skeleton: asset_server.load(MODEL_PATH_BUTTER).into(),
             transform: Transform::from_xyz(640.0, 0.0, 1.0).with_scale((1.0, 1.0, 1.0).into()),
             visibility: Visibility::Hidden,
             ..Default::default()
         })
-        .insert((Character::Butter, SpawnRequest))
+        .insert((
+            ColliderGroupHandle(asset_server.load(COLLIDER_PATH_BUTTER)),
+            Character::Butter,
+        ))
         .id();
     loading_entities.insert(entity);
 
-    let skeleton = asset_server.load(MODEL_PATH_KOMMY).into();
     let entity = commands
         .spawn(SpineBundle {
-            skeleton,
+            skeleton: asset_server.load(MODEL_PATH_KOMMY).into(),
             transform: Transform::from_xyz(-640.0, 0.0, 1.0).with_scale((-1.0, 1.0, 1.0).into()),
             visibility: Visibility::Hidden,
             ..Default::default()
         })
-        .insert((Character::Kommy, SpawnRequest))
+        .insert((
+            ColliderGroupHandle(asset_server.load(COLLIDER_PATH_KOMMY)),
+            Character::Kommy,
+        ))
         .id();
     loading_entities.insert(entity);
 }
@@ -279,6 +287,37 @@ fn remove_resource(mut commands: Commands) {
 
 // --- UPDATE SYSTEMS ---
 
+fn handle_entity_collider(
+    mut commands: Commands,
+    collider_assets: Res<Assets<ColliderGroup>>,
+    query: Query<(Entity, &ColliderGroupHandle), Added<ColliderGroupHandle>>,
+) {
+    for (entity, handle) in query.iter() {
+        let mut commands = commands.entity(entity);
+
+        let Some(collider_group) = collider_assets.get(handle.id()) else {
+            continue;
+        };
+        commands.with_children(|parent| {
+            parent.spawn((
+                collider_group.ball,
+                ColliderType::Ball,
+                Transform::IDENTITY,
+                TitleLevelEntity,
+            ));
+
+            parent.spawn((
+                collider_group.head,
+                ColliderType::Head,
+                Transform::IDENTITY,
+                TitleLevelEntity,
+            ));
+        });
+
+        commands.remove::<ColliderGroupHandle>();
+    }
+}
+
 fn observe_entity_creation(
     mut commands: Commands,
     mut loading_entities: ResMut<LoadingEntities>,
@@ -290,9 +329,8 @@ fn observe_entity_creation(
         let mut commands = commands.entity(entity);
         commands.remove::<SpawnRequest>();
 
-        if child_of.is_some() {
-            commands.insert(TitleLevelSub);
-        } else {
+        commands.insert(TitleLevelEntity);
+        if child_of.is_none() {
             commands.insert(TitleLevelRoot);
         }
     }
@@ -304,5 +342,48 @@ fn check_loading_progress(
 ) {
     if loading_entities.is_empty() {
         next_state.set(LevelStates::InTitle);
+    }
+}
+
+#[allow(unreachable_patterns)]
+fn play_animation(
+    mut commands: Commands,
+    mut spine_ready_event: EventReader<SpineReadyEvent>,
+    mut spine_query: Query<(&mut Spine, &Character)>,
+) {
+    for event in spine_ready_event.read() {
+        let Ok((mut spine, character)) = spine_query.get_mut(event.entity) else {
+            continue;
+        };
+
+        let Spine(SkeletonController {
+            skeleton,
+            animation_state,
+            ..
+        }) = spine.as_mut();
+
+        let index = skeleton
+            .bones()
+            .enumerate()
+            .find_map(|(idx, b)| b.data().name().contains("Ball_L").then_some(idx))
+            .expect("Ball not found!");
+        let mut commands = commands.entity(event.entity);
+        commands.insert((LeftBall(index), SpawnRequest));
+
+        match character {
+            Character::Butter => {
+                skeleton.set_skin_by_name("Normal").unwrap();
+                animation_state
+                    .set_animation_by_name(0, BUTTER_TITLE_IDLE, true)
+                    .unwrap();
+            }
+            Character::Kommy => {
+                skeleton.set_skin_by_name("Normal").unwrap();
+                animation_state
+                    .set_animation_by_name(0, KOMMY_TITLE_TAUNT, true)
+                    .unwrap();
+            }
+            _ => { /* empty */ }
+        }
     }
 }

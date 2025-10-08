@@ -19,6 +19,7 @@
             "directories": {
                 "butter": {
                     "target_files": [
+                        "Butter.collider",
                         "Butter.model",
                         "Butter.s_atlas",
                         "Butter.s_skel",
@@ -27,6 +28,7 @@
                 },
                 "kommy": {
                     "target_files": [
+                        "Kommy.collider",
                         "Kommy.model",
                         "Kommy.s_atlas",
                         "Kommy.s_skel",

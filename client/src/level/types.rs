@@ -17,7 +17,7 @@ pub struct SpawnRequest;
 pub struct TitleLevelRoot;
 
 #[derive(Component)]
-pub struct TitleLevelSub;
+pub struct TitleLevelEntity;
 
 #[derive(Component)]
 pub struct OriginColor(pub Color);
@@ -30,8 +30,17 @@ pub enum UI {
     InTitleHowToPlayButton,
 }
 
-#[derive(Component, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub enum Character {
     Butter,
     Kommy,
 }
+
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub enum ColliderType {
+    Ball,
+    Head,
+}
+
+#[derive(Component)]
+pub struct LeftBall(pub usize);

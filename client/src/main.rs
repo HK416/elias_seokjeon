@@ -1,4 +1,5 @@
 mod assets;
+mod collider;
 mod level;
 mod resizable_font;
 mod translatable_text;
@@ -21,7 +22,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Elias: Seokjeon".into(),
-                        resolution: (1280.0, 720.0).into(),
+                        resolution: (1920.0, 1080.0).into(),
                         resizable: true,
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
@@ -45,6 +46,7 @@ fn main() {
         )
         .add_plugins(SpinePlugin)
         .add_plugins(assets::InnerPlugin)
+        .add_plugins(collider::InnerPlugin)
         .add_plugins(level::InnerPlugin)
         .add_plugins(resizable_font::InnerPlugin)
         .add_plugins(translatable_text::InnerPlugin)

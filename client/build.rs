@@ -35,6 +35,11 @@ struct Hierarchy {
 // --- MAIN ---
 
 fn main() {
+    println!(
+        "cargo:rerun-if-changed={}",
+        concat!(env!("CARGO_WORKSPACE_DIR"), "/assets")
+    );
+
     let hierarchy = serde_json::de::from_str::<Hierarchy>(ASSET_LIST).unwrap();
 
     let mut src_path = Path::new(env!("CARGO_WORKSPACE_DIR")).to_path_buf();
