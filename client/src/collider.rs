@@ -10,7 +10,10 @@ impl Plugin for InnerPlugin {
     #[allow(unused_variables)]
     fn build(&self, app: &mut App) {
         #[cfg(not(feature = "no-debuging-gizmo"))]
-        app.add_systems(PostUpdate, (handle_collider_gizmo, draw_collider_gizmo));
+        app.add_systems(
+            PostUpdate,
+            (handle_collider_gizmo, draw_collider_gizmo).after(TransformSystem::TransformPropagate),
+        );
     }
 }
 

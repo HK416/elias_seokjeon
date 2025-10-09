@@ -30,7 +30,7 @@ pub enum UI {
     InTitleHowToPlayButton,
 }
 
-#[derive(Component, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
 pub enum Character {
     Butter,
     Kommy,
@@ -43,4 +43,7 @@ pub enum ColliderType {
 }
 
 #[derive(Component)]
-pub struct LeftBall(pub usize);
+pub struct SpineEntity(pub Entity);
+
+#[derive(Component)]
+pub struct SpineBoneEntity(pub Entity);

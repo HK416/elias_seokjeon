@@ -11,25 +11,27 @@ use crate::collider::Collider2d;
 use super::*;
 
 #[derive(Component)]
-pub struct ColliderGroupHandle(pub Handle<ColliderGroup>);
+pub struct ColliderHandle(pub Handle<Collider>);
 
-impl ColliderGroupHandle {
-    pub fn id(&self) -> AssetId<ColliderGroup> {
+impl ColliderHandle {
+    pub fn id(&self) -> AssetId<Collider> {
         self.0.id()
     }
 }
 
 #[derive(Asset, TypePath, Deserialize)]
-pub struct ColliderGroup {
-    pub ball: Collider2d,
-    pub head: Collider2d,
+pub struct Collider {
+    pub ball_bone_name: String,
+    pub ball_collider: Collider2d,
+    pub head_bone_name: String,
+    pub head_collider: Collider2d,
 }
 
 #[derive(Default)]
 pub struct ColliderAssetLoader;
 
 impl AssetLoader for ColliderAssetLoader {
-    type Asset = ColliderGroup;
+    type Asset = Collider;
     type Settings = ();
     type Error = LoaderError;
 
@@ -47,7 +49,7 @@ impl AssetLoader for ColliderAssetLoader {
 
             let key = reconstruct_key();
             let decrypted_data = decrypt_bytes(&bytes, &key)?;
-            let group: ColliderGroup = serde_json::from_slice(&decrypted_data)?;
+            let group: Collider = serde_json::from_slice(&decrypted_data)?;
 
             Ok(group)
         })

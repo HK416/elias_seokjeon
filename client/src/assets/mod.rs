@@ -20,7 +20,7 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<collider::ColliderGroup>()
+        app.init_asset::<collider::Collider>()
             .init_asset::<config::ConfigData>()
             .init_asset::<locale::LocalizationData>()
             .register_asset_loader(atlas::AtlasAssetLoader)

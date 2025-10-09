@@ -40,6 +40,12 @@ impl Plugin for InnerPlugin {
                     update_spine_animation,
                 )
                     .run_if(in_state(LevelStates::InTitle)),
+            )
+            .add_systems(
+                PostUpdate,
+                update_collider_transform
+                    .after(TransformSystem::TransformPropagate)
+                    .run_if(in_state(LevelStates::InTitle)),
             );
     }
 }
@@ -150,9 +156,9 @@ fn handle_mouse_input(
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     grabbed_character: Option<Res<GrabbedCharacter>>,
     mut input_events: EventReader<MouseButtonInput>,
-    mut spine_query: Query<&mut Spine, With<TitleLevelEntity>>,
+    mut spine_query: Query<&mut Spine>,
     collider_query: Query<
-        (&ChildOf, &Collider2d, &GlobalTransform, &ColliderType),
+        (&SpineEntity, &Collider2d, &GlobalTransform, &ColliderType),
         With<TitleLevelEntity>,
     >,
 ) {
@@ -174,11 +180,11 @@ fn handle_mouse_input(
                     return;
                 };
 
-                for (child_of, collider, transform, &ty) in collider_query.iter() {
+                for (spine_entity, collider, transform, &ty) in collider_query.iter() {
                     if Collider2d::contains((collider, transform), world_pos) {
-                        info!("Grabbed Character: {:?}", child_of.parent());
+                        info!("Grabbed Character: {:?}", spine_entity.0);
                         commands.insert_resource(GrabbedCharacter {
-                            target: child_of.parent(),
+                            target: spine_entity.0,
                             duration: 0.0,
                             ty,
                         });
@@ -252,5 +258,19 @@ fn update_spine_animation(
             },
             _ => { /* empty */ }
         }
+    }
+}
+
+// --- POSTUPDATE SYSTEMS ---
+
+fn update_collider_transform(
+    transform_query: Query<&GlobalTransform>,
+    mut query: Query<(&mut Transform, &SpineBoneEntity)>,
+) {
+    for (mut transform, bone_entity) in query.iter_mut() {
+        let bone_transform = transform_query.get(bone_entity.0).unwrap();
+        transform.translation = bone_transform.translation();
+        transform.rotation = bone_transform.rotation();
+        transform.scale = bone_transform.scale();
     }
 }

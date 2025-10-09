@@ -2,7 +2,7 @@
 use bevy::prelude::*;
 use bevy_spine::SkeletonData;
 
-use crate::assets::collider::ColliderGroup;
+use crate::assets::collider::Collider;
 
 use super::*;
 
@@ -63,10 +63,10 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     loading_assets.push(handle);
 
     // --- Collider Loading ---
-    let handle: Handle<ColliderGroup> = asset_server.load(COLLIDER_PATH_BUTTER);
+    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_BUTTER);
     loading_assets.push(handle);
 
-    let handle: Handle<ColliderGroup> = asset_server.load(COLLIDER_PATH_KOMMY);
+    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_KOMMY);
     loading_assets.push(handle);
 
     // --- Resource Insersion ---
