@@ -21,7 +21,7 @@ static_assertions = "1.1"
 [dependencies]
 aes-gcm = "0.10"
 anyhow = "1.0"
-bevy_spine = { git = "https://github.com/HK416/bevy_spine", branch = "main" }
+bevy_spine = { git = "https://github.com/HK416/bevy_spine", branch = "v17" }
 const_format = "0.2"
 flume = "0.11"
 image = { version = "0.25", default-features = false, features = ["png"] }
@@ -33,7 +33,7 @@ thiserror = "2"
 protocol = { path = "../protocol" }
 
 [dependencies.bevy]
-version = "0.16"
+version = "0.17"
 default-features = false
 features = [
     "std",
@@ -45,10 +45,15 @@ features = [
     "bevy_gizmos",
     "bevy_log",
     "bevy_render",
+    "bevy_mesh",
+    "bevy_camera",
+    "bevy_shader",
     "bevy_sprite",
+    "bevy_sprite_render",
     "bevy_state",
     "bevy_text",
     "bevy_ui",
+    "bevy_ui_render",
     "bevy_window",
     "bevy_winit",
     "multi_threaded",

@@ -3,8 +3,7 @@ mod load;
 
 // Import necessary Bevy modules.
 use bevy::{
-    input::{ButtonState, mouse::MouseButtonInput},
-    prelude::*,
+    input::{mouse::MouseButtonInput, ButtonState}, prelude::*
 };
 use bevy_spine::{SkeletonController, Spine, SpineEvent, SpineReadyEvent};
 
@@ -44,7 +43,7 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 PostUpdate,
                 update_collider_transform
-                    .after(TransformSystem::TransformPropagate)
+                    .after(TransformSystems::Propagate)
                     .run_if(in_state(LevelStates::InTitle)),
             );
     }
@@ -81,7 +80,7 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
             Transform::from_xyz(0.0, 540.0, 0.0),
             Projection::Orthographic(OrthographicProjection {
                 area: Rect::from_center_half_size(Vec2::ZERO, Vec2::ONE),
-                scaling_mode: bevy::render::camera::ScalingMode::Fixed {
+                scaling_mode: bevy::camera::ScalingMode::Fixed {
                     width: 1920.0,
                     height: 1080.0,
                 },
@@ -155,7 +154,7 @@ fn handle_mouse_input(
     window_query: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     grabbed_character: Option<Res<GrabbedCharacter>>,
-    mut input_events: EventReader<MouseButtonInput>,
+    mut input_events: MessageReader<MouseButtonInput>,
     mut spine_query: Query<&mut Spine>,
     collider_query: Query<
         (&SpineEntity, &Collider2d, &GlobalTransform, &ColliderType),
@@ -222,7 +221,7 @@ fn update_grabbed_character_timer(
 }
 
 fn update_spine_animation(
-    mut spine_events: EventReader<SpineEvent>,
+    mut spine_events: MessageReader<SpineEvent>,
     mut spine_query: Query<(&mut Spine, &Character), With<TitleLevelEntity>>,
 ) {
     for event in spine_events.read() {

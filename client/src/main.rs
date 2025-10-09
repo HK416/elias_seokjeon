@@ -22,7 +22,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Elias: Seokjeon".into(),
-                        resolution: (1920.0, 1080.0).into(),
+                        resolution: (1920, 1080).into(),
                         resizable: true,
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,

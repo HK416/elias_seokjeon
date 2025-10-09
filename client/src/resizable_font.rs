@@ -42,7 +42,7 @@ fn setup_font_size(
 }
 
 fn update_font_size(
-    mut reader: EventReader<WindowResized>,
+    mut reader: MessageReader<WindowResized>,
     mut query: Query<(&mut TextFont, &ResizableFont)>,
 ) {
     for event in reader.read() {

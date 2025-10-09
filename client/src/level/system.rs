@@ -41,8 +41,8 @@ pub fn setup_loading_screen(mut commands: Commands, asset_server: Res<AssetServe
                     let font = asset_server.load(FONT_PATH);
                     parent.spawn((
                         Text::new("Now Loading..."),
-                        TextFont::from_font(font).with_font_size(24.0),
-                        TextLayout::new_with_justify(JustifyText::Center),
+                        TextFont::from(font).with_font_size(24.0),
+                        TextLayout::new_with_justify(Justify::Center),
                         TextColor::WHITE,
                         ResizableFont::vertical(1280.0, 24.0),
                         Node {
@@ -65,7 +65,7 @@ pub fn setup_loading_screen(mut commands: Commands, asset_server: Res<AssetServe
                         border: UiRect::all(Val::Percent(0.25)),
                         ..Default::default()
                     },
-                    BorderColor(Color::WHITE),
+                    BorderColor::all(Color::WHITE),
                     BorderRadius::all(Val::Percent(50.0)),
                 ))
                 .with_children(|parent| {

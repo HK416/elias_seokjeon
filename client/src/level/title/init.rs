@@ -173,8 +173,8 @@ fn setup_title_interface(
                                     let font = asset_server.load(FONT_PATH);
                                     commands.insert((
                                         Text::new("Game Start"),
-                                        TextFont::from_font(font),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextFont::from(font),
+                                        TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
                                         OriginColor(Color::BLACK),
                                         TranslatableText("game_start".into()),
@@ -217,8 +217,8 @@ fn setup_title_interface(
                                     let font = asset_server.load(FONT_PATH);
                                     commands.insert((
                                         Text::new("Settings"),
-                                        TextFont::from_font(font),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextFont::from(font),
+                                        TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
                                         OriginColor(Color::BLACK),
                                         TranslatableText("game_settings".into()),
@@ -261,8 +261,8 @@ fn setup_title_interface(
                                     let font = asset_server.load(FONT_PATH);
                                     commands.insert((
                                         Text::new("How to play"),
-                                        TextFont::from_font(font),
-                                        TextLayout::new_with_justify(JustifyText::Center),
+                                        TextFont::from(font),
+                                        TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
                                         OriginColor(Color::BLACK),
                                         TranslatableText("how_to_play".into()),
@@ -320,7 +320,7 @@ fn check_loading_progress(
 fn play_animation(
     mut commands: Commands,
     collider_assets: Res<Assets<Collider>>,
-    mut spine_ready_event: EventReader<SpineReadyEvent>,
+    mut spine_ready_event: MessageReader<SpineReadyEvent>,
     mut spine_query: Query<(&mut Spine, &Character, &ColliderHandle)>,
 ) {
     for event in spine_ready_event.read() {

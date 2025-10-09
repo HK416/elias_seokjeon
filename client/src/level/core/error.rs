@@ -85,8 +85,8 @@ fn setup_error_screen(
 
                     parent.spawn((
                         Text::new(message),
-                        TextFont::from_font(font),
-                        TextLayout::new_with_justify(JustifyText::Center),
+                        TextFont::from(font),
+                        TextLayout::new_with_justify(Justify::Center),
                         ResizableFont::vertical(1280.0, 48.0),
                         TextColor::BLACK,
                         Node::default(),

@@ -12,7 +12,7 @@ impl Plugin for InnerPlugin {
         #[cfg(not(feature = "no-debuging-gizmo"))]
         app.add_systems(
             PostUpdate,
-            (handle_collider_gizmo, draw_collider_gizmo).after(TransformSystem::TransformPropagate),
+            (handle_collider_gizmo, draw_collider_gizmo),
         );
     }
 }
