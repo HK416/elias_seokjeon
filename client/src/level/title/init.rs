@@ -329,11 +329,22 @@ fn play_animation(
         info!("Character:{:?}, bones:{:?}", character, event.bones.keys());
 
         let bone_entity = event.bones.get(&collider.ball_bone_name).copied().unwrap();
+        let bone_index = spine
+            .skeleton
+            .bones()
+            .enumerate()
+            .find_map(|(i, b)| (b.data().name() == collider.ball_bone_name).then_some(i))
+            .unwrap();
         commands.spawn((
             collider.ball_collider,
             ColliderType::Ball,
-            SpineEntity(event.entity),
-            SpineBoneEntity(bone_entity),
+            TargetSpine {
+                entity: event.entity,
+            },
+            TargetSpineBone {
+                entity: bone_entity,
+                bone_index,
+            },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
             TitleLevelEntity,
@@ -341,11 +352,22 @@ fn play_animation(
         ));
 
         let bone_entity = event.bones.get(&collider.head_bone_name).copied().unwrap();
+        let bone_index = spine
+            .skeleton
+            .bones()
+            .enumerate()
+            .find_map(|(i, b)| (b.data().name() == collider.head_bone_name).then_some(i))
+            .unwrap();
         commands.entity(bone_entity).insert((
             collider.head_collider,
             ColliderType::Head,
-            SpineEntity(event.entity),
-            SpineBoneEntity(bone_entity),
+            TargetSpine {
+                entity: event.entity,
+            },
+            TargetSpineBone {
+                entity: bone_entity,
+                bone_index,
+            },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
             TitleLevelEntity,
@@ -376,7 +398,7 @@ fn play_animation(
 
         commands
             .entity(event.entity)
-            .insert(SpawnRequest)
+            .insert((CharacterAnimState::Idle, SpawnRequest))
             .remove::<ColliderHandle>();
     }
 }

@@ -118,6 +118,9 @@ pub struct PlayerInfo {
 #[derive(Resource)]
 pub struct GrabbedCharacter {
     pub target: Entity,
+    pub bone_index: usize,
+    pub bone_position: Vec2,
+    pub cursor_delta: Vec2,
     pub duration: f32,
     pub ty: ColliderType,
 }

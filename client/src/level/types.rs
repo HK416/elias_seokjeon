@@ -36,6 +36,17 @@ pub enum Character {
     Kommy,
 }
 
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum CharacterAnimState {
+    Idle,
+    PatIdle,
+    PatEnd,
+    TouchIdle,
+    TouchEnd,
+    SmashEnd1,
+    SmashEnd2,
+}
+
 #[derive(Component, Clone, Copy, PartialEq, Eq)]
 pub enum ColliderType {
     Ball,
@@ -43,7 +54,12 @@ pub enum ColliderType {
 }
 
 #[derive(Component)]
-pub struct SpineEntity(pub Entity);
+pub struct TargetSpine {
+    pub entity: Entity,
+}
 
 #[derive(Component)]
-pub struct SpineBoneEntity(pub Entity);
+pub struct TargetSpineBone {
+    pub entity: Entity,
+    pub bone_index: usize,
+}

@@ -7,8 +7,8 @@ use tokio_tungstenite::{accept_async, tungstenite};
 
 #[tokio::main]
 async fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8889").await.unwrap();
-    println!("WebSocket server listening on ws://127.0.0.1:8889");
+    let listener = TcpListener::bind("0.0.0.0:8889").await.unwrap();
+    println!("WebSocket server listening on ws://0.0.0.0:8889");
 
     while let Ok((stream, addr)) = listener.accept().await {
         tokio::spawn(handle_initial_connection(stream, addr));
