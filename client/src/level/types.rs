@@ -58,8 +58,44 @@ pub struct TargetSpine {
     pub entity: Entity,
 }
 
+impl TargetSpine {
+    pub const fn new(entity: Entity) -> Self {
+        Self { entity }
+    }
+}
+
 #[derive(Component)]
 pub struct TargetSpineBone {
     pub entity: Entity,
-    pub bone_index: usize,
+    pub index: usize,
+}
+
+impl TargetSpineBone {
+    pub const fn new(entity: Entity, index: usize) -> Self {
+        Self { entity, index }
+    }
+}
+
+#[derive(Component)]
+pub struct SpineBoneOriginPosition {
+    pub local: Vec2,
+    pub world: Vec2,
+}
+
+#[derive(Component)]
+pub struct Grabbed {
+    pub elapsed: f32,
+}
+
+impl Default for Grabbed {
+    fn default() -> Self {
+        Self { elapsed: 0.0 }
+    }
+}
+
+#[derive(Component)]
+pub struct BallWaveAnimation {
+    pub elapsed: f32,
+    pub direction: Vec2,
+    pub power: f32,
 }

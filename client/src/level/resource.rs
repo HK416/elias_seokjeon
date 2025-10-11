@@ -2,8 +2,6 @@
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
 use protocol::uuid::Uuid;
 
-use crate::level::types::ColliderType;
-
 pub trait AssetGroup: Resource {
     fn push(&mut self, handle: impl Into<UntypedHandle>);
 
@@ -113,14 +111,4 @@ impl Default for SceneTimer {
 pub struct PlayerInfo {
     pub uuid: Uuid,
     pub username: String,
-}
-
-#[derive(Resource)]
-pub struct GrabbedCharacter {
-    pub target: Entity,
-    pub bone_index: usize,
-    pub bone_position: Vec2,
-    pub cursor_delta: Vec2,
-    pub duration: f32,
-    pub ty: ColliderType,
 }

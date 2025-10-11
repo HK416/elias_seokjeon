@@ -329,21 +329,20 @@ fn play_animation(
         info!("Character:{:?}, bones:{:?}", character, event.bones.keys());
 
         let bone_entity = event.bones.get(&collider.ball_bone_name).copied().unwrap();
-        let bone_index = spine
+        let (bone, bone_index) = spine
             .skeleton
             .bones()
             .enumerate()
-            .find_map(|(i, b)| (b.data().name() == collider.ball_bone_name).then_some(i))
+            .find_map(|(i, b)| (b.data().name() == collider.ball_bone_name).then_some((b, i)))
             .unwrap();
         commands.spawn((
             collider.ball_collider,
             ColliderType::Ball,
-            TargetSpine {
-                entity: event.entity,
-            },
-            TargetSpineBone {
-                entity: bone_entity,
-                bone_index,
+            TargetSpine::new(event.entity),
+            TargetSpineBone::new(bone_entity, bone_index),
+            SpineBoneOriginPosition {
+                local: bone.position().into(),
+                world: bone.world_position().into(),
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
@@ -352,21 +351,20 @@ fn play_animation(
         ));
 
         let bone_entity = event.bones.get(&collider.head_bone_name).copied().unwrap();
-        let bone_index = spine
+        let (bone, bone_index) = spine
             .skeleton
             .bones()
             .enumerate()
-            .find_map(|(i, b)| (b.data().name() == collider.head_bone_name).then_some(i))
+            .find_map(|(i, b)| (b.data().name() == collider.head_bone_name).then_some((b, i)))
             .unwrap();
         commands.entity(bone_entity).insert((
             collider.head_collider,
             ColliderType::Head,
-            TargetSpine {
-                entity: event.entity,
-            },
-            TargetSpineBone {
-                entity: bone_entity,
-                bone_index,
+            TargetSpine::new(event.entity),
+            TargetSpineBone::new(bone_entity, bone_index),
+            SpineBoneOriginPosition {
+                local: bone.position().into(),
+                world: bone.world_position().into(),
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,

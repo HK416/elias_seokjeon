@@ -10,10 +10,6 @@ use bevy_spine::{SkeletonController, Spine, SpineEvent, SpineReadyEvent};
 
 use super::*;
 
-// --- CONSTANTS ---
-const RANGE: f32 = 30.0;
-const THRESHOLD: f32 = 0.25;
-
 // --- PLUGIN ---
 
 pub struct InnerPlugin;
@@ -34,31 +30,24 @@ impl Plugin for InnerPlugin {
             .add_systems(OnExit(LevelStates::InTitle), hide_interface)
             .add_systems(
                 PreUpdate,
-                (
-                    handle_button_interaction,
-                    handle_mouse_input,
-                    handle_cursor_moved.run_if(resource_exists::<GrabbedCharacter>),
-                )
+                (handle_button_interaction, handle_mouse_input)
                     .run_if(in_state(LevelStates::InTitle)),
             )
             .add_systems(
                 Update,
                 (
-                    (
-                        update_grabbed_character_timer,
-                        update_grabbed_spine_animation,
-                    )
-                        .run_if(resource_exists::<GrabbedCharacter>),
+                    update_grabbed_timer,
+                    update_wave_animation,
+                    added_grabbed_component,
+                    removed_grabbed_component,
                     handle_spine_animation_completed,
+                    update_spine_bone_position,
                 )
                     .run_if(in_state(LevelStates::InTitle)),
             )
             .add_systems(
                 PostUpdate,
-                (
-                    update_collider_transform.after(TransformSystems::Propagate),
-                    update_grabbed_spine_position.run_if(resource_exists::<GrabbedCharacter>),
-                )
+                (update_collider_transform.after(TransformSystems::Propagate),)
                     .run_if(in_state(LevelStates::InTitle)),
             );
     }
@@ -164,117 +153,39 @@ fn handle_button_interaction(
     }
 }
 
-fn handle_cursor_moved(
-    mut grabbed_character: ResMut<GrabbedCharacter>,
-    mut cursor_moved_reader: MessageReader<CursorMoved>,
-) {
-    for event in cursor_moved_reader.read() {
-        if let Some(delta) = event.delta {
-            grabbed_character.cursor_delta -= delta;
-        }
-    }
-}
-
-#[allow(clippy::type_complexity)]
 fn handle_mouse_input(
     mut commands: Commands,
-    window_query: Query<&Window>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-    grabbed_character: Option<Res<GrabbedCharacter>>,
-    mut input_events: MessageReader<MouseButtonInput>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
-    collider_query: Query<
-        (
-            &TargetSpine,
-            &TargetSpineBone,
-            &Collider2d,
-            &GlobalTransform,
-            &ColliderType,
-        ),
-        With<TitleLevelEntity>,
-    >,
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut button_inputs: MessageReader<MouseButtonInput>,
+    collider_query: Query<(Entity, &Collider2d, &GlobalTransform)>,
+    grabbed_query: Query<Entity, With<Grabbed>>,
 ) {
-    let Ok((camera, camera_transform)) = camera_query.single() else {
+    let Ok(window) = windows.single() else { return };
+    let Ok((camera, camera_transform)) = cameras.single() else {
         return;
     };
 
-    for event in input_events.read() {
+    for event in button_inputs.read() {
         match (event.button, event.state) {
             (MouseButton::Left, ButtonState::Pressed) => {
-                let Ok(window) = window_query.get(event.window) else {
-                    return;
-                };
-                let Some(point) = window.cursor_position() else {
-                    return;
-                };
-
-                let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, point) else {
-                    return;
-                };
-
-                for (target_spine, target_spine_bone, collider, transform, &ty) in
-                    collider_query.iter()
+                if grabbed_query.is_empty()
+                    && let Some(cursor_viewport_position) = window.cursor_position()
+                    && let Ok(point) =
+                        camera.viewport_to_world_2d(camera_transform, cursor_viewport_position)
                 {
-                    if Collider2d::contains((collider, transform), world_pos) {
-                        info!("Grabbed Character: {:?}", target_spine.entity);
-                        let (mut spine, ..) = spine_query.get_mut(target_spine.entity).unwrap();
-                        let bone = spine
-                            .skeleton
-                            .bone_at_index_mut(target_spine_bone.bone_index)
-                            .unwrap();
-
-                        commands.insert_resource(GrabbedCharacter {
-                            target: target_spine.entity,
-                            bone_index: target_spine_bone.bone_index,
-                            bone_position: bone.position().into(),
-                            cursor_delta: Vec2::ZERO,
-                            duration: 0.0,
-                            ty,
-                        });
-
-                        match ty {
-                            ColliderType::Ball => {
-                                if let Ok((mut spine, character, mut anim_state)) =
-                                    spine_query.get_mut(target_spine.entity)
-                                {
-                                    *anim_state = CharacterAnimState::TouchIdle;
-                                    play_character_animation(&mut spine, *character, *anim_state);
-                                }
-                            }
-                            _ => { /* empty */ }
+                    for (entity, collider, transform) in collider_query.iter() {
+                        if Collider2d::contains((collider, transform), point) {
+                            commands.entity(entity).insert(Grabbed::default());
+                            break;
                         }
-
-                        break;
                     }
                 }
             }
             (MouseButton::Left, ButtonState::Released) => {
-                if let Some(grabbed_character) = &grabbed_character
-                    && let Ok((mut spine, character, mut anim_state)) =
-                        spine_query.get_mut(grabbed_character.target)
-                {
-                    let mut bone = spine
-                        .skeleton
-                        .bone_at_index_mut(grabbed_character.bone_index)
-                        .unwrap();
-                    bone.set_position(grabbed_character.bone_position);
-                    spine.skeleton.update_world_transform();
-
-                    *anim_state = match grabbed_character.ty {
-                        ColliderType::Ball => CharacterAnimState::TouchEnd,
-                        ColliderType::Head => {
-                            if grabbed_character.duration <= THRESHOLD {
-                                CharacterAnimState::SmashEnd1
-                            } else {
-                                CharacterAnimState::PatEnd
-                            }
-                        }
-                    };
-
-                    play_character_animation(&mut spine, *character, *anim_state);
+                if let Ok(entity) = grabbed_query.single() {
+                    commands.entity(entity).remove::<Grabbed>();
                 }
-
-                commands.remove_resource::<GrabbedCharacter>();
             }
             _ => { /* empty */ }
         }
@@ -283,50 +194,145 @@ fn handle_mouse_input(
 
 // --- UPDATE SYSTEMS ---
 
-fn update_grabbed_character_timer(
-    mut grabbed_character: ResMut<GrabbedCharacter>,
+fn update_grabbed_timer(
+    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    mut grabbed_query: Query<(&TargetSpine, &ColliderType, &mut Grabbed)>,
     time: Res<Time>,
 ) {
-    grabbed_character.duration += time.delta_secs();
+    for (target_spine, ty, mut grabbed) in grabbed_query.iter_mut() {
+        grabbed.elapsed += time.delta_secs();
+        if matches!(ty, ColliderType::Head)
+            && grabbed.elapsed > GRABBED_TIME_THRESHOLD
+            && let Ok((mut spine, character, mut anim_state)) =
+                spine_query.get_mut(target_spine.entity)
+            && !matches!(*anim_state, CharacterAnimState::PatIdle)
+        {
+            *anim_state = CharacterAnimState::PatIdle;
+            play_character_animation(&mut spine, *character, *anim_state);
+        }
+    }
 }
 
-fn update_grabbed_spine_animation(
-    window_query: Query<&Window>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-    grabbed_character: Res<GrabbedCharacter>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+#[allow(clippy::type_complexity)]
+fn update_wave_animation(
+    mut commands: Commands,
+    mut spine_query: Query<(&mut Spine, &CharacterAnimState)>,
+    mut wave_anim_query: Query<(
+        Entity,
+        &TargetSpine,
+        &TargetSpineBone,
+        &SpineBoneOriginPosition,
+        &mut BallWaveAnimation,
+    )>,
+    time: Res<Time>,
 ) {
-    if let Ok((mut spine, character, mut anim_state)) =
-        spine_query.get_mut(grabbed_character.target)
+    for (entity, target_spine, target_spine_bone, origin_position, mut wave_anim) in
+        wave_anim_query.iter_mut()
     {
-        match grabbed_character.ty {
-            ColliderType::Ball => {
-                let Ok(window) = window_query.single() else {
-                    return;
-                };
-                let Ok((camera, camera_transform)) = camera_query.single() else {
-                    return;
-                };
-                let Some(point) = window.cursor_position() else {
-                    return;
-                };
+        wave_anim.elapsed += time.delta_secs();
+        let t = (wave_anim.elapsed / BALL_WAVE_DURATION).min(1.0);
+        let delta = normalized_wave(t, 0.5, 1.0, 5.0, PI);
 
-                let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, point) else {
-                    return;
-                };
-
-                let mut bone = spine
-                    .skeleton
-                    .bone_at_index_mut(grabbed_character.bone_index)
-                    .unwrap();
-                bone.set_applied_position(world_pos);
+        if let Ok((mut spine, anim_state)) = spine_query.get_mut(target_spine.entity)
+            && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
+        {
+            if matches!(*anim_state, CharacterAnimState::TouchIdle) {
+                bone.set_position(origin_position.local);
+                spine.skeleton.update_world_transform();
+                commands.entity(entity).remove::<BallWaveAnimation>();
+                continue;
             }
-            ColliderType::Head => {
-                if grabbed_character.duration > THRESHOLD
-                    && !matches!(*anim_state, CharacterAnimState::PatIdle)
-                {
-                    *anim_state = CharacterAnimState::PatIdle;
+
+            bone.set_position(
+                origin_position.local + wave_anim.direction.yx() * delta * wave_anim.power,
+            );
+            spine.skeleton.update_world_transform();
+        }
+
+        if wave_anim.elapsed > BALL_WAVE_DURATION {
+            commands.entity(entity).remove::<BallWaveAnimation>();
+        }
+    }
+}
+
+fn added_grabbed_component(
+    bone_query: Query<&GlobalTransform>,
+    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    mut grabbed_query: Query<
+        (
+            &TargetSpine,
+            &TargetSpineBone,
+            &ColliderType,
+            &mut SpineBoneOriginPosition,
+        ),
+        Added<Grabbed>,
+    >,
+) {
+    for (target_spine, target_spine_bone, ty, mut origin_position) in grabbed_query.iter_mut() {
+        if let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(target_spine.entity)
+            && let Ok(transform) = bone_query.get(target_spine_bone.entity)
+        {
+            match ty {
+                ColliderType::Ball => {
+                    origin_position.world = transform.translation().xy();
+                    *anim_state = CharacterAnimState::TouchIdle;
                     play_character_animation(&mut spine, *character, *anim_state);
+                }
+                _ => { /* empty */ }
+            };
+        }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+fn removed_grabbed_component(
+    mut commands: Commands,
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut entities: RemovedComponents<Grabbed>,
+    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    grabbed_query: Query<(Entity, &TargetSpine, &TargetSpineBone, &ColliderType)>,
+) {
+    let Ok(window) = windows.single() else { return };
+    let Ok((camera, camera_transform)) = cameras.single() else {
+        return;
+    };
+
+    for entity in entities.read() {
+        if let Ok((entity, target_spine, target_spine_bone, ty)) = grabbed_query.get(entity)
+            && let Ok((mut spine, character, mut anim_state)) =
+                spine_query.get_mut(target_spine.entity)
+        {
+            match ty {
+                ColliderType::Ball => {
+                    *anim_state = CharacterAnimState::TouchEnd;
+                    play_character_animation(&mut spine, *character, *anim_state);
+
+                    if let Some(cursor_viewport_position) = window.cursor_position()
+                        && let Ok(point) =
+                            camera.viewport_to_world_2d(camera_transform, cursor_viewport_position)
+                        && let Some(bone) = spine.skeleton.bone_at_index(target_spine_bone.index)
+                    {
+                        let w_bone_position: Vec2 = bone.world_position().into();
+                        let distance = point - w_bone_position;
+                        let length = distance.length();
+                        if length > f32::EPSILON {
+                            commands.entity(entity).insert(BallWaveAnimation {
+                                elapsed: 0.0,
+                                direction: distance / length,
+                                power: length.min(BALL_MOVE_RANGE * 0.5),
+                            });
+                        }
+                    }
+                }
+                ColliderType::Head => {
+                    if matches!(*anim_state, CharacterAnimState::PatIdle) {
+                        *anim_state = CharacterAnimState::PatEnd;
+                        play_character_animation(&mut spine, *character, *anim_state);
+                    } else {
+                        *anim_state = CharacterAnimState::SmashEnd1;
+                        play_character_animation(&mut spine, *character, *anim_state);
+                    }
                 }
             }
         }
@@ -335,29 +341,69 @@ fn update_grabbed_spine_animation(
 
 fn handle_spine_animation_completed(
     mut spine_events: MessageReader<SpineEvent>,
-    mut spine_query: Query<
-        (&mut Spine, &Character, &mut CharacterAnimState),
-        With<TitleLevelEntity>,
-    >,
+    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
 ) {
     for event in spine_events.read() {
-        let SpineEvent::Complete { entity, .. } = event else {
-            continue;
-        };
+        if let SpineEvent::Complete { entity, animation } = event
+            && let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(*entity)
+            && let Some(track) = spine.animation_state.get_current(0)
+        {
+            if track.animation().name() != animation {
+                continue;
+            }
 
-        let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(*entity) else {
-            continue;
-        };
+            *anim_state = match *anim_state {
+                CharacterAnimState::PatEnd
+                | CharacterAnimState::TouchEnd
+                | CharacterAnimState::SmashEnd2 => CharacterAnimState::Idle,
+                CharacterAnimState::SmashEnd1 => CharacterAnimState::SmashEnd2,
+                _ => continue,
+            };
+            play_character_animation(&mut spine, *character, *anim_state);
+        }
+    }
+}
 
-        *anim_state = match *anim_state {
-            CharacterAnimState::PatEnd
-            | CharacterAnimState::TouchEnd
-            | CharacterAnimState::SmashEnd2 => CharacterAnimState::Idle,
-            CharacterAnimState::SmashEnd1 => CharacterAnimState::SmashEnd2,
-            _ => continue,
-        };
+fn update_spine_bone_position(
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut spine_query: Query<(&mut Spine, &GlobalTransform)>,
+    mut grabbed_query: Query<
+        (
+            &TargetSpine,
+            &TargetSpineBone,
+            &SpineBoneOriginPosition,
+            &ColliderType,
+        ),
+        With<Grabbed>,
+    >,
+) {
+    let Ok(window) = windows.single() else { return };
+    let Ok((camera, camera_transform)) = cameras.single() else {
+        return;
+    };
 
-        play_character_animation(&mut spine, *character, *anim_state);
+    for (target_spine, target_spine_bone, origin_position, ty) in grabbed_query.iter_mut() {
+        if matches!(ty, ColliderType::Ball)
+            && let Ok((mut spine, transform)) = spine_query.get_mut(target_spine.entity)
+            && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
+            && let Some(cursor_viewport_position) = window.cursor_position()
+            && let Ok(point) =
+                camera.viewport_to_world_2d(camera_transform, cursor_viewport_position)
+        {
+            let w_bone_position = origin_position.world;
+            let distance = point - w_bone_position;
+            let length = distance.length();
+            let offset = vec2(1.0, -transform.scale().x);
+            if length > f32::EPSILON {
+                bone.set_position(
+                    origin_position.local
+                        + distance.yx() * offset / length * length.min(BALL_MOVE_RANGE),
+                );
+            } else {
+                bone.set_position(w_bone_position);
+            }
+        }
     }
 }
 
@@ -372,33 +418,6 @@ fn update_collider_transform(
         transform.translation = bone_transform.translation();
         transform.rotation = bone_transform.rotation();
         transform.scale = bone_transform.scale();
-    }
-}
-
-fn update_grabbed_spine_position(
-    grabbed_character: Res<GrabbedCharacter>,
-    mut spine_query: Query<(&mut Spine, &GlobalTransform)>,
-) {
-    if let Ok((mut spine, transform)) = spine_query.get_mut(grabbed_character.target) {
-        match grabbed_character.ty {
-            ColliderType::Ball => {
-                let mut bone = spine
-                    .skeleton
-                    .bone_at_index_mut(grabbed_character.bone_index)
-                    .unwrap();
-
-                let length = grabbed_character.cursor_delta.length();
-                let mut delta = grabbed_character.cursor_delta;
-                if length > RANGE {
-                    delta = delta / length * RANGE;
-                }
-                bone.set_position(
-                    grabbed_character.bone_position + delta.yx() * transform.scale().zx(),
-                );
-                spine.skeleton.update_world_transform();
-            }
-            _ => { /* empty */ }
-        }
     }
 }
 
@@ -426,4 +445,8 @@ fn play_character_animation(
         .animation_state
         .set_animation_by_name(0, animation_name, looping)
         .unwrap();
+}
+
+pub fn normalized_wave(t: f32, a: f32, k: f32, omega: f32, phi: f32) -> f32 {
+    a * (1.0 - t).powf(k) * (omega * t * TAU + phi).sin()
 }
