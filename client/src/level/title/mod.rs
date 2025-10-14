@@ -8,6 +8,9 @@ use bevy::{
 };
 use bevy_spine::{SkeletonController, Spine, SpineEvent, SpineReadyEvent};
 
+#[cfg(target_arch = "wasm32")]
+use protocol::uuid::Uuid;
+
 use super::*;
 
 // --- PLUGIN ---
@@ -30,7 +33,13 @@ impl Plugin for InnerPlugin {
             .add_systems(OnExit(LevelStates::InTitle), hide_interface)
             .add_systems(
                 PreUpdate,
-                (handle_button_interaction, handle_mouse_input)
+                (
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        handle_button_interaction
+                    },
+                    handle_mouse_input,
+                )
                     .run_if(in_state(LevelStates::InTitle)),
             )
             .add_systems(
@@ -42,6 +51,10 @@ impl Plugin for InnerPlugin {
                     removed_grabbed_component,
                     handle_spine_animation_completed,
                     update_spine_bone_position,
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        packet_receive_loop
+                    },
                 )
                     .run_if(in_state(LevelStates::InTitle)),
             )
@@ -111,43 +124,35 @@ fn hide_interface(mut query: Query<(&mut Visibility, &UI)>) {
 
 // --- PREUPDATE SYSTEMS ---
 
+#[cfg(target_arch = "wasm32")]
 #[allow(unreachable_patterns)]
 #[allow(clippy::type_complexity)]
 fn handle_button_interaction(
+    network: Res<Network>,
+    player_info: Res<PlayerInfo>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor)>,
-    mut interaction_query: Query<(Entity, &UI, &Interaction), (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<
+        (Entity, &UI, &Interaction),
+        (Changed<Interaction>, With<TitleLevelEntity>, With<Button>),
+    >,
 ) {
     for (entity, ui, interaction) in interaction_query.iter_mut() {
-        match ui {
-            UI::InTitleGameStartButton => {
-                update_button_visual(
-                    entity,
-                    interaction,
-                    &children_query,
-                    &mut text_color_query,
-                    &mut button_color_query,
-                );
+        update_button_visual(
+            entity,
+            interaction,
+            &children_query,
+            &mut text_color_query,
+            &mut button_color_query,
+        );
+
+        match (ui, interaction) {
+            (UI::InTitleGameStartButton, Interaction::Pressed) => {
+                send_enter_game_message(&network, player_info.uuid);
             }
-            UI::InTitleOptionButton => {
-                update_button_visual(
-                    entity,
-                    interaction,
-                    &children_query,
-                    &mut text_color_query,
-                    &mut button_color_query,
-                );
-            }
-            UI::InTitleHowToPlayButton => {
-                update_button_visual(
-                    entity,
-                    interaction,
-                    &children_query,
-                    &mut text_color_query,
-                    &mut button_color_query,
-                );
-            }
+            (UI::InTitleOptionButton, Interaction::Pressed) => {}
+            (UI::InTitleHowToPlayButton, Interaction::Pressed) => {}
             _ => { /* empty */ }
         }
     }
@@ -407,6 +412,20 @@ fn update_spine_bone_position(
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+fn packet_receive_loop(network: Res<Network>) {
+    use protocol::{EnterGameMessage, Header};
+    for msg in network.try_iter() {
+        match msg.header {
+            Header::EnterGame => {
+                let message = serde_json::from_str::<EnterGameMessage>(&msg.json).unwrap();
+                info!("Received packet! {:?}", &message);
+            }
+            _ => { /* empty */ }
+        }
+    }
+}
+
 // --- POSTUPDATE SYSTEMS ---
 
 fn update_collider_transform(
@@ -449,4 +468,14 @@ fn play_character_animation(
 
 pub fn normalized_wave(t: f32, a: f32, k: f32, omega: f32, phi: f32) -> f32 {
     a * (1.0 - t).powf(k) * (omega * t * TAU + phi).sin()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn send_enter_game_message(network: &Network, uuid: Uuid) {
+    use protocol::{EnterGameMessage, Header, Message};
+    let message = Message {
+        header: Header::EnterGame,
+        json: serde_json::to_string(&EnterGameMessage { uuid }).unwrap(),
+    };
+    network.send(&message).unwrap();
 }

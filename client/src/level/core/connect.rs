@@ -87,7 +87,7 @@ fn connect_game_server(
     socket.set_onmessage(Some(closure.as_ref().unchecked_ref()));
     closure.forget();
 
-    commands.insert_resource(Network { socket, receiver });
+    commands.insert_resource(Network::new(socket, receiver));
 }
 
 // --- UPDATE SYSTEMS ---
@@ -105,6 +105,7 @@ fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
                         username: connection.username,
                     });
                 }
+                _ => { /* empty */ }
             }
         }
     }

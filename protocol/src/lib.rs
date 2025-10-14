@@ -8,6 +8,7 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize, Serialize)]
 pub enum Header {
     Connection,
+    EnterGame,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -16,8 +17,13 @@ pub struct Message {
     pub json: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ConnectionMessage {
     pub uuid: Uuid,
     pub username: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EnterGameMessage {
+    pub uuid: Uuid,
 }
