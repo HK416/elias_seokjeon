@@ -2,6 +2,8 @@
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
 use protocol::uuid::Uuid;
 
+use super::*;
+
 pub trait AssetGroup: Resource {
     fn push(&mut self, handle: impl Into<UntypedHandle>);
 
@@ -111,4 +113,23 @@ impl Default for SceneTimer {
 pub struct PlayerInfo {
     pub uuid: Uuid,
     pub username: String,
+}
+
+#[derive(Default, Resource)]
+pub struct SelectedSliderCursor(Option<(UI, Entity, u64)>);
+
+impl SelectedSliderCursor {
+    pub fn take(&mut self) -> Option<(UI, Entity, u64)> {
+        self.0.take()
+    }
+
+    pub fn get(&self) -> Option<(UI, Entity, u64)> {
+        self.0
+    }
+
+    pub fn set(&mut self, ui: UI, entity: Entity, id: u64) {
+        if self.0.is_none() {
+            self.0 = Some((ui, entity, id))
+        }
+    }
 }

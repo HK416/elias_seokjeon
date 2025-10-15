@@ -60,7 +60,7 @@ impl OriginColor {
     }
 }
 
-#[derive(Component, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub enum UI {
     BackgroundVolumeSlider,
