@@ -1,5 +1,6 @@
 mod core;
 mod in_game;
+mod option;
 mod title;
 
 mod constants;
@@ -27,6 +28,7 @@ impl Plugin for InnerPlugin {
         app.init_state::<LevelStates>()
             .add_plugins(core::InnerPlugin)
             .add_plugins(in_game::InnerPlugin)
+            .add_plugins(option::InnerPlugin)
             .add_plugins(title::InnerPlugin);
     }
 }
@@ -39,6 +41,9 @@ pub enum LevelStates {
     #[default]
     Setup,
     Connect,
+
+    InitOption,
+    InOption,
 
     LoadTitle,
     InitTitle,

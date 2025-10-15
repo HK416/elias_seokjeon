@@ -14,20 +14,72 @@ pub struct LoadingBar;
 pub struct SpawnRequest;
 
 #[derive(Component)]
+pub struct OptionLevelRoot;
+
+#[derive(Component)]
+pub struct OptionLevelEntity;
+
+#[derive(Component)]
 pub struct TitleLevelRoot;
 
 #[derive(Component)]
 pub struct TitleLevelEntity;
 
 #[derive(Component)]
-pub struct OriginColor(pub Color);
+pub struct OriginColor {
+    pub none: Color,
+    pub hovered: Color,
+    pub pressed: Color,
+}
+
+impl OriginColor {
+    pub fn new(none: Color) -> Self {
+        Self {
+            none,
+            hovered: none.darker(0.15),
+            pressed: none.darker(0.3),
+        }
+    }
+
+    pub fn fill(none: Color) -> Self {
+        Self {
+            none,
+            hovered: none,
+            pressed: none,
+        }
+    }
+
+    pub fn with_hovered(mut self, hovered: Color) -> Self {
+        self.hovered = hovered;
+        self
+    }
+
+    pub fn with_pressed(mut self, pressed: Color) -> Self {
+        self.pressed = pressed;
+        self
+    }
+}
 
 #[derive(Component, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub enum UI {
+    BackgroundVolumeSlider,
+    BackgroundVolume,
+    EffectVolumeSlider,
+    EffectVolume,
+    VoiceVolumeSlider,
+    VoiceVolume,
+
+    LocaleButtonEn,
+    LocaleButtonJa,
+    LocaleButtonKo,
+
     InTitleGameStartButton,
     InTitleOptionButton,
     InTitleHowToPlayButton,
+
+    InOptionModal,
+    InOptionExitButton,
 }
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]

@@ -15,13 +15,13 @@ impl Plugin for InnerPlugin {
         app.add_systems(OnEnter(LevelStates::InitTitle), (debug_label, setup_title))
             .add_systems(
                 OnExit(LevelStates::InitTitle),
-                (remove_resource, cleanup_loading_screen),
+                (cleanup_loading_resource, cleanup_loading_screen),
             )
             .add_systems(
                 Update,
                 (
-                    observe_entity_creation,
                     update_entity_spawn_progress,
+                    observe_entity_creation,
                     check_loading_progress,
                     play_animation,
                 )
@@ -160,8 +160,13 @@ fn setup_title_interface(
                             create_button(
                                 loading_entities,
                                 parent,
-                                BTN_BG_BORDER_COLOR,
-                                BTN_BG_COLOR,
+                                ASPECT_RATIO,
+                                0.26,
+                                0.128,
+                                BORDER_GREEN_COLOR_0,
+                                BG_GREEN_COLOR_0,
+                                None,
+                                None,
                                 BoxShadow::new(
                                     Color::BLACK.with_alpha(0.8),
                                     Val::Percent(2.0),
@@ -176,7 +181,7 @@ fn setup_title_interface(
                                         TextFont::from(font),
                                         TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
-                                        OriginColor(Color::BLACK),
+                                        OriginColor::fill(Color::BLACK),
                                         TranslatableText("game_start".into()),
                                         ResizableFont::vertical(1280.0, 52.0),
                                     ));
@@ -204,8 +209,13 @@ fn setup_title_interface(
                             create_button(
                                 loading_entities,
                                 parent,
-                                BTN_BG_BORDER_COLOR,
-                                BTN_BG_COLOR,
+                                ASPECT_RATIO,
+                                0.26,
+                                0.128,
+                                BORDER_GREEN_COLOR_0,
+                                BG_GREEN_COLOR_0,
+                                None,
+                                None,
                                 BoxShadow::new(
                                     Color::BLACK.with_alpha(0.8),
                                     Val::Percent(2.0),
@@ -220,7 +230,7 @@ fn setup_title_interface(
                                         TextFont::from(font),
                                         TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
-                                        OriginColor(Color::BLACK),
+                                        OriginColor::fill(Color::BLACK),
                                         TranslatableText("game_settings".into()),
                                         ResizableFont::vertical(1280.0, 52.0),
                                     ));
@@ -248,8 +258,13 @@ fn setup_title_interface(
                             create_button(
                                 loading_entities,
                                 parent,
-                                BTN_BG_BORDER_COLOR,
-                                BTN_BG_COLOR,
+                                ASPECT_RATIO,
+                                0.26,
+                                0.128,
+                                BORDER_GREEN_COLOR_0,
+                                BG_GREEN_COLOR_0,
+                                None,
+                                None,
                                 BoxShadow::new(
                                     Color::BLACK.with_alpha(0.8),
                                     Val::Percent(2.0),
@@ -264,7 +279,7 @@ fn setup_title_interface(
                                         TextFont::from(font),
                                         TextLayout::new_with_justify(Justify::Center),
                                         TextColor::BLACK,
-                                        OriginColor(Color::BLACK),
+                                        OriginColor::fill(Color::BLACK),
                                         TranslatableText("how_to_play".into()),
                                         ResizableFont::vertical(1280.0, 52.0),
                                     ));
@@ -279,12 +294,6 @@ fn setup_title_interface(
         })
         .id();
     loading_entities.insert(entity);
-}
-
-// --- CLEANUP SYSTEMS ---
-
-fn remove_resource(mut commands: Commands) {
-    commands.remove_resource::<LoadingEntities>();
 }
 
 // --- UPDATE SYSTEMS ---

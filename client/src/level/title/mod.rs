@@ -6,7 +6,7 @@ use bevy::{
     input::{ButtonState, mouse::MouseButtonInput},
     prelude::*,
 };
-use bevy_spine::{SkeletonController, Spine, SpineEvent, SpineReadyEvent};
+use bevy_spine::{SkeletonController, Spine, SpineReadyEvent};
 
 #[cfg(target_arch = "wasm32")]
 use protocol::uuid::Uuid;
@@ -33,13 +33,7 @@ impl Plugin for InnerPlugin {
             .add_systems(OnExit(LevelStates::InTitle), hide_interface)
             .add_systems(
                 PreUpdate,
-                (
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        handle_button_interaction
-                    },
-                    handle_mouse_input,
-                )
+                (handle_button_interaction, handle_mouse_input)
                     .run_if(in_state(LevelStates::InTitle)),
             )
             .add_systems(
@@ -79,14 +73,9 @@ fn show_entities(mut query: Query<&mut Visibility, (With<TitleLevelRoot>, Withou
 }
 
 #[allow(unreachable_patterns)]
-fn show_interface(mut query: Query<(&mut Visibility, &UI)>) {
-    for (mut visibility, ui) in query.iter_mut() {
-        match ui {
-            UI::InTitleGameStartButton | UI::InTitleOptionButton | UI::InTitleHowToPlayButton => {
-                *visibility = Visibility::Visible;
-            }
-            _ => { /* empty */ }
-        }
+fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEntity>)>) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Visible;
     }
 }
 
@@ -111,25 +100,20 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
 // --- CLEANUP SYSTEMS ---
 
 #[allow(unreachable_patterns)]
-fn hide_interface(mut query: Query<(&mut Visibility, &UI)>) {
-    for (mut visibility, ui) in query.iter_mut() {
-        match ui {
-            UI::InTitleGameStartButton | UI::InTitleOptionButton | UI::InTitleHowToPlayButton => {
-                *visibility = Visibility::Hidden;
-            }
-            _ => { /* empty */ }
-        }
+fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEntity>)>) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Hidden;
     }
 }
 
 // --- PREUPDATE SYSTEMS ---
 
-#[cfg(target_arch = "wasm32")]
 #[allow(unreachable_patterns)]
 #[allow(clippy::type_complexity)]
 fn handle_button_interaction(
-    network: Res<Network>,
-    player_info: Res<PlayerInfo>,
+    #[cfg(target_arch = "wasm32")] network: Res<Network>,
+    #[cfg(target_arch = "wasm32")] player_info: Res<PlayerInfo>,
+    mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor)>,
@@ -149,9 +133,12 @@ fn handle_button_interaction(
 
         match (ui, interaction) {
             (UI::InTitleGameStartButton, Interaction::Pressed) => {
+                #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network, player_info.uuid);
             }
-            (UI::InTitleOptionButton, Interaction::Pressed) => {}
+            (UI::InTitleOptionButton, Interaction::Pressed) => {
+                next_state.set(LevelStates::InOption);
+            }
             (UI::InTitleHowToPlayButton, Interaction::Pressed) => {}
             _ => { /* empty */ }
         }
@@ -214,48 +201,6 @@ fn update_grabbed_timer(
         {
             *anim_state = CharacterAnimState::PatIdle;
             play_character_animation(&mut spine, *character, *anim_state);
-        }
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn update_wave_animation(
-    mut commands: Commands,
-    mut spine_query: Query<(&mut Spine, &CharacterAnimState)>,
-    mut wave_anim_query: Query<(
-        Entity,
-        &TargetSpine,
-        &TargetSpineBone,
-        &SpineBoneOriginPosition,
-        &mut BallWaveAnimation,
-    )>,
-    time: Res<Time>,
-) {
-    for (entity, target_spine, target_spine_bone, origin_position, mut wave_anim) in
-        wave_anim_query.iter_mut()
-    {
-        wave_anim.elapsed += time.delta_secs();
-        let t = (wave_anim.elapsed / BALL_WAVE_DURATION).min(1.0);
-        let delta = normalized_wave(t, 0.5, 1.0, 5.0, PI);
-
-        if let Ok((mut spine, anim_state)) = spine_query.get_mut(target_spine.entity)
-            && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
-        {
-            if matches!(*anim_state, CharacterAnimState::TouchIdle) {
-                bone.set_position(origin_position.local);
-                spine.skeleton.update_world_transform();
-                commands.entity(entity).remove::<BallWaveAnimation>();
-                continue;
-            }
-
-            bone.set_position(
-                origin_position.local + wave_anim.direction.yx() * delta * wave_anim.power,
-            );
-            spine.skeleton.update_world_transform();
-        }
-
-        if wave_anim.elapsed > BALL_WAVE_DURATION {
-            commands.entity(entity).remove::<BallWaveAnimation>();
         }
     }
 }
@@ -344,31 +289,6 @@ fn removed_grabbed_component(
     }
 }
 
-fn handle_spine_animation_completed(
-    mut spine_events: MessageReader<SpineEvent>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
-) {
-    for event in spine_events.read() {
-        if let SpineEvent::Complete { entity, animation } = event
-            && let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(*entity)
-            && let Some(track) = spine.animation_state.get_current(0)
-        {
-            if track.animation().name() != animation {
-                continue;
-            }
-
-            *anim_state = match *anim_state {
-                CharacterAnimState::PatEnd
-                | CharacterAnimState::TouchEnd
-                | CharacterAnimState::SmashEnd2 => CharacterAnimState::Idle,
-                CharacterAnimState::SmashEnd1 => CharacterAnimState::SmashEnd2,
-                _ => continue,
-            };
-            play_character_animation(&mut spine, *character, *anim_state);
-        }
-    }
-}
-
 fn update_spine_bone_position(
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
@@ -441,34 +361,6 @@ fn update_collider_transform(
 }
 
 // --- UTILITIES ---
-
-fn play_character_animation(
-    spine: &mut Spine,
-    character: Character,
-    anim_state: CharacterAnimState,
-) {
-    let (animation_name, looping) = match anim_state {
-        CharacterAnimState::Idle => match character {
-            Character::Butter => (BUTTER_TITLE_IDLE, true),
-            Character::Kommy => (KOMMY_TITLE_TAUNT, true),
-        },
-        CharacterAnimState::PatIdle => (PAT_IDLE, true),
-        CharacterAnimState::PatEnd => (PAT_END, false),
-        CharacterAnimState::TouchIdle => (TOUCH_IDLE, true),
-        CharacterAnimState::TouchEnd => (TOUCH_END, false),
-        CharacterAnimState::SmashEnd1 => (SMASH_END_1, false),
-        CharacterAnimState::SmashEnd2 => (SMASH_END_2, false),
-    };
-
-    spine
-        .animation_state
-        .set_animation_by_name(0, animation_name, looping)
-        .unwrap();
-}
-
-pub fn normalized_wave(t: f32, a: f32, k: f32, omega: f32, phi: f32) -> f32 {
-    a * (1.0 - t).powf(k) * (omega * t * TAU + phi).sin()
-}
 
 #[cfg(target_arch = "wasm32")]
 fn send_enter_game_message(network: &Network, uuid: Uuid) {

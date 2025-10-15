@@ -123,7 +123,7 @@ fn check_connection_progress(
             player_info.uuid.urn(),
             player_info.username
         );
-        next_state.set(LevelStates::LoadTitle);
+        next_state.set(LevelStates::InitOption);
     }
 }
 
