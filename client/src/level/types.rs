@@ -26,6 +26,12 @@ pub struct TitleLevelRoot;
 pub struct TitleLevelEntity;
 
 #[derive(Component)]
+pub struct MatchingLevelEntity;
+
+#[derive(Component)]
+pub struct MatchingCancelLevelEntity;
+
+#[derive(Component)]
 pub struct OriginColor {
     pub none: Color,
     pub hovered: Color,
@@ -80,6 +86,13 @@ pub enum UI {
 
     InOptionModal,
     InOptionExitButton,
+
+    InMatchingCancelModal,
+    InMatchingCancelYesButton,
+    InMatchingCancelNoButton,
+
+    InMatchingModal,
+    InMatchingCancelButton,
 }
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]

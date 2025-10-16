@@ -66,6 +66,7 @@ fn setup_option_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
+            BackgroundColor(Color::BLACK.with_alpha(0.5)),
             Visibility::Hidden,
             UI::InOptionModal,
             SpawnRequest,
@@ -238,7 +239,7 @@ fn setup_option_interface(
                                 .spawn((
                                     Node {
                                         width: Val::Percent(24.0),
-                                        height: Val::Percent(10.0),
+                                        height: Val::Percent(12.0),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
@@ -508,7 +509,7 @@ fn add_locale_buttons(
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 100.0),
+                        width: Val::Percent(width * 110.0),
                         height: Val::Percent(100.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
@@ -551,7 +552,7 @@ fn add_locale_buttons(
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 100.0),
+                        width: Val::Percent(width * 110.0),
                         height: Val::Percent(100.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
@@ -594,7 +595,7 @@ fn add_locale_buttons(
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 100.0),
+                        width: Val::Percent(width * 110.0),
                         height: Val::Percent(100.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,

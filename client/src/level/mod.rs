@@ -1,5 +1,6 @@
 mod core;
 mod in_game;
+mod matching;
 mod option;
 mod title;
 
@@ -28,6 +29,7 @@ impl Plugin for InnerPlugin {
         app.init_state::<LevelStates>()
             .add_plugins(core::InnerPlugin)
             .add_plugins(in_game::InnerPlugin)
+            .add_plugins(matching::InnerPlugin)
             .add_plugins(option::InnerPlugin)
             .add_plugins(title::InnerPlugin);
     }
@@ -48,6 +50,12 @@ pub enum LevelStates {
     LoadTitle,
     InitTitle,
     InTitle,
+
+    InitMatchingCancel,
+    InMatchingCancel,
+
+    InitMatching,
+    InMatching,
 
     LoadGame,
 }

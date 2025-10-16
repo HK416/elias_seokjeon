@@ -135,6 +135,7 @@ fn handle_button_interaction(
             (UI::InTitleGameStartButton, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network, player_info.uuid);
+                next_state.set(LevelStates::InMatching);
             }
             (UI::InTitleOptionButton, Interaction::Pressed) => {
                 next_state.set(LevelStates::InOption);

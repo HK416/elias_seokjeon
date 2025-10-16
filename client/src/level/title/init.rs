@@ -321,7 +321,7 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::InTitle);
+        next_state.set(LevelStates::InitMatching);
     }
 }
 
