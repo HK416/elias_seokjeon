@@ -45,10 +45,6 @@ impl Plugin for InnerPlugin {
                     removed_grabbed_component,
                     handle_spine_animation_completed,
                     update_spine_bone_position,
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        packet_receive_loop
-                    },
                 )
                     .run_if(in_state(LevelStates::InTitle)),
             )
@@ -333,20 +329,6 @@ fn update_spine_bone_position(
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-fn packet_receive_loop(network: Res<Network>) {
-    use protocol::{EnterGameMessage, Header};
-    for msg in network.try_iter() {
-        match msg.header {
-            Header::EnterGame => {
-                let message = serde_json::from_str::<EnterGameMessage>(&msg.json).unwrap();
-                info!("Received packet! {:?}", &message);
-            }
-            _ => { /* empty */ }
-        }
-    }
-}
-
 // --- POSTUPDATE SYSTEMS ---
 
 fn update_collider_transform(
@@ -365,10 +347,7 @@ fn update_collider_transform(
 
 #[cfg(target_arch = "wasm32")]
 fn send_enter_game_message(network: &Network, uuid: Uuid) {
-    use protocol::{EnterGameMessage, Header, Message};
-    let message = Message {
-        header: Header::EnterGame,
-        json: serde_json::to_string(&EnterGameMessage { uuid }).unwrap(),
-    };
+    use protocol::EnterGamePacket;
+    let message: Packet = EnterGamePacket { uuid }.into();
     network.send(&message).unwrap();
 }

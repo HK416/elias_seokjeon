@@ -51,7 +51,11 @@ fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCanc
 
 // --- PREUPDATE SYSTEMS ---
 
+#[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn handle_button_interaction(
+    #[cfg(target_arch = "wasm32")] network: Res<Network>,
+    #[cfg(target_arch = "wasm32")] player_info: Res<PlayerInfo>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
@@ -72,6 +76,8 @@ fn handle_button_interaction(
 
         match (ui, interaction) {
             (UI::InMatchingCancelYesButton, Interaction::Pressed) => {
+                #[cfg(target_arch = "wasm32")]
+                send_cancel_game_message(&network, player_info.uuid);
                 next_state.set(LevelStates::InTitle);
             }
             (UI::InMatchingCancelNoButton, Interaction::Pressed) => {
@@ -80,4 +86,22 @@ fn handle_button_interaction(
             _ => { /* empty */ }
         }
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn handle_received_packets(network: Res<Network>) {
+    for msg in network.try_iter() {
+        match msg.header {
+            _ => { /* empty */ }
+        }
+    }
+}
+
+// --- UTILITIES ---
+
+#[cfg(target_arch = "wasm32")]
+fn send_cancel_game_message(network: &Network, uuid: Uuid) {
+    use protocol::CancelGamePacket;
+    let message: Packet = CancelGamePacket { uuid }.into();
+    network.send(&message).unwrap();
 }

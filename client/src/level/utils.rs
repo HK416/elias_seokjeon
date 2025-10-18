@@ -38,6 +38,7 @@ pub fn add_horizontal_space(
     loading_entities.insert(entity);
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn create_button<F>(
     loading_entities: &mut LoadingEntities,
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,

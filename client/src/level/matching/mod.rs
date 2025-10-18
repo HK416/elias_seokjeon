@@ -54,6 +54,7 @@ fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLeve
 
 // --- PREUPDATE SYSTEMS ---
 
+#[allow(clippy::type_complexity)]
 fn handle_button_interaction(
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,

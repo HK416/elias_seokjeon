@@ -329,6 +329,7 @@ fn add_modal_title(
     loading_entities.insert(entity);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_volume_controller<LabelFn, VolumeFn>(
     loading_entities: &mut LoadingEntities,
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
@@ -476,6 +477,7 @@ fn add_volume_controller<LabelFn, VolumeFn>(
     loading_entities.insert(entity);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_locale_buttons(
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,

@@ -99,6 +99,7 @@ fn handle_keyboard_inputs(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn handle_button_interaction(
     mut locale: ResMut<Locale>,
     mut next_state: ResMut<NextState<LevelStates>>,
@@ -142,6 +143,7 @@ fn handle_button_interaction(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn handle_slider_pressed(
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
@@ -162,6 +164,7 @@ fn handle_slider_pressed(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn handle_slider_pressed_for_moblie(
     touches: Res<Touches>,
     mut selected: ResMut<SelectedSliderCursor>,

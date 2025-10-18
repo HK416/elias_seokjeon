@@ -73,13 +73,13 @@ fn connect_game_server(
         }
     };
 
-    use protocol::Message;
+    use protocol::Packet;
     let (sender, receiver) = flume::unbounded();
     let closure = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
         if let Ok(text) = e.data().dyn_into::<js_sys::JsString>()
-            && let Ok(msg) = serde_json::from_str::<Message>(&text.as_string().unwrap())
+            && let Ok(msg) = serde_json::from_str::<Packet>(&text.as_string().unwrap())
         {
-            info!("Received message: {:?}", msg);
+            info!("Received packet: {:?}", msg);
             let _ = sender.send(msg);
         }
     });
@@ -94,12 +94,12 @@ fn connect_game_server(
 
 #[cfg(target_arch = "wasm32")]
 fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
-    use protocol::{ConnectionMessage, Header};
+    use protocol::{ConnectionPacket, Header};
     if let Some(network) = network.as_ref() {
         for msg in network.receiver.try_iter() {
             match msg.header {
                 Header::Connection => {
-                    let connection = serde_json::from_str::<ConnectionMessage>(&msg.json).unwrap();
+                    let connection = serde_json::from_str::<ConnectionPacket>(&msg.json).unwrap();
                     commands.insert_resource(PlayerInfo {
                         uuid: connection.uuid,
                         username: connection.username,
