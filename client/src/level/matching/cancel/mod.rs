@@ -83,7 +83,7 @@ fn handle_button_interaction(
         match (ui, interaction) {
             (UI::InMatchingCancelYesButton, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
-                send_cancel_game_message(&network, player_info.uuid);
+                send_cancel_game_message(&network);
                 next_state.set(LevelStates::InTitle);
             }
             (UI::InMatchingCancelNoButton, Interaction::Pressed) => {
@@ -102,7 +102,7 @@ fn handle_received_packets(
 ) {
     for result in network.try_iter() {
         match result {
-            Ok(msg) => match msg.header {
+            Ok(packet) => match packet {
                 _ => { /* empty */ }
             },
             Err(e) => {
@@ -116,8 +116,7 @@ fn handle_received_packets(
 // --- UTILITIES ---
 
 #[cfg(target_arch = "wasm32")]
-fn send_cancel_game_message(network: &Network, uuid: Uuid) {
-    use protocol::CancelGamePacket;
-    let message: Packet = CancelGamePacket { uuid }.into();
-    network.send(&message).unwrap();
+fn send_cancel_game_message(network: &Network) {
+    let packet = Packet::CancelGame;
+    network.send(&packet).unwrap();
 }

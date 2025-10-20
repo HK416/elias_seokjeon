@@ -3,11 +3,11 @@ mod stream;
 use std::{net::SocketAddr, time::Duration};
 
 use futures_util::{SinkExt, StreamExt};
-use protocol::{ConnectionPacket, Header, MatchingStatusPacket, Packet, serde_json, uuid::Uuid};
+use protocol::{Packet, serde_json, uuid::Uuid};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::mpsc::unbounded_channel,
-    time::{Instant, interval, interval_at},
+    time::{Instant, interval_at},
 };
 use tokio_tungstenite::{
     WebSocketStream, accept_async,
@@ -52,11 +52,10 @@ pub async fn handle_initial_connection(
     #[cfg(not(feature = "no-debuging-log"))]
     println!("Current State: Init");
 
-    let packet: Packet = ConnectionPacket {
+    let packet = Packet::Connection {
         uuid: Uuid::new_v4(),
         username: "Test".into(),
-    }
-    .into();
+    };
 
     let s = serde_json::to_string(&packet).unwrap();
     let item = Message::text(s);
@@ -98,8 +97,8 @@ pub async fn handle_title_connection(ws_stream: WebSocketStream<TcpStream>, addr
         if let Message::Text(s) = message
             && let Ok(packet) = serde_json::from_str::<Packet>(&s)
         {
-            match packet.header {
-                Header::EnterGame => {
+            match packet {
+                Packet::EnterGame => {
                     state = State::Matching;
                     break;
                 }
@@ -151,7 +150,7 @@ pub async fn handle_matching_connection(ws_stream: WebSocketStream<TcpStream>, a
         millis = millis.saturating_sub(elapsed as u16);
         println!("millis: {}", millis);
 
-        let packet: Packet = MatchingStatusPacket::new(millis).into();
+        let packet = Packet::MatchingStatus { millis };
         tx.send(serde_json::to_string(&packet).unwrap()).unwrap();
 
         loop {
@@ -161,8 +160,8 @@ pub async fn handle_matching_connection(ws_stream: WebSocketStream<TcpStream>, a
                     if let Message::Text(s) = message
                         && let Ok(packet) = serde_json::from_str::<Packet>(&s)
                     {
-                        match packet.header {
-                            Header::CancelGame => {
+                        match packet {
+                            Packet::CancelGame => {
                                 state = State::Title;
                                 break 'update;
                             }

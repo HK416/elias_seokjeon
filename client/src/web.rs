@@ -1,6 +1,6 @@
 #![cfg(target_arch = "wasm32")]
 pub use bevy::prelude::*;
-pub use protocol::{Header, Packet, uuid::Uuid};
+pub use protocol::Packet;
 pub use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 pub use web_sys::{BinaryType, CloseEvent, ErrorEvent, MessageEvent, Storage, WebSocket, window};
 

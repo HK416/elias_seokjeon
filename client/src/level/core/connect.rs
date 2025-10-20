@@ -74,19 +74,12 @@ fn connect_game_server(
 
 #[cfg(target_arch = "wasm32")]
 fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
-    use protocol::ConnectionPacket;
     if let Some(network) = network.as_ref() {
         for result in network.receiver.try_iter() {
             match result {
-                Ok(msg) => match msg.header {
-                    Header::Connection => {
-                        let result = serde_json::from_str::<ConnectionPacket>(&msg.json);
-                        if let Ok(packet) = result {
-                            commands.insert_resource(PlayerInfo {
-                                uuid: packet.uuid,
-                                username: packet.username,
-                            });
-                        }
+                Ok(packet) => match packet {
+                    Packet::Connection { uuid, username } => {
+                        commands.insert_resource(PlayerInfo { uuid, username });
                     }
                     _ => { /* empty */ }
                 },

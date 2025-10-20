@@ -102,24 +102,20 @@ fn handle_received_packets(
     locale: Res<Locale>,
     network: Res<Network>,
 ) {
-    use protocol::MatchingStatusPacket;
     for result in network.try_iter() {
         match result {
-            Ok(msg) => match msg.header {
-                Header::MatchingStatus => {
-                    let result = serde_json::from_str::<MatchingStatusPacket>(&msg.json);
-                    if let Ok(packet) = result
-                        && let Ok(mut text) = query.single_mut()
-                    {
+            Ok(packet) => match packet {
+                Packet::MatchingStatus { millis } => {
+                    if let Ok(mut text) = query.single_mut() {
                         *text = Text::new(match *locale {
                             Locale::En => {
-                                format!("Remaining time: {}", packet.millis / 1000)
+                                format!("Remaining time: {}", millis / 1000)
                             }
                             Locale::Ja => {
-                                format!("残り時間: {}", packet.millis / 1000)
+                                format!("残り時間: {}", millis / 1000)
                             }
                             Locale::Ko => {
-                                format!("남은 시간: {}", packet.millis / 1000)
+                                format!("남은 시간: {}", millis / 1000)
                             }
                         });
                     }

@@ -8,9 +8,6 @@ use bevy::{
 };
 use bevy_spine::{SkeletonController, Spine, SpineReadyEvent};
 
-#[cfg(target_arch = "wasm32")]
-use protocol::uuid::Uuid;
-
 use super::*;
 
 // --- PLUGIN ---
@@ -114,7 +111,6 @@ fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEn
 #[allow(clippy::type_complexity)]
 fn handle_button_interaction(
     #[cfg(target_arch = "wasm32")] network: Res<Network>,
-    #[cfg(target_arch = "wasm32")] player_info: Res<PlayerInfo>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
@@ -136,7 +132,7 @@ fn handle_button_interaction(
         match (ui, interaction) {
             (UI::InTitleGameStartButton, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
-                send_enter_game_message(&network, player_info.uuid);
+                send_enter_game_message(&network);
                 next_state.set(LevelStates::InMatching);
             }
             (UI::InTitleOptionButton, Interaction::Pressed) => {
@@ -352,8 +348,7 @@ fn update_collider_transform(
 // --- UTILITIES ---
 
 #[cfg(target_arch = "wasm32")]
-fn send_enter_game_message(network: &Network, uuid: Uuid) {
-    use protocol::EnterGamePacket;
-    let message: Packet = EnterGamePacket { uuid }.into();
-    network.send(&message).unwrap();
+fn send_enter_game_message(network: &Network) {
+    let packet = Packet::EnterGame;
+    network.send(&packet).unwrap();
 }
