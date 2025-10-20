@@ -53,6 +53,12 @@ impl Plugin for InnerPlugin {
                 (update_collider_transform.after(TransformSystems::Propagate),)
                     .run_if(in_state(LevelStates::InTitle)),
             );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            packet_receive_loop.run_if(in_state(LevelStates::InTitle)),
+        );
     }
 }
 

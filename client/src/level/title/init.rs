@@ -27,6 +27,12 @@ impl Plugin for InnerPlugin {
                 )
                     .run_if(in_state(LevelStates::InitTitle)),
             );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            packet_receive_loop.run_if(in_state(LevelStates::InitTitle)),
+        );
     }
 }
 

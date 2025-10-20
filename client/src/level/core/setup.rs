@@ -161,10 +161,10 @@ fn check_and_retry_asset_load_timeout(
         counter.0 += 1;
         if counter.0 > MAX_RETRY_COUNT {
             error!("Asset load request timed out.");
-            commands.insert_resource(ErrorMessage {
-                tag: "asset_load_timeout".into(),
-                message: "Asset load request timed out.\nPlease refresh your browser.".into(),
-            });
+            commands.insert_resource(ErrorMessage::new(
+                "asset_load_timeout",
+                "Asset load request timed out.\nPlease refresh your browser.",
+            ));
             next_state.set(LevelStates::Error);
         } else {
             load_assets(&mut commands, &asset_server);

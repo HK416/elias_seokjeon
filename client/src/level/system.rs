@@ -108,6 +108,21 @@ pub fn cleanup_loading_resource(mut commands: Commands) {
 
 // --- UPDATE SYSTEMS ---
 
+#[cfg(target_arch = "wasm32")]
+pub fn packet_receive_loop(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<LevelStates>>,
+    network: Res<Network>,
+) {
+    for result in network.receiver.try_iter() {
+        if let Err(e) = result {
+            commands.insert_resource(ErrorMessage::from(e));
+            next_state.set(LevelStates::Error);
+            return;
+        }
+    }
+}
+
 pub fn update_asset_loading_progress<T: AssetGroup>(
     asset_server: Res<AssetServer>,
     loading_assets: Res<T>,

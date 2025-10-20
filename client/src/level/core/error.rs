@@ -20,10 +20,52 @@ impl Plugin for InnerPlugin {
 
 // --- RESOURCES ---
 
+pub enum Args {
+    String(String),
+    Integer(i32),
+}
+
 #[derive(Resource)]
 pub struct ErrorMessage {
     pub tag: String,
     pub message: String,
+    pub args: Vec<Args>,
+}
+
+impl ErrorMessage {
+    pub fn new(tag: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            tag: tag.into(),
+            message: message.into(),
+            args: Vec::new(),
+        }
+    }
+
+    pub fn with_args(mut self, args: Vec<Args>) -> Self {
+        self.args = args;
+        self
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<NetError> for ErrorMessage {
+    fn from(e: NetError) -> Self {
+        match e {
+            NetError::NotFound => {
+                ErrorMessage::new("net_not_found", "Failed to connect to the game server.")
+            }
+            NetError::Closed(code) => ErrorMessage::new(
+                "net_closed",
+                format!("Disconnected from the server. ({})", code),
+            )
+            .with_args(vec![Args::Integer(code as i32)]),
+            NetError::Error(message) => ErrorMessage::new(
+                "net_error",
+                format!("Disconnected from the server. {}", message),
+            )
+            .with_args(vec![Args::String(message)]),
+        }
+    }
 }
 
 // --- SETUP SYSTEMS ---
@@ -71,14 +113,26 @@ fn setup_error_screen(
                     let font = asset_server.load(FONT_PATH);
                     let message = message
                         .as_ref()
-                        .map(|m| {
+                        .map(|e| {
                             if let Some(handle) = local_assets.locale.get(&*locale)
                                 && let Some(data) = locale_data.get(handle.id())
-                                && let Some(message) = data.0.get(&m.tag)
+                                && let Some(message) = data.0.get(&e.tag)
                             {
-                                message.clone()
+                                let mut buffer = Vec::new();
+                                let mut terminator = message.split_terminator("{}");
+                                let mut args = e.args.iter();
+                                for word in terminator.next() {
+                                    buffer.push(word.to_string());
+                                    if let Some(arg) = args.next() {
+                                        buffer.push(match arg {
+                                            Args::String(s) => s.clone(),
+                                            Args::Integer(i) => i.to_string(),
+                                        });
+                                    }
+                                }
+                                buffer.into_iter().collect()
                             } else {
-                                m.message.clone()
+                                e.message.clone()
                             }
                         })
                         .unwrap_or("Unknown error.".to_string());

@@ -53,59 +53,45 @@ fn connect_game_server(
 ) {
     let handle: Handle<ConfigData> = asset_server.load(CONFIG_PATH);
     let Some(config) = config_assets.get(handle.id()) else {
-        commands.insert_resource(ErrorMessage {
-            tag: "connection_failed".into(),
-            message: "Failed to connect to the game server.".into(),
-        });
+        commands.insert_resource(ErrorMessage::new(
+            "net_not_found",
+            "Failed to connect to the game server.",
+        ));
         return;
     };
 
-    let result = WebSocket::new(&config.server_url);
-    let socket = match result {
-        Ok(socket) => socket,
+    match Network::new(&config.server_url) {
+        Ok(network) => {
+            commands.insert_resource(network);
+        }
         Err(e) => {
-            error!("Failed to connect to the game server: {:?}", e);
-            commands.insert_resource(ErrorMessage {
-                tag: "connection_failed".into(),
-                message: "Failed to connect to the game server".into(),
-            });
-            return;
+            commands.insert_resource(ErrorMessage::from(e));
         }
     };
-
-    use protocol::Packet;
-    let (sender, receiver) = flume::unbounded();
-    let closure = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
-        if let Ok(text) = e.data().dyn_into::<js_sys::JsString>()
-            && let Ok(msg) = serde_json::from_str::<Packet>(&text.as_string().unwrap())
-        {
-            info!("Received packet: {:?}", msg);
-            let _ = sender.send(msg);
-        }
-    });
-    socket.set_binary_type(BinaryType::Arraybuffer);
-    socket.set_onmessage(Some(closure.as_ref().unchecked_ref()));
-    closure.forget();
-
-    commands.insert_resource(Network::new(socket, receiver));
 }
 
 // --- UPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
 fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
-    use protocol::{ConnectionPacket, Header};
+    use protocol::ConnectionPacket;
     if let Some(network) = network.as_ref() {
-        for msg in network.receiver.try_iter() {
-            match msg.header {
-                Header::Connection => {
-                    let connection = serde_json::from_str::<ConnectionPacket>(&msg.json).unwrap();
-                    commands.insert_resource(PlayerInfo {
-                        uuid: connection.uuid,
-                        username: connection.username,
-                    });
+        for result in network.receiver.try_iter() {
+            match result {
+                Ok(msg) => match msg.header {
+                    Header::Connection => {
+                        let connection =
+                            serde_json::from_str::<ConnectionPacket>(&msg.json).unwrap();
+                        commands.insert_resource(PlayerInfo {
+                            uuid: connection.uuid,
+                            username: connection.username,
+                        });
+                    }
+                    _ => { /* empty */ }
+                },
+                Err(e) => {
+                    commands.insert_resource(ErrorMessage::from(e));
                 }
-                _ => { /* empty */ }
             }
         }
     }
@@ -147,10 +133,10 @@ fn check_connection(
         counter.0 += 1;
         if counter.0 > MAX_RETRY_COUNT {
             error!("The connection to the game server timed out.");
-            commands.insert_resource(ErrorMessage {
-                tag: "connection_failed".into(),
-                message: "Failed to connect to the game server.".into(),
-            });
+            commands.insert_resource(ErrorMessage::new(
+                "connection_failed",
+                "Failed to connect to the game server.",
+            ));
             next_state.set(LevelStates::Error);
         }
     }

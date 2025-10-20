@@ -89,10 +89,20 @@ fn handle_button_interaction(
 }
 
 #[cfg(target_arch = "wasm32")]
-fn handle_received_packets(network: Res<Network>) {
-    for msg in network.try_iter() {
-        match msg.header {
-            _ => { /* empty */ }
+fn handle_received_packets(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<LevelStates>>,
+    network: Res<Network>,
+) {
+    for result in network.try_iter() {
+        match result {
+            Ok(msg) => match msg.header {
+                _ => { /* empty */ }
+            },
+            Err(e) => {
+                commands.insert_resource(ErrorMessage::from(e));
+                next_state.set(LevelStates::Error);
+            }
         }
     }
 }
