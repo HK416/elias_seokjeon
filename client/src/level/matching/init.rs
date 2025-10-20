@@ -105,7 +105,7 @@ fn setup_matching_interface(
                                 .spawn((
                                     Node {
                                         width: Val::Percent(90.0),
-                                        height: Val::Percent(50.0),
+                                        height: Val::Percent(30.0),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
@@ -132,6 +132,39 @@ fn setup_matching_interface(
                                 })
                                 .id();
                             loading_entities.insert(entity);
+
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(90.0),
+                                        height: Val::Percent(20.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..Default::default()
+                                    },
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let font = asset_server.load(FONT_PATH);
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::default(),
+                                            TextFont::from(font),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            TextColor::BLACK,
+                                            ResizableFont::vertical(1280.0, 48.0),
+                                            Visibility::Inherited,
+                                            MatchingStatusMessage,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+
                             add_vertical_space(loading_entities, parent, Val::Percent(10.0));
 
                             let entity = parent

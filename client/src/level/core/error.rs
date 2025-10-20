@@ -119,9 +119,9 @@ fn setup_error_screen(
                                 && let Some(message) = data.0.get(&e.tag)
                             {
                                 let mut buffer = Vec::new();
-                                let mut terminator = message.split_terminator("{}");
+                                let terminator = message.split_terminator("{}");
                                 let mut args = e.args.iter();
-                                for word in terminator.next() {
+                                for word in terminator {
                                     buffer.push(word.to_string());
                                     if let Some(arg) = args.next() {
                                         buffer.push(match arg {

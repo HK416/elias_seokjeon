@@ -32,6 +32,9 @@ pub struct MatchingLevelEntity;
 pub struct MatchingCancelLevelEntity;
 
 #[derive(Component)]
+pub struct MatchingStatusMessage;
+
+#[derive(Component)]
 pub struct OriginColor {
     pub none: Color,
     pub hovered: Color,

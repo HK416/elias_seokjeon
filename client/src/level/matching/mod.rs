@@ -5,6 +5,9 @@ mod init;
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
+use crate::assets::locale::Locale;
+
 use super::*;
 
 // --- PLUGIN ---
@@ -29,6 +32,12 @@ impl Plugin for InnerPlugin {
                 (handle_spine_animation_completed, update_wave_animation)
                     .run_if(in_state(LevelStates::InMatching)),
             );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            handle_received_packets.run_if(in_state(LevelStates::InMatching)),
+        );
     }
 }
 
@@ -79,6 +88,48 @@ fn handle_button_interaction(
                 next_state.set(LevelStates::InMatchingCancel);
             }
             _ => { /* empty */ }
+        }
+    }
+}
+
+// --- UPDATE SYSTEMS ---
+
+#[cfg(target_arch = "wasm32")]
+fn handle_received_packets(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<LevelStates>>,
+    mut query: Query<&mut Text, With<MatchingStatusMessage>>,
+    locale: Res<Locale>,
+    network: Res<Network>,
+) {
+    use protocol::MatchingStatusPacket;
+    for result in network.try_iter() {
+        match result {
+            Ok(msg) => match msg.header {
+                Header::MatchingStatus => {
+                    let result = serde_json::from_str::<MatchingStatusPacket>(&msg.json);
+                    if let Ok(packet) = result
+                        && let Ok(mut text) = query.single_mut()
+                    {
+                        *text = Text::new(match *locale {
+                            Locale::En => {
+                                format!("Remaining time: {}", packet.millis / 1000)
+                            }
+                            Locale::Ja => {
+                                format!("残り時間: {}", packet.millis / 1000)
+                            }
+                            Locale::Ko => {
+                                format!("남은 시간: {}", packet.millis / 1000)
+                            }
+                        });
+                    }
+                }
+                _ => { /* empty */ }
+            },
+            Err(e) => {
+                commands.insert_resource(ErrorMessage::from(e));
+                next_state.set(LevelStates::Error);
+            }
         }
     }
 }

@@ -26,6 +26,12 @@ impl Plugin for InnerPlugin {
                 (handle_spine_animation_completed, update_wave_animation)
                     .run_if(in_state(LevelStates::InMatchingCancel)),
             );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            handle_received_packets.run_if(in_state(LevelStates::InMatchingCancel)),
+        );
     }
 }
 

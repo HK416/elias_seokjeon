@@ -80,12 +80,13 @@ fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
             match result {
                 Ok(msg) => match msg.header {
                     Header::Connection => {
-                        let connection =
-                            serde_json::from_str::<ConnectionPacket>(&msg.json).unwrap();
-                        commands.insert_resource(PlayerInfo {
-                            uuid: connection.uuid,
-                            username: connection.username,
-                        });
+                        let result = serde_json::from_str::<ConnectionPacket>(&msg.json);
+                        if let Ok(packet) = result {
+                            commands.insert_resource(PlayerInfo {
+                                uuid: packet.uuid,
+                                username: packet.username,
+                            });
+                        }
                     }
                     _ => { /* empty */ }
                 },
