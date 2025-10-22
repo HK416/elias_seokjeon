@@ -78,8 +78,8 @@ fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
         for result in network.receiver.try_iter() {
             match result {
                 Ok(packet) => match packet {
-                    Packet::Connection { uuid, username } => {
-                        commands.insert_resource(PlayerInfo { uuid, username });
+                    Packet::Connection { uuid, name, hero } => {
+                        commands.insert_resource(PlayerInfo { uuid, name, hero });
                     }
                     _ => { /* empty */ }
                 },
@@ -99,9 +99,10 @@ fn check_connection_progress(
     if let Some(player_info) = &player_info {
         info!("Connected to the game server.");
         info!(
-            "UUID: {}, Username:{}",
+            "UUID: {}, Username:{}, Hero:{:?}",
             player_info.uuid.urn(),
-            player_info.username
+            player_info.name,
+            player_info.hero,
         );
         next_state.set(LevelStates::InitOption);
     }

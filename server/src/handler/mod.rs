@@ -2,14 +2,14 @@ pub mod init;
 pub mod matching;
 pub mod title;
 
-use std::{collections::VecDeque, mem, net::SocketAddr};
+use std::{collections::VecDeque, fmt, mem, net::SocketAddr};
 
 use crossbeam_queue::SegQueue;
 use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use protocol::{Packet, serde_json, uuid::Uuid};
+use protocol::{Hero, Packet, rand, serde_json, uuid::Uuid};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
 use tokio::task::JoinHandle;
@@ -24,14 +24,25 @@ pub enum State {
     Matching,
 }
 
-pub fn next_state(
+pub struct Player {
     uuid: Uuid,
-    state: State,
-    ws_stream: WebSocketStream<TcpStream>,
+    name: String,
+    hero: Hero,
     addr: SocketAddr,
-) {
+    read: SplitStream<WebSocketStream<TcpStream>>,
+    tx: UnboundedSender<Packet>,
+    _write_task: JoinHandle<SplitSink<WebSocketStream<TcpStream>, Message>>,
+}
+
+impl fmt::Debug for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple(stringify!(Player)).field(&self.addr).finish()
+    }
+}
+
+pub fn next_state(state: State, player: Player) {
     match state {
-        State::Title => tokio::spawn(title::update(uuid, addr, ws_stream)),
-        State::Matching => tokio::spawn(matching::regist(uuid, addr, ws_stream)),
+        State::Title => tokio::spawn(title::update(player)),
+        State::Matching => tokio::spawn(matching::regist(player)),
     };
 }

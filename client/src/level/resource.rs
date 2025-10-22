@@ -1,6 +1,6 @@
 // Import necessary Bevy modules.
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
-use protocol::uuid::Uuid;
+use protocol::{Hero, uuid::Uuid};
 
 use super::*;
 
@@ -112,7 +112,8 @@ impl Default for SceneTimer {
 #[allow(dead_code)]
 pub struct PlayerInfo {
     pub uuid: Uuid,
-    pub username: String,
+    pub name: String,
+    pub hero: Hero,
 }
 
 #[derive(Default, Resource)]

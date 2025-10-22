@@ -9,6 +9,8 @@ async fn main() {
     let listener = TcpListener::bind("0.0.0.0:8889").await.unwrap();
     println!("WebSocket server listening on ws://0.0.0.0:8889");
 
+    tokio::spawn(handler::matching::update());
+
     while let Ok((stream, addr)) = listener.accept().await {
         let result = accept_async(stream).await;
         let ws_stream = match result {
@@ -22,7 +24,6 @@ async fn main() {
             }
         };
 
-        tokio::spawn(handler::matching::update());
         tokio::spawn(handler::init::setup(addr, ws_stream));
     }
 }

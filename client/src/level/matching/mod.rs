@@ -120,6 +120,9 @@ fn handle_received_packets(
                         });
                     }
                 }
+                Packet::MatchingSuccess { other, hero } => {
+                    todo!("");
+                }
                 _ => { /* empty */ }
             },
             Err(e) => {

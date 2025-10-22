@@ -1,47 +1,22 @@
 use super::*;
 
-type SocketReader = SplitStream<WebSocketStream<TcpStream>>;
-type WriteTaskHandle = JoinHandle<SplitSink<WebSocketStream<TcpStream>, Message>>;
-
 const MAX_MATCHING_TIME: u16 = 15000;
+const MAX_LOOP: usize = 100;
 
-static NEW: SegQueue<UserBlob> = SegQueue::new();
+static NEW: SegQueue<Node> = SegQueue::new();
 
-struct UserBlob {
-    uuid: Uuid,
-    addr: SocketAddr,
-    read: SocketReader,
-    tx: UnboundedSender<String>,
-    write_task: WriteTaskHandle,
+struct Node {
+    player: Player,
     previous_instant: Instant,
     millis: u16,
-    state: State,
 }
 
-impl UserBlob {
-    pub fn new(uuid: Uuid, addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) -> Self {
-        let (tx, mut rx) = unbounded_channel::<String>();
-        let (mut write, read) = ws_stream.split();
-        let write_task: WriteTaskHandle = tokio::spawn(async move {
-            while let Some(s) = rx.recv().await {
-                let result = write.send(Message::text(s)).await;
-                if let Err(e) = result {
-                    eprintln!("Failed to send message to WebSocket (Address:{addr}): {e}");
-                    return write;
-                }
-            }
-            write
-        });
-
+impl Node {
+    pub fn new(player: Player) -> Self {
         Self {
-            uuid,
-            addr,
-            read,
-            tx,
-            write_task,
+            player,
             previous_instant: Instant::now(),
             millis: MAX_MATCHING_TIME,
-            state: State::Matching,
         }
     }
 }
@@ -50,82 +25,111 @@ pub async fn update() {
     const TICK: u64 = 1000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut interval = interval(PERIOD);
-    let mut users = VecDeque::new();
+    let mut nodes = VecDeque::new();
     let mut temp = VecDeque::new();
     loop {
         let instant = interval.tick().await;
 
-        while let Some(user) = NEW.pop() {
-            users.push_back(user);
+        // 1. Move new players from the global queue to the local queue.
+        while let Some(n) = NEW.pop() {
+            #[cfg(not(feature = "no-debuging-log"))]
+            println!(
+                "Added Matching Queue ({:?}) - Queue Size: {}",
+                n.player,
+                nodes.len() + 1
+            );
+            nodes.push_back(n);
         }
 
-        'update: while let Some(mut user) = users.pop_front() {
-            let elapsed = instant
-                .saturating_duration_since(user.previous_instant)
-                .as_millis();
-            user.previous_instant = instant;
-            user.millis = user.millis.saturating_sub(elapsed as u16);
-
-            #[cfg(not(feature = "no-debuging-log"))]
-            println!("Addr:{} - millis: {}", user.addr, user.millis);
-
-            let packet = Packet::MatchingStatus {
-                millis: user.millis,
-            };
-            user.tx
-                .send(serde_json::to_string(&packet).unwrap())
-                .unwrap();
-
-            loop {
-                match poll_stream_nonblocking(&mut user.read) {
+        // 2. Poll events for all waiting players before attempting to match.
+        // This ensures that cancellation requests are processed with priority.
+        'update: while let Some(mut node) = nodes.pop_front() {
+            let mut cnt = MAX_LOOP;
+            while cnt > 0 {
+                match poll_stream_nonblocking(&mut node.player.read) {
                     StreamPollResult::Pending => break,
                     StreamPollResult::Item(message) => {
                         if let Message::Text(s) = message
                             && let Ok(packet) = serde_json::from_str::<Packet>(&s)
                         {
                             match packet {
-                                Packet::CancelGame => {
-                                    user.state = State::Title;
-
-                                    drop(user.tx);
-                                    let other = user.write_task.await.unwrap();
-                                    let ws_stream = user.read.reunite(other).unwrap();
-                                    next_state(user.uuid, user.state, ws_stream, user.addr);
-                                    continue 'update;
+                                Packet::TryCancelGame => {
+                                    node.player.tx.send(Packet::CancelSuccess).unwrap();
+                                    next_state(State::Title, node.player);
+                                    continue 'update; // Player is removed from matching.
                                 }
                                 _ => { /* empty */ }
                             }
                         }
                     }
                     StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected (Address:{}): {e}", user.addr);
-                        continue 'update;
+                        println!("WebSocket disconnected ({:?}): {e}", node.player);
+                        continue 'update; // Player is removed due to error.
                     }
                     StreamPollResult::Closed => {
-                        println!("WebSocket disconnected (Address:{})", user.addr);
-                        continue 'update;
+                        println!("WebSocket disconnected ({:?})", node.player);
+                        continue 'update; // Player is removed due to closure.
                     }
                 }
+                cnt -= 1;
             }
+            temp.push_back(node);
+        }
+        mem::swap(&mut nodes, &mut temp);
 
-            if user.millis == 0 {
-                // --- Temp code ---
-                drop(user.tx);
-                let other = user.write_task.await.unwrap();
-                let ws_stream = user.read.reunite(other).unwrap();
-                next_state(user.uuid, user.state, ws_stream, user.addr);
-                continue 'update;
-            }
+        // 3. Try to match players who are still in the queue.
+        while nodes.len() >= 2 {
+            let p0 = nodes.pop_front().unwrap().player;
+            let p1 = nodes.pop_front().unwrap().player;
 
-            temp.push_back(user);
+            #[cfg(not(feature = "no-debuging-log"))]
+            println!("[{:?} VS {:?}] - Current State: Matching", p0, p1);
+
+            p0.tx
+                .send(Packet::MatchingSuccess {
+                    other: p1.name.clone(),
+                    hero: p1.hero,
+                })
+                .unwrap();
+            p1.tx
+                .send(Packet::MatchingSuccess {
+                    other: p0.name.clone(),
+                    hero: p0.hero,
+                })
+                .unwrap();
         }
 
-        mem::swap(&mut users, &mut temp);
+        // 4. Update status for the remaining players.
+        while let Some(mut node) = nodes.pop_front() {
+            let elapsed = instant
+                .saturating_duration_since(node.previous_instant)
+                .as_millis();
+            node.previous_instant = instant;
+            node.millis = node.millis.saturating_sub(elapsed as u16);
+
+            if node.millis == 0 {
+                // --- Temp code ---
+                next_state(State::Matching, node.player);
+                continue;
+                //-------------------
+            }
+
+            node.player
+                .tx
+                .send(Packet::MatchingStatus {
+                    millis: node.millis,
+                })
+                .unwrap();
+
+            temp.push_back(node);
+        }
+
+        mem::swap(&mut nodes, &mut temp);
     }
 }
 
-pub async fn regist(uuid: Uuid, addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
+pub async fn regist(player: Player) {
     #[cfg(not(feature = "no-debuging-log"))]
-    println!("Addr:{addr} - Current State: Matching");
-    NEW.push(UserBlob::new(uuid, addr, ws_stream));
+    println!("{:?} - Current State: Matching", player);
+    NEW.push(Node::new(player));
 }

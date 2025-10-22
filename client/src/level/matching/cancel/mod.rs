@@ -5,6 +5,11 @@ use bevy::prelude::*;
 
 use super::*;
 
+// --- Resource ---
+
+#[derive(Resource)]
+struct CancelFlag(bool);
+
 // --- PLUGIN ---
 
 pub struct InnerPlugin;
@@ -14,9 +19,12 @@ impl Plugin for InnerPlugin {
         app.add_plugins(init::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InMatchingCancel),
-                (debug_label, show_interface),
+                (debug_label, show_interface, insert_resource),
             )
-            .add_systems(OnExit(LevelStates::InMatchingCancel), hide_interface)
+            .add_systems(
+                OnExit(LevelStates::InMatchingCancel),
+                (hide_interface, remove_resource),
+            )
             .add_systems(
                 PreUpdate,
                 (handle_button_interaction,).run_if(in_state(LevelStates::InMatchingCancel)),
@@ -47,12 +55,20 @@ fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCanc
     }
 }
 
+fn insert_resource(mut commands: Commands) {
+    commands.insert_resource(CancelFlag(false));
+}
+
 // --- CLEANUP SYSTEMS ---
 
 fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCancelLevelEntity>)>) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
     }
+}
+
+fn remove_resource(mut commands: Commands) {
+    commands.remove_resource::<CancelFlag>();
 }
 
 // --- PREUPDATE SYSTEMS ---
@@ -62,6 +78,7 @@ fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCanc
 fn handle_button_interaction(
     #[cfg(target_arch = "wasm32")] network: Res<Network>,
     #[cfg(target_arch = "wasm32")] player_info: Res<PlayerInfo>,
+    mut canceled: ResMut<CancelFlag>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
@@ -71,25 +88,27 @@ fn handle_button_interaction(
         (With<MatchingCancelLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    for (entity, &ui, interaction) in interaction_query.iter_mut() {
-        update_button_visual(
-            entity,
-            interaction,
-            &children_query,
-            &mut text_color_query,
-            &mut button_color_query,
-        );
+    if !canceled.0 {
+        for (entity, &ui, interaction) in interaction_query.iter_mut() {
+            update_button_visual(
+                entity,
+                interaction,
+                &children_query,
+                &mut text_color_query,
+                &mut button_color_query,
+            );
 
-        match (ui, interaction) {
-            (UI::InMatchingCancelYesButton, Interaction::Pressed) => {
-                #[cfg(target_arch = "wasm32")]
-                send_cancel_game_message(&network);
-                next_state.set(LevelStates::InTitle);
+            match (ui, interaction) {
+                (UI::InMatchingCancelYesButton, Interaction::Pressed) => {
+                    canceled.0 = true;
+                    #[cfg(target_arch = "wasm32")]
+                    send_cancel_game_message(&network);
+                }
+                (UI::InMatchingCancelNoButton, Interaction::Pressed) => {
+                    next_state.set(LevelStates::InMatching);
+                }
+                _ => { /* empty */ }
             }
-            (UI::InMatchingCancelNoButton, Interaction::Pressed) => {
-                next_state.set(LevelStates::InMatching);
-            }
-            _ => { /* empty */ }
         }
     }
 }
@@ -103,6 +122,12 @@ fn handle_received_packets(
     for result in network.try_iter() {
         match result {
             Ok(packet) => match packet {
+                Packet::CancelSuccess => {
+                    next_state.set(LevelStates::InTitle);
+                }
+                Packet::MatchingSuccess { other, hero } => {
+                    todo!("");
+                }
                 _ => { /* empty */ }
             },
             Err(e) => {
@@ -117,6 +142,6 @@ fn handle_received_packets(
 
 #[cfg(target_arch = "wasm32")]
 fn send_cancel_game_message(network: &Network) {
-    let packet = Packet::CancelGame;
+    let packet = Packet::TryCancelGame;
     network.send(&packet).unwrap();
 }
