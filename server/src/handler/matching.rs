@@ -22,6 +22,13 @@ impl Node {
 }
 
 pub async fn update() {
+    static COUNTER: AtomicUsize = AtomicUsize::new(0);
+    let n = COUNTER.fetch_add(1, MemOrdering::AcqRel);
+    assert!(n < 1, "This function must be called only once!");
+    update_internal().await;
+}
+
+async fn update_internal() {
     const TICK: u64 = 1000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut interval = interval(PERIOD);
