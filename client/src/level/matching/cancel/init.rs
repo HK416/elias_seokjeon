@@ -64,7 +64,7 @@ fn setup_matching_cancel_interface(
                 ..Default::default()
             },
             BackgroundColor(Color::BLACK.with_alpha(0.5)),
-            UI::InMatchingCancelModal,
+            UI::InMatchingCancelBackground,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(3),
@@ -81,7 +81,8 @@ fn setup_matching_cancel_interface(
                     },
                     BorderRadius::all(Val::Percent(30.0)),
                     BackgroundColor(BORDER_GREEN_COLOR_0),
-                    Visibility::Inherited,
+                    UI::InMatchingCancelModal,
+                    Visibility::Hidden,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {

@@ -62,7 +62,7 @@ fn setup_matching_interface(
             },
             BackgroundColor(Color::BLACK.with_alpha(0.5)),
             Visibility::Hidden,
-            UI::InMatchingModal,
+            UI::InMatchingBackground,
             SpawnRequest,
             ZIndex(3),
         ))
@@ -78,7 +78,8 @@ fn setup_matching_interface(
                     },
                     BorderRadius::all(Val::Percent(30.0)),
                     BackgroundColor(BORDER_GREEN_COLOR_0),
-                    Visibility::Inherited,
+                    Visibility::Hidden,
+                    UI::InMatchingModal,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {

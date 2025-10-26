@@ -68,7 +68,7 @@ fn setup_option_interface(
             },
             BackgroundColor(Color::BLACK.with_alpha(0.5)),
             Visibility::Hidden,
-            UI::InOptionModal,
+            UI::InOptionBackground,
             SpawnRequest,
             ZIndex(3),
         ))
@@ -84,7 +84,8 @@ fn setup_option_interface(
                     },
                     BorderRadius::all(Val::Percent(30.0)),
                     BackgroundColor(BORDER_GREEN_COLOR_1),
-                    Visibility::Inherited,
+                    UI::InOptionModal,
+                    Visibility::Hidden,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {

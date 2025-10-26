@@ -20,16 +20,27 @@ impl Plugin for InnerPlugin {
             .add_plugins(init::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InMatching),
-                (debug_label, show_interface),
+                (debug_label, show_interface, setup_ui_animation),
             )
-            .add_systems(OnExit(LevelStates::InMatching), hide_interface)
+            .add_systems(
+                OnExit(LevelStates::InMatching),
+                (hide_interface, cleanup_backout_anim::<MatchingLevelEntity>),
+            )
             .add_systems(
                 PreUpdate,
-                (handle_button_interaction,).run_if(in_state(LevelStates::InMatching)),
+                (handle_keyboard_input, handle_button_interaction)
+                    .run_if(resource_exists::<Interactable>)
+                    .run_if(in_state(LevelStates::InMatching)),
             )
             .add_systems(
                 Update,
-                (handle_spine_animation_completed, update_wave_animation)
+                (
+                    update_backout_anim::<MatchingLevelEntity>,
+                    check_backout_anim_finished::<MatchingLevelEntity>
+                        .run_if(not(resource_exists::<Interactable>)),
+                    handle_spine_animation_completed,
+                    update_wave_animation,
+                )
                     .run_if(in_state(LevelStates::InMatching)),
             );
 
@@ -53,6 +64,24 @@ fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLeve
     }
 }
 
+fn setup_ui_animation(
+    mut commands: Commands,
+    query: Query<(Entity, &UI), With<MatchingLevelEntity>>,
+) {
+    for (entity, &ui) in query.iter() {
+        match ui {
+            UI::InMatchingModal => {
+                commands.entity(entity).insert(UiBackOutScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ZERO,
+                    Vec2::ONE,
+                ));
+            }
+            _ => { /* empty */ }
+        }
+    }
+}
+
 // --- CLEANUP SYSTEMS ---
 
 fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLevelEntity>)>) {
@@ -62,6 +91,15 @@ fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLeve
 }
 
 // --- PREUPDATE SYSTEMS ---
+
+fn handle_keyboard_input(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<LevelStates>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        next_state.set(LevelStates::InMatchingCancel);
+    }
+}
 
 #[allow(clippy::type_complexity)]
 fn handle_button_interaction(

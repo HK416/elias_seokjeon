@@ -36,3 +36,5 @@ pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;
 pub const BALL_WAVE_DURATION: f32 = 0.5;
+
+pub const UI_POPUP_DURATION: f32 = 0.2;

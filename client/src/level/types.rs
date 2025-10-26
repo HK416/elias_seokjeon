@@ -99,13 +99,16 @@ pub enum UI {
     InTitleOptionButton,
     InTitleHowToPlayButton,
 
+    InOptionBackground,
     InOptionModal,
     InOptionExitButton,
 
+    InMatchingCancelBackground,
     InMatchingCancelModal,
     InMatchingCancelYesButton,
     InMatchingCancelNoButton,
 
+    InMatchingBackground,
     InMatchingModal,
     InMatchingCancelButton,
 
@@ -233,5 +236,39 @@ impl FadeOut {
 
     pub fn is_finished(&self) -> bool {
         self.elapsed >= self.duration
+    }
+}
+
+#[derive(Component)]
+pub struct UiBackOutScale {
+    duration: f32,
+    elapsed: f32,
+    start: Vec2,
+    end: Vec2,
+}
+
+impl UiBackOutScale {
+    pub fn new(duration: f32, start: Vec2, end: Vec2) -> Self {
+        assert!(duration > 0.0, "duration must be greater than 0.0");
+        Self {
+            duration,
+            elapsed: 0.0,
+            start,
+            end,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration);
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration
+    }
+
+    pub fn scale(&self) -> Vec2 {
+        let t = self.elapsed / self.duration;
+        let t = 1.0 + 2.70158 * (t - 1.0).powi(3) - 1.70158 * (t - 1.0).powi(2);
+        (self.start * (1.0 - t) + self.end * t).max(Vec2::ZERO)
     }
 }

@@ -106,6 +106,16 @@ pub fn cleanup_loading_resource(mut commands: Commands) {
     commands.remove_resource::<LoadingEntities>();
 }
 
+pub fn cleanup_backout_anim<Marker: Component>(
+    mut commands: Commands,
+    query: Query<Entity, (With<UI>, With<Marker>, With<UiBackOutScale>)>,
+) {
+    commands.remove_resource::<Interactable>();
+    for entity in query.iter() {
+        commands.entity(entity).remove::<UiBackOutScale>();
+    }
+}
+
 // --- UPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
@@ -223,5 +233,30 @@ pub fn update_wave_animation(
         if wave_anim.elapsed > BALL_WAVE_DURATION {
             commands.entity(entity).remove::<BallWaveAnimation>();
         }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+pub fn update_backout_anim<Marker: Component>(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut UiBackOutScale, &mut UiTransform), (With<UI>, With<Marker>)>,
+    time: Res<Time>,
+) {
+    for (entity, mut back_out, mut transform) in query.iter_mut() {
+        back_out.tick(time.delta_secs());
+        transform.scale = back_out.scale();
+
+        if back_out.is_finished() {
+            commands.entity(entity).remove::<UiBackOutScale>();
+        }
+    }
+}
+
+pub fn check_backout_anim_finished<Marker: Component>(
+    mut commands: Commands,
+    query: Query<(), (With<UI>, With<Marker>, With<UiBackOutScale>)>,
+) {
+    if query.is_empty() {
+        commands.insert_resource(Interactable);
     }
 }

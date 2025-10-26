@@ -158,3 +158,6 @@ impl SelectedSliderCursor {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct Interactable;
