@@ -17,3 +17,6 @@ use const_format::concatcp;
 #[rustfmt::skip] pub const COLLIDER_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.collider", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND: &str = concatcp!("textures/Background.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_BACKGROUND_BLURED: &str = concatcp!("textures/Background_Blured.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_LOADING_ICON_DECO: &str = concatcp!("textures/Loading_Icon_Deco.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.texture", QUERY, VERSION);

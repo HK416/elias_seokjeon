@@ -35,6 +35,18 @@ pub struct MatchingCancelLevelEntity;
 pub struct MatchingStatusMessage;
 
 #[derive(Component)]
+pub struct EnterGameLevelEntity;
+
+#[derive(Component)]
+pub struct BluredBackground;
+
+#[derive(Component)]
+pub struct EnterGameLoadingBar;
+
+#[derive(Component)]
+pub struct EnterGameLoadingCursor;
+
+#[derive(Component)]
 pub struct OriginColor {
     pub none: Color,
     pub hovered: Color,
@@ -96,6 +108,8 @@ pub enum UI {
 
     InMatchingModal,
     InMatchingCancelButton,
+
+    EnterGameLoadingBar,
 }
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
@@ -166,4 +180,58 @@ pub struct BallWaveAnimation {
     pub elapsed: f32,
     pub direction: Vec2,
     pub power: f32,
+}
+
+#[derive(Component)]
+pub struct FadeIn {
+    duration: f32,
+    elapsed: f32,
+}
+
+impl FadeIn {
+    pub fn new(duration: f32) -> Self {
+        Self {
+            duration,
+            elapsed: 0.0,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration);
+    }
+
+    pub fn progress(&self) -> f32 {
+        self.elapsed / self.duration
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration
+    }
+}
+
+#[derive(Component)]
+pub struct FadeOut {
+    duration: f32,
+    elapsed: f32,
+}
+
+impl FadeOut {
+    pub fn new(duration: f32) -> Self {
+        Self {
+            duration,
+            elapsed: 0.0,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration);
+    }
+
+    pub fn progress(&self) -> f32 {
+        self.elapsed / self.duration
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration
+    }
 }

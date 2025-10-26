@@ -15,7 +15,7 @@ use super::*;
 // --- CONSTANTS ---
 
 const TIMEOUT: f32 = 5.0;
-const MAX_RETRY_COUNT: u32 = 3;
+const MAX_RETRY_COUNT: u32 = 2;
 
 // --- PLUGIN ---
 

@@ -1,8 +1,5 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use bevy_spine::SkeletonData;
-
-use crate::assets::collider::Collider;
 
 use super::*;
 
@@ -18,24 +15,24 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(LevelStates::LoadTitle),
+            OnEnter(LevelStates::LoadEnterGame),
             (debug_label, setup_timeout_retry, load_necessary_assets),
         )
-        .add_systems(OnExit(LevelStates::LoadTitle), cleanup_timeout_retry)
+        .add_systems(OnExit(LevelStates::LoadEnterGame), cleanup_timeout_retry)
         .add_systems(
             Update,
             (
                 check_loading_progress,
-                update_asset_loading_progress::<TitleAssets>,
+                update_asset_loading_progress::<EnterGameAssets>,
                 check_and_retry_asset_load_timeout,
             )
-                .run_if(in_state(LevelStates::LoadTitle)),
+                .run_if(in_state(LevelStates::LoadEnterGame)),
         );
 
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
-            packet_receive_loop.run_if(in_state(LevelStates::LoadTitle)),
+            packet_receive_loop.run_if(in_state(LevelStates::LoadEnterGame)),
         );
     }
 }
@@ -43,7 +40,7 @@ impl Plugin for InnerPlugin {
 // --- SETUP SYSTEMS ---
 
 fn debug_label() {
-    info!("Current Level: LoadTitle");
+    info!("Current Level: LoadEnterGame");
 }
 
 fn load_necessary_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -51,31 +48,17 @@ fn load_necessary_assets(mut commands: Commands, asset_server: Res<AssetServer>)
 }
 
 fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
-    let mut loading_assets = TitleAssets::default();
+    let mut loading_assets = EnterGameAssets::default();
 
     // --- Font Loading ---
     let handle: Handle<Font> = asset_server.load(FONT_PATH);
     loading_assets.push(handle);
 
     // --- Background Loading ---
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_BACKGROUND);
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_BACKGROUND_BLURED);
     loading_assets.push(handle);
 
-    // --- Model Loading ---
-    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_BUTTER);
-    loading_assets.push(handle);
-
-    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_KOMMY);
-    loading_assets.push(handle);
-
-    // --- Collider Loading ---
-    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_BUTTER);
-    loading_assets.push(handle);
-
-    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_KOMMY);
-    loading_assets.push(handle);
-
-    // --- Resource Insersion ---
+    // --- Resource Insertion ---
     commands.insert_resource(loading_assets);
 }
 
@@ -83,7 +66,7 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
 
 fn check_loading_progress(
     asset_server: Res<AssetServer>,
-    loading_assets: Res<TitleAssets>,
+    loading_assets: Res<EnterGameAssets>,
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     let all_loaded = loading_assets
@@ -92,7 +75,7 @@ fn check_loading_progress(
         .all(|&id| asset_server.is_loaded_with_dependencies(id));
 
     if all_loaded {
-        next_state.set(LevelStates::InitTitle);
+        next_state.set(LevelStates::InitEnterGame);
     }
 }
 

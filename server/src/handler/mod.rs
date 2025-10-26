@@ -19,7 +19,7 @@ use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
     task::JoinHandle,
-    time::{Duration, Instant, interval},
+    time::{self, Duration, Instant},
 };
 use tokio_tungstenite::{WebSocketStream, tungstenite::Message};
 

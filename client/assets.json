@@ -39,7 +39,9 @@
         },
         "textures": {
             "target_files": [
-                "Background.texture"
+                "Background.texture",
+                "Background_Blured.texture",
+                "Loading_Icon_Deco.texture"
             ]
         }
     }

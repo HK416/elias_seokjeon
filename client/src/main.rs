@@ -15,6 +15,9 @@ use bevy::{
 };
 use bevy_spine::SpinePlugin;
 
+const WND_WIDTH: u32 = 1920;
+const WND_HEIGHT: u32 = 1080;
+
 fn main() {
     App::new()
         .add_plugins(
@@ -22,7 +25,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Elias: Seokjeon".into(),
-                        resolution: (1920, 1080).into(),
+                        resolution: (WND_WIDTH, WND_HEIGHT).into(),
                         resizable: true,
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,

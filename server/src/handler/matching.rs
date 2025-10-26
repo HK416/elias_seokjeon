@@ -31,7 +31,7 @@ pub async fn update() {
 async fn update_internal() {
     const TICK: u64 = 1000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
-    let mut interval = interval(PERIOD);
+    let mut interval = time::interval(PERIOD);
     let mut nodes = VecDeque::new();
     let mut temp = VecDeque::new();
     loop {
@@ -90,7 +90,12 @@ async fn update_internal() {
             let p1 = nodes.pop_front().unwrap().player;
 
             #[cfg(not(feature = "no-debuging-log"))]
-            println!("[{:?} VS {:?}] - Current State: Matching", p0, p1);
+            println!(
+                "[{:?} VS {:?}] - Current State: Matching / Queue Size: {}",
+                p0,
+                p1,
+                nodes.len()
+            );
 
             p0.tx
                 .send(Packet::MatchingSuccess {
@@ -104,6 +109,26 @@ async fn update_internal() {
                     hero: p0.hero,
                 })
                 .unwrap();
+
+            // --- Temp Code ---
+            tokio::spawn(async move {
+                const PERIOD: Duration = Duration::from_secs(1);
+                let mut previous_instant = Instant::now();
+                let mut interval = time::interval_at(previous_instant, PERIOD);
+                let mut millis = 3000u32;
+                while millis > 0 {
+                    let instant = interval.tick().await;
+                    let elapsed = instant
+                        .saturating_duration_since(previous_instant)
+                        .as_millis();
+                    previous_instant = instant;
+                    millis = millis.saturating_sub(elapsed as u32);
+                }
+
+                drop(p0);
+                drop(p1);
+            });
+            //------------------
         }
 
         // 4. Update status for the remaining players.

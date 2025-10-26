@@ -13,7 +13,9 @@ mod utils;
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
-use crate::{assets::path::*, collider::*, resizable_font::*, translatable_text::*};
+use crate::{
+    WND_HEIGHT, WND_WIDTH, assets::path::*, collider::*, resizable_font::*, translatable_text::*,
+};
 
 #[cfg(target_arch = "wasm32")]
 use crate::web::*;
@@ -56,6 +58,9 @@ pub enum LevelStates {
 
     InitMatching,
     InMatching,
+
+    LoadEnterGame,
+    InitEnterGame,
 
     LoadGame,
 }

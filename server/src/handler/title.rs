@@ -4,7 +4,6 @@ pub async fn update(mut player: Player) {
     #[cfg(not(feature = "no-debuging-log"))]
     println!("{:?} - Current State: Title", player);
 
-    let mut state = State::Title;
     while let Some(result) = player.read.next().await {
         let message = match result {
             Ok(message) => message,
@@ -19,13 +18,10 @@ pub async fn update(mut player: Player) {
         {
             match packet {
                 Packet::EnterGame => {
-                    state = State::Matching;
-                    break;
+                    return next_state(State::Matching, player);
                 }
                 _ => { /* empty */ }
             }
         }
     }
-
-    next_state(state, player);
 }

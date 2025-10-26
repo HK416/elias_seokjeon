@@ -126,7 +126,8 @@ fn handle_received_packets(
                     next_state.set(LevelStates::InTitle);
                 }
                 Packet::MatchingSuccess { other, hero } => {
-                    todo!("");
+                    commands.insert_resource(OtherInfo { name: other, hero });
+                    next_state.set(LevelStates::LoadGame);
                 }
                 _ => { /* empty */ }
             },

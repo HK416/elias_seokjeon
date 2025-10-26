@@ -51,6 +51,25 @@ impl AssetGroup for TitleAssets {
 }
 
 #[derive(Default, Resource)]
+pub struct EnterGameAssets {
+    handles: Vec<UntypedHandle>,
+}
+
+impl AssetGroup for EnterGameAssets {
+    fn push(&mut self, handle: impl Into<UntypedHandle>) {
+        self.handles.push(handle.into());
+    }
+
+    fn ids(&self) -> Vec<UntypedAssetId> {
+        self.handles.iter().map(|h| h.id()).collect()
+    }
+
+    fn len(&self) -> usize {
+        self.handles.len()
+    }
+}
+
+#[derive(Default, Resource)]
 pub struct LoadingEntities {
     entities: HashSet<Entity>,
     total: usize,
@@ -109,9 +128,14 @@ impl Default for SceneTimer {
 }
 
 #[derive(Resource)]
-#[allow(dead_code)]
 pub struct PlayerInfo {
     pub uuid: Uuid,
+    pub name: String,
+    pub hero: Hero,
+}
+
+#[derive(Resource)]
+pub struct OtherInfo {
     pub name: String,
     pub hero: Hero,
 }

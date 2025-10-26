@@ -69,15 +69,17 @@ fn setup_title_screen(
     let handle = asset_server.load(IMG_PATH_BACKGROUND);
     let image = image_assets.get(handle.id()).unwrap();
     let aspect_ratio = image.aspect_ratio().ratio();
+    let size = (WND_WIDTH as f32, WND_WIDTH as f32 / aspect_ratio);
+    let half_height = WND_HEIGHT as f32 * 0.5;
     let entity = commands
         .spawn((
             Sprite {
-                image: asset_server.load(IMG_PATH_BACKGROUND),
+                image: handle,
                 image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
-                custom_size: Some((1920.0, 1920.0 / aspect_ratio).into()),
+                custom_size: Some(size.into()),
                 ..Default::default()
             },
-            Transform::from_xyz(0.0, 540.0, 0.0),
+            Transform::from_xyz(0.0, half_height, 0.0),
             Visibility::Hidden,
             SpawnRequest,
         ))
