@@ -173,43 +173,36 @@ fn setup_matching_interface(
                                     Node {
                                         width: Val::Percent(50.0),
                                         height: Val::Percent(20.0),
+                                        border: UiRect::all(Val::VMin(1.25)),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
                                     },
+                                    BorderRadius::all(Val::Percent(30.0)),
+                                    OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
+                                    BorderColor::all(BORDER_RED_COLOR_0),
+                                    BackgroundColor(BG_RED_COLOR_0),
                                     UI::InMatchingCancelButton,
                                     Visibility::Inherited,
                                     SpawnRequest,
                                     Button,
                                 ))
                                 .with_children(|parent| {
-                                    let percent_width = width * 0.4;
-                                    let percent_height = height * 0.18;
-                                    create_button(
-                                        loading_entities,
-                                        parent,
-                                        ASPECT_RATIO,
-                                        percent_width,
-                                        percent_height,
-                                        BORDER_RED_COLOR_0,
-                                        BG_RED_COLOR_0,
-                                        None,
-                                        None,
-                                        BoxShadow::default(),
-                                        |commands| {
-                                            let font = asset_server.load(FONT_PATH);
-                                            commands.insert((
-                                                Text::new("Cancel"),
-                                                TextFont::from(font),
-                                                TextLayout::new_with_justify(Justify::Center),
-                                                TextColor::WHITE,
-                                                OriginColor::new(Color::WHITE),
-                                                TranslatableText("cancel".into()),
-                                                ResizableFont::vertical(1280.0, 42.0),
-                                                Visibility::Inherited,
-                                            ));
-                                        },
-                                    );
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new("Cancel"),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            TranslatableText("cancel".into()),
+                                            ResizableFont::vertical(1280.0, 42.0),
+                                            OriginColor::<TextColor>::new(Color::WHITE),
+                                            TextColor::WHITE,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
                                 })
                                 .id();
                             loading_entities.insert(entity);

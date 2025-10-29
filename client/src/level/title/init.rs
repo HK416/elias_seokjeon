@@ -126,13 +126,14 @@ fn setup_title_interface(
     let entity = commands
         .spawn((
             Node {
-                width: Val::Vw(100.0),
-                height: Val::Vh(100.0),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            Visibility::Inherited,
+            UI::Root,
+            Visibility::Hidden,
             SpawnRequest,
         ))
         .with_children(|parent| {
@@ -151,148 +152,145 @@ fn setup_title_interface(
                 ))
                 .with_children(|parent| {
                     add_vertical_space(loading_entities, parent, Val::Percent(20.0));
+
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(100.0),
                                 height: Val::Percent(16.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
                                 ..Default::default()
                             },
-                            ZIndex(4),
+                            BorderRadius::all(Val::Percent(30.0)),
+                            OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
                             UI::InTitleGameStartButton,
-                            Visibility::Hidden,
+                            Visibility::Inherited,
+                            BoxShadow::new(
+                                Color::BLACK.with_alpha(0.8),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::Px(1.0),
+                            ),
                             SpawnRequest,
                             Button,
                         ))
                         .with_children(|parent| {
-                            create_button(
-                                loading_entities,
-                                parent,
-                                ASPECT_RATIO,
-                                0.26,
-                                0.128,
-                                BORDER_GREEN_COLOR_0,
-                                BG_GREEN_COLOR_0,
-                                None,
-                                None,
-                                BoxShadow::new(
-                                    Color::BLACK.with_alpha(0.8),
-                                    Val::Percent(2.0),
-                                    Val::Percent(10.0),
-                                    Val::Percent(5.0),
-                                    Val::Px(1.0),
-                                ),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("Game Start"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        OriginColor::fill(Color::BLACK),
-                                        TranslatableText("game_start".into()),
-                                        ResizableFont::vertical(1280.0, 52.0),
-                                    ));
-                                },
-                            );
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("Game Start"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TranslatableText("game_start".into()),
+                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);
 
                     add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(100.0),
                                 height: Val::Percent(16.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
                                 ..Default::default()
                             },
-                            ZIndex(4),
+                            BorderRadius::all(Val::Percent(30.0)),
+                            OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
                             UI::InTitleOptionButton,
-                            Visibility::Hidden,
+                            Visibility::Inherited,
+                            BoxShadow::new(
+                                Color::BLACK.with_alpha(0.8),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::Px(1.0),
+                            ),
                             SpawnRequest,
                             Button,
                         ))
                         .with_children(|parent| {
-                            create_button(
-                                loading_entities,
-                                parent,
-                                ASPECT_RATIO,
-                                0.26,
-                                0.128,
-                                BORDER_GREEN_COLOR_0,
-                                BG_GREEN_COLOR_0,
-                                None,
-                                None,
-                                BoxShadow::new(
-                                    Color::BLACK.with_alpha(0.8),
-                                    Val::Percent(2.0),
-                                    Val::Percent(10.0),
-                                    Val::Percent(5.0),
-                                    Val::Px(1.0),
-                                ),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("Settings"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        OriginColor::fill(Color::BLACK),
-                                        TranslatableText("game_settings".into()),
-                                        ResizableFont::vertical(1280.0, 52.0),
-                                    ));
-                                },
-                            );
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("Settings"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TranslatableText("game_settings".into()),
+                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);
 
                     add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(100.0),
                                 height: Val::Percent(16.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
                                 ..Default::default()
                             },
-                            ZIndex(4),
+                            BorderRadius::all(Val::Percent(30.0)),
+                            OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
                             UI::InTitleHowToPlayButton,
-                            Visibility::Hidden,
+                            Visibility::Inherited,
+                            BoxShadow::new(
+                                Color::BLACK.with_alpha(0.8),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::Px(1.0),
+                            ),
                             SpawnRequest,
                             Button,
                         ))
                         .with_children(|parent| {
-                            create_button(
-                                loading_entities,
-                                parent,
-                                ASPECT_RATIO,
-                                0.26,
-                                0.128,
-                                BORDER_GREEN_COLOR_0,
-                                BG_GREEN_COLOR_0,
-                                None,
-                                None,
-                                BoxShadow::new(
-                                    Color::BLACK.with_alpha(0.8),
-                                    Val::Percent(2.0),
-                                    Val::Percent(10.0),
-                                    Val::Percent(5.0),
-                                    Val::Px(1.0),
-                                ),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("How to play"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        OriginColor::fill(Color::BLACK),
-                                        TranslatableText("how_to_play".into()),
-                                        ResizableFont::vertical(1280.0, 52.0),
-                                    ));
-                                },
-                            );
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("How to play"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TranslatableText("how_to_play".into()),
+                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);

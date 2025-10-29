@@ -223,9 +223,6 @@ fn setup_option_interface(
                                 asset_server,
                                 loading_entities,
                                 parent,
-                                ASPECT_RATIO,
-                                width * 0.9,
-                                height * 0.15,
                                 BORDER_GREEN_COLOR_2,
                                 BG_GREEN_COLOR_2,
                                 Some(BG_GREEN_COLOR_3),
@@ -241,40 +238,36 @@ fn setup_option_interface(
                                     Node {
                                         width: Val::Percent(24.0),
                                         height: Val::Percent(12.0),
+                                        border: UiRect::all(Val::VMin(1.0)),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
                                     },
+                                    BorderRadius::all(Val::Percent(30.0)),
+                                    OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
+                                    BorderColor::all(BORDER_YELLO_COLOR_0),
+                                    BackgroundColor(BG_YELLO_COLOR_0),
                                     UI::InOptionExitButton,
                                     Visibility::Inherited,
                                     SpawnRequest,
                                     Button,
                                 ))
                                 .with_children(|parent| {
-                                    create_button(
-                                        loading_entities,
-                                        parent,
-                                        ASPECT_RATIO,
-                                        width * 0.24,
-                                        height * 0.1,
-                                        BORDER_YELLO_COLOR_0,
-                                        BG_YELLO_COLOR_0,
-                                        None,
-                                        None,
-                                        BoxShadow::default(),
-                                        |commands| {
-                                            let font = asset_server.load(FONT_PATH);
-                                            commands.insert((
-                                                Text::from("Back"),
-                                                TextFont::from(font),
-                                                TextLayout::new_with_justify(Justify::Center),
-                                                TextColor::BLACK,
-                                                OriginColor::fill(Color::BLACK),
-                                                TranslatableText("back".into()),
-                                                ResizableFont::vertical(1280.0, 42.0),
-                                            ));
-                                        },
-                                    );
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new("Back"),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            ResizableFont::vertical(1280.0, 42.0),
+                                            TranslatableText("back".into()),
+                                            OriginColor::<TextColor>::new(Color::BLACK),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
                                 })
                                 .id();
                             loading_entities.insert(entity);
@@ -428,9 +421,9 @@ fn add_volume_controller<LabelFn, VolumeFn>(
                                                 border: UiRect::all(Val::VMin(0.5)),
                                                 ..Default::default()
                                             },
+                                            OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
                                             BorderColor::all(BORDER_GREEN_COLOR_0),
                                             BackgroundColor(BG_GREEN_COLOR_0),
-                                            OriginColor::new(BG_GREEN_COLOR_0),
                                             BorderRadius::all(Val::Percent(50.0)),
                                             Visibility::Inherited,
                                             SpawnRequest,
@@ -483,9 +476,6 @@ fn add_locale_buttons(
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    aspect_ratio: f32,
-    percent_width: f32,
-    percent_height: f32,
     border_color: Color,
     inner_color: Color,
     hoverd_color: Option<Color>,
@@ -507,46 +497,42 @@ fn add_locale_buttons(
             SpawnRequest,
         ))
         .with_children(|parent| {
-            let width = 0.2;
-            let percent_width = percent_width * width;
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 110.0),
+                        width: Val::Percent(22.0),
                         height: Val::Percent(100.0),
+                        border: UiRect::all(Val::VMin(0.8)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
+                    BorderRadius::all(Val::Percent(30.0)),
+                    OriginColor::<BackgroundColor>::new(inner_color)
+                        .with_hovered(hoverd_color.unwrap_or(inner_color.darker(0.15)))
+                        .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
+                    BorderColor::all(border_color),
+                    BackgroundColor(inner_color),
                     UI::LocaleButtonEn,
                     Visibility::Inherited,
                     SpawnRequest,
                     Button,
                 ))
                 .with_children(|parent| {
-                    let font = asset_server.load(FONT_PATH);
-                    create_button(
-                        loading_entities,
-                        parent,
-                        aspect_ratio,
-                        percent_width,
-                        percent_height,
-                        border_color,
-                        inner_color,
-                        hoverd_color,
-                        pressed_color,
-                        BoxShadow::default(),
-                        |commands| {
-                            commands.insert((
-                                Text::new("English"),
-                                TextFont::from(font),
-                                TextLayout::new_with_justify(Justify::Center),
-                                TextColor::BLACK,
-                                OriginColor::fill(Color::BLACK),
-                                ResizableFont::vertical(1280.0, 42.0),
-                            ));
-                        },
-                    );
+                    let entity = parent
+                        .spawn((
+                            Node::default(),
+                            Text::new("English"),
+                            TextFont::from(asset_server.load(FONT_PATH)),
+                            TextLayout::new_with_justify(Justify::Center),
+                            ResizableFont::vertical(1280.0, 42.0),
+                            OriginColor::<TextColor>::fill(Color::BLACK),
+                            TextColor::BLACK,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
                 })
                 .id();
             loading_entities.insert(entity);
@@ -555,41 +541,39 @@ fn add_locale_buttons(
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 110.0),
+                        width: Val::Percent(22.0),
                         height: Val::Percent(100.0),
+                        border: UiRect::all(Val::VMin(0.8)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
+                    BorderRadius::all(Val::Percent(30.0)),
+                    OriginColor::<BackgroundColor>::new(inner_color)
+                        .with_hovered(hoverd_color.unwrap_or(inner_color.darker(0.15)))
+                        .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
+                    BorderColor::all(border_color),
+                    BackgroundColor(inner_color),
                     UI::LocaleButtonJa,
                     Visibility::Inherited,
                     SpawnRequest,
                     Button,
                 ))
                 .with_children(|parent| {
-                    let font = asset_server.load(FONT_PATH);
-                    create_button(
-                        loading_entities,
-                        parent,
-                        aspect_ratio,
-                        percent_width,
-                        percent_height,
-                        border_color,
-                        inner_color,
-                        hoverd_color,
-                        pressed_color,
-                        BoxShadow::default(),
-                        |commands| {
-                            commands.insert((
-                                Text::new("日本語"),
-                                TextFont::from(font),
-                                TextLayout::new_with_justify(Justify::Center),
-                                TextColor::BLACK,
-                                OriginColor::fill(Color::BLACK),
-                                ResizableFont::vertical(1280.0, 42.0),
-                            ));
-                        },
-                    );
+                    let entity = parent
+                        .spawn((
+                            Node::default(),
+                            Text::new("日本語"),
+                            TextFont::from(asset_server.load(FONT_PATH)),
+                            TextLayout::new_with_justify(Justify::Center),
+                            ResizableFont::vertical(1280.0, 42.0),
+                            OriginColor::<TextColor>::fill(Color::BLACK),
+                            TextColor::BLACK,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
                 })
                 .id();
             loading_entities.insert(entity);
@@ -598,41 +582,39 @@ fn add_locale_buttons(
             let entity = parent
                 .spawn((
                     Node {
-                        width: Val::Percent(width * 110.0),
+                        width: Val::Percent(22.0),
                         height: Val::Percent(100.0),
+                        border: UiRect::all(Val::VMin(0.8)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
+                    BorderRadius::all(Val::Percent(30.0)),
+                    OriginColor::<BackgroundColor>::new(inner_color)
+                        .with_hovered(hoverd_color.unwrap_or(inner_color.darker(0.15)))
+                        .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
+                    BorderColor::all(border_color),
+                    BackgroundColor(inner_color),
                     UI::LocaleButtonKo,
                     Visibility::Inherited,
                     SpawnRequest,
                     Button,
                 ))
                 .with_children(|parent| {
-                    let font = asset_server.load(FONT_PATH);
-                    create_button(
-                        loading_entities,
-                        parent,
-                        aspect_ratio,
-                        percent_width,
-                        percent_height,
-                        border_color,
-                        inner_color,
-                        hoverd_color,
-                        pressed_color,
-                        BoxShadow::default(),
-                        |commands| {
-                            commands.insert((
-                                Text::new("한국어"),
-                                TextFont::from(font),
-                                TextLayout::new_with_justify(Justify::Center),
-                                TextColor::BLACK,
-                                OriginColor::fill(Color::BLACK),
-                                ResizableFont::vertical(1280.0, 42.0),
-                            ));
-                        },
-                    );
+                    let entity = parent
+                        .spawn((
+                            Node::default(),
+                            Text::new("한국어"),
+                            TextFont::from(asset_server.load(FONT_PATH)),
+                            TextLayout::new_with_justify(Justify::Center),
+                            ResizableFont::vertical(1280.0, 42.0),
+                            OriginColor::<TextColor>::fill(Color::BLACK),
+                            TextColor::BLACK,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
                 })
                 .id();
             loading_entities.insert(entity);

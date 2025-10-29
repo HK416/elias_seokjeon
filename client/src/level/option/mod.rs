@@ -106,8 +106,8 @@ fn handle_button_interaction(
     mut locale: ResMut<Locale>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
-    mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
-    mut button_color_query: Query<(&mut BackgroundColor, &OriginColor)>,
+    mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
+    mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &UI, &Interaction),
         (With<OptionLevelEntity>, With<Button>),

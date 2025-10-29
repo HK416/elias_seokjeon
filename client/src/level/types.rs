@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
@@ -53,18 +55,20 @@ pub struct InGameLevelEntity;
 pub struct InGameLevelRoot;
 
 #[derive(Component)]
-pub struct OriginColor {
+pub struct OriginColor<T> {
     pub none: Color,
     pub hovered: Color,
     pub pressed: Color,
+    _panthom: PhantomData<T>,
 }
 
-impl OriginColor {
+impl<T> OriginColor<T> {
     pub fn new(none: Color) -> Self {
         Self {
             none,
             hovered: none.darker(0.15),
             pressed: none.darker(0.3),
+            _panthom: PhantomData,
         }
     }
 
@@ -73,6 +77,7 @@ impl OriginColor {
             none,
             hovered: none,
             pressed: none,
+            _panthom: PhantomData,
         }
     }
 
@@ -90,6 +95,8 @@ impl OriginColor {
 #[derive(Component, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub enum UI {
+    Root,
+
     BackgroundVolumeSlider,
     BackgroundVolume,
     EffectVolumeSlider,

@@ -152,50 +152,41 @@ fn setup_matching_cancel_interface(
                                     SpawnRequest,
                                 ))
                                 .with_children(|parent| {
-                                    let percent_width = width * 0.9 * 0.4;
-                                    let percent_height = height * 0.2;
                                     let entity = parent
                                         .spawn((
                                             Node {
                                                 width: Val::Percent(40.0),
                                                 height: Val::Percent(100.0),
+                                                border: UiRect::all(Val::VMin(0.8)),
                                                 justify_content: JustifyContent::Center,
                                                 align_items: AlignItems::Center,
                                                 ..Default::default()
                                             },
+                                            BorderRadius::all(Val::Percent(30.0)),
+                                            OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
+                                            BorderColor::all(BORDER_RED_COLOR_0),
+                                            BackgroundColor(BG_RED_COLOR_0),
                                             UI::InMatchingCancelYesButton,
                                             Visibility::Inherited,
                                             SpawnRequest,
                                             Button,
                                         ))
                                         .with_children(|parent| {
-                                            create_button(
-                                                loading_entities,
-                                                parent,
-                                                ASPECT_RATIO,
-                                                percent_width,
-                                                percent_height,
-                                                BORDER_RED_COLOR_0,
-                                                BG_RED_COLOR_0,
-                                                None,
-                                                None,
-                                                BoxShadow::default(),
-                                                |commands| {
-                                                    let font = asset_server.load(FONT_PATH);
-                                                    commands.insert((
-                                                        Text::new("Yes"),
-                                                        TextFont::from(font),
-                                                        TextLayout::new_with_justify(
-                                                            Justify::Center,
-                                                        ),
-                                                        TextColor::WHITE,
-                                                        OriginColor::new(Color::WHITE),
-                                                        TranslatableText("yes".into()),
-                                                        ResizableFont::vertical(1280.0, 36.0),
-                                                        Visibility::Inherited,
-                                                    ));
-                                                },
-                                            );
+                                            let entity = parent
+                                                .spawn((
+                                                    Node::default(),
+                                                    Text::new("Yes"),
+                                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                                    TextLayout::new_with_justify(Justify::Center),
+                                                    TranslatableText("yes".into()),
+                                                    ResizableFont::vertical(1280.0, 42.0),
+                                                    OriginColor::<TextColor>::new(Color::WHITE),
+                                                    TextColor::WHITE,
+                                                    Visibility::Inherited,
+                                                    SpawnRequest,
+                                                ))
+                                                .id();
+                                            loading_entities.insert(entity);
                                         })
                                         .id();
                                     loading_entities.insert(entity);
@@ -211,43 +202,36 @@ fn setup_matching_cancel_interface(
                                             Node {
                                                 width: Val::Percent(40.0),
                                                 height: Val::Percent(100.0),
+                                                border: UiRect::all(Val::VMin(0.8)),
                                                 justify_content: JustifyContent::Center,
                                                 align_items: AlignItems::Center,
                                                 ..Default::default()
                                             },
+                                            BorderRadius::all(Val::Percent(30.0)),
+                                            OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
+                                            BorderColor::all(BORDER_YELLO_COLOR_0),
+                                            BackgroundColor(BG_YELLO_COLOR_0),
                                             UI::InMatchingCancelNoButton,
                                             Visibility::Inherited,
                                             SpawnRequest,
                                             Button,
                                         ))
                                         .with_children(|parent| {
-                                            create_button(
-                                                loading_entities,
-                                                parent,
-                                                ASPECT_RATIO,
-                                                percent_width,
-                                                percent_height,
-                                                BORDER_YELLO_COLOR_0,
-                                                BG_YELLO_COLOR_0,
-                                                None,
-                                                None,
-                                                BoxShadow::default(),
-                                                |commands| {
-                                                    let font = asset_server.load(FONT_PATH);
-                                                    commands.insert((
-                                                        Text::new("No"),
-                                                        TextFont::from(font),
-                                                        TextLayout::new_with_justify(
-                                                            Justify::Center,
-                                                        ),
-                                                        TextColor::BLACK,
-                                                        OriginColor::new(Color::BLACK),
-                                                        TranslatableText("no".into()),
-                                                        ResizableFont::vertical(1280.0, 42.0),
-                                                        Visibility::Inherited,
-                                                    ));
-                                                },
-                                            );
+                                            let entity = parent
+                                                .spawn((
+                                                    Node::default(),
+                                                    Text::new("No"),
+                                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                                    TextLayout::new_with_justify(Justify::Center),
+                                                    TranslatableText("no".into()),
+                                                    ResizableFont::vertical(1280.0, 42.0),
+                                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                                    TextColor::BLACK,
+                                                    Visibility::Inherited,
+                                                    SpawnRequest,
+                                                ))
+                                                .id();
+                                            loading_entities.insert(entity);
                                         })
                                         .id();
                                     loading_entities.insert(entity);

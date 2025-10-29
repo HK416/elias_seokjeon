@@ -38,81 +38,12 @@ pub fn add_horizontal_space(
     loading_entities.insert(entity);
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn create_button<F>(
-    loading_entities: &mut LoadingEntities,
-    parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    aspect_ratio: f32,
-    percent_width: f32,
-    percent_height: f32,
-    border_color: Color,
-    inner_color: Color,
-    hoverd_color: Option<Color>,
-    pressed_color: Option<Color>,
-    shadow: BoxShadow,
-    func: F,
-) where
-    F: FnOnce(&mut EntityCommands<'_>),
-{
-    let entity = parent
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..Default::default()
-            },
-            BorderRadius::all(Val::Percent(30.0)),
-            BackgroundColor(border_color),
-            OriginColor::fill(border_color),
-            Visibility::Inherited,
-            shadow,
-            SpawnRequest,
-            ZIndex(5),
-        ))
-        .with_children(|parent| {
-            let t = percent_width / percent_height * aspect_ratio;
-            let width = 0.96;
-            let height = 1.0 - t * (1.0 - width);
-            let entity = parent
-                .spawn((
-                    Node {
-                        width: Val::Percent(width * 100.0),
-                        height: Val::Percent(height * 100.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..Default::default()
-                    },
-                    BorderRadius::all(Val::Percent(30.0)),
-                    BackgroundColor(inner_color),
-                    OriginColor::new(inner_color)
-                        .with_hovered(hoverd_color.unwrap_or(inner_color.darker(0.15)))
-                        .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
-                    Visibility::Inherited,
-                    SpawnRequest,
-                ))
-                .with_children(|parent| {
-                    let mut commands =
-                        parent.spawn((Node::default(), Visibility::Inherited, SpawnRequest));
-                    func(&mut commands);
-
-                    let entity = commands.id();
-                    loading_entities.insert(entity);
-                })
-                .id();
-            loading_entities.insert(entity);
-        })
-        .id();
-    loading_entities.insert(entity);
-}
-
 pub fn update_button_visual(
     entity: Entity,
     interaction: &Interaction,
     children_query: &Query<&Children>,
-    text_color_query: &mut Query<(&mut TextColor, &OriginColor)>,
-    button_color_query: &mut Query<(&mut BackgroundColor, &OriginColor)>,
+    text_color_query: &mut Query<(&mut TextColor, &OriginColor<TextColor>)>,
+    button_color_query: &mut Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
 ) {
     if let Ok((mut text_color, origin_color)) = text_color_query.get_mut(entity) {
         let color = match interaction {

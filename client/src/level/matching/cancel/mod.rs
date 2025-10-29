@@ -34,10 +34,7 @@ impl Plugin for InnerPlugin {
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
-            handle_received_packets.run_if(
-                in_state(LevelStates::InMatchingCancel)
-                    .or(in_state(LevelStates::SwitchToInMatchingCancel)),
-            ),
+            handle_received_packets.run_if(in_state(LevelStates::InMatchingCancel)),
         );
     }
 }
@@ -79,8 +76,8 @@ fn handle_button_interaction(
     mut commands: Commands,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
-    mut text_color_query: Query<(&mut TextColor, &OriginColor)>,
-    mut button_color_query: Query<(&mut BackgroundColor, &OriginColor)>,
+    mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
+    mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &UI, &Interaction),
         (With<MatchingCancelLevelEntity>, Changed<Interaction>),
