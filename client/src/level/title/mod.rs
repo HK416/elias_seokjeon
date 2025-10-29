@@ -37,10 +37,8 @@ impl Plugin for InnerPlugin {
                 Update,
                 (
                     update_grabbed_timer,
-                    update_wave_animation,
                     added_grabbed_component,
                     removed_grabbed_component,
-                    handle_spine_animation_completed,
                     update_spine_bone_position,
                 )
                     .run_if(in_state(LevelStates::InTitle)),
@@ -133,10 +131,10 @@ fn handle_button_interaction(
             (UI::InTitleGameStartButton, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network);
-                next_state.set(LevelStates::InMatching);
+                next_state.set(LevelStates::SwitchToInMatching);
             }
             (UI::InTitleOptionButton, Interaction::Pressed) => {
-                next_state.set(LevelStates::InOption);
+                next_state.set(LevelStates::SwitchToInOption);
             }
             (UI::InTitleHowToPlayButton, Interaction::Pressed) => {}
             _ => { /* empty */ }

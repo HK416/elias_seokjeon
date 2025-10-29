@@ -1,4 +1,6 @@
 mod enter;
+mod init;
+mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
@@ -11,6 +13,8 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(enter::InnerPlugin);
+        app.add_plugins(enter::InnerPlugin)
+            .add_plugins(init::InnerPlugin)
+            .add_plugins(switch::InnerPlugin);
     }
 }

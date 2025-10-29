@@ -1,6 +1,6 @@
 mod cancel;
-
 mod init;
+mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
@@ -18,36 +18,26 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(cancel::InnerPlugin)
             .add_plugins(init::InnerPlugin)
-            .add_systems(
-                OnEnter(LevelStates::InMatching),
-                (debug_label, show_interface, setup_ui_animation),
-            )
-            .add_systems(
-                OnExit(LevelStates::InMatching),
-                (hide_interface, cleanup_backout_anim::<MatchingLevelEntity>),
-            )
+            .add_plugins(switch::InnerPlugin)
+            .add_systems(OnEnter(LevelStates::InMatching), debug_label)
+            .add_systems(OnExit(LevelStates::InMatching), hide_interface)
             .add_systems(
                 PreUpdate,
                 (handle_keyboard_input, handle_button_interaction)
-                    .run_if(resource_exists::<Interactable>)
                     .run_if(in_state(LevelStates::InMatching)),
             )
             .add_systems(
                 Update,
-                (
-                    update_backout_anim::<MatchingLevelEntity>,
-                    check_backout_anim_finished::<MatchingLevelEntity>
-                        .run_if(not(resource_exists::<Interactable>)),
-                    handle_spine_animation_completed,
-                    update_wave_animation,
-                )
+                (handle_spine_animation_completed, update_wave_animation)
                     .run_if(in_state(LevelStates::InMatching)),
             );
 
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
-            handle_received_packets.run_if(in_state(LevelStates::InMatching)),
+            handle_received_packets.run_if(
+                in_state(LevelStates::InMatching).or(in_state(LevelStates::SwitchToInMatching)),
+            ),
         );
     }
 }
@@ -56,30 +46,6 @@ impl Plugin for InnerPlugin {
 
 fn debug_label() {
     info!("Current Level: InMatching");
-}
-
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLevelEntity>)>) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
-}
-
-fn setup_ui_animation(
-    mut commands: Commands,
-    query: Query<(Entity, &UI), With<MatchingLevelEntity>>,
-) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::InMatchingModal => {
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    UI_POPUP_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
-    }
 }
 
 // --- CLEANUP SYSTEMS ---
@@ -97,7 +63,7 @@ fn handle_keyboard_input(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        next_state.set(LevelStates::InMatchingCancel);
+        next_state.set(LevelStates::SwitchToInMatchingCancel);
     }
 }
 
@@ -123,7 +89,7 @@ fn handle_button_interaction(
 
         match (ui, interaction) {
             (UI::InMatchingCancelButton, Interaction::Pressed) => {
-                next_state.set(LevelStates::InMatchingCancel);
+                next_state.set(LevelStates::SwitchToInMatchingCancel);
             }
             _ => { /* empty */ }
         }
@@ -160,7 +126,7 @@ fn handle_received_packets(
                 }
                 Packet::MatchingSuccess { other, hero } => {
                     commands.insert_resource(OtherInfo { name: other, hero });
-                    next_state.set(LevelStates::LoadGame);
+                    next_state.set(LevelStates::SwitchToLoadGame);
                 }
                 _ => { /* empty */ }
             },

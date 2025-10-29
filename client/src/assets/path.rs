@@ -1,4 +1,7 @@
+use bevy::platform::collections::HashMap;
 use const_format::concatcp;
+use lazy_static::lazy_static;
+use protocol::{Hero, NUM_HEROS};
 
 #[rustfmt::skip] pub const QUERY: &str = "?";
 #[rustfmt::skip] pub const VERSION: &str = concat!("v=", env!("CARGO_PKG_VERSION_PATCH"));
@@ -20,3 +23,14 @@ use const_format::concatcp;
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND_BLURED: &str = concatcp!("textures/Background_Blured.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LOADING_ICON_DECO: &str = concatcp!("textures/Loading_Icon_Deco.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.texture", QUERY, VERSION);
+
+lazy_static! {
+    pub static ref MODEL_PATH_HEROS: HashMap<Hero, &'static str> = {
+        let mut map = HashMap::default();
+        map.insert(Hero::Butter, MODEL_PATH_BUTTER);
+        map.insert(Hero::Kommy, MODEL_PATH_KOMMY);
+
+        assert_eq!(map.len(), NUM_HEROS);
+        map
+    };
+}

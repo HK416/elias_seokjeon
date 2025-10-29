@@ -1,5 +1,6 @@
 pub mod init;
 pub mod matching;
+pub mod sync;
 pub mod title;
 
 use std::{

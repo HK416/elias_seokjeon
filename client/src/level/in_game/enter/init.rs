@@ -94,7 +94,7 @@ fn setup_enter_game_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::EnterGameLoadingBar,
+            UI::EnterGameLoadingBackground,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(4),
@@ -116,8 +116,10 @@ fn setup_enter_game_interface(
                 .spawn((
                     Node {
                         width: Val::Percent(80.0),
+                        border: UiRect::all(Val::VMin(2.0)),
                         ..Default::default()
                     },
+                    UI::EnterGameLoadingBar,
                     Visibility::Inherited,
                     SpawnRequest,
                 ))
@@ -129,6 +131,7 @@ fn setup_enter_game_interface(
                                 ..Default::default()
                             },
                             Visibility::Inherited,
+                            EnterGameLoadingCursor,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
@@ -144,7 +147,6 @@ fn setup_enter_game_interface(
                                     },
                                     Transform::from_scale(Vec3::splat(0.01)),
                                     Visibility::Inherited,
-                                    EnterGameLoadingCursor,
                                     SpawnRequest,
                                 ))
                                 .id();
@@ -170,7 +172,7 @@ fn setup_enter_game_interface(
                 ..Default::default()
             },
             Transform::from_scale(Vec3::splat(0.01)),
-            UI::EnterGameLoadingBar,
+            UI::EnterGameLoadingBackground,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(3),
@@ -199,6 +201,7 @@ fn setup_enter_game_interface(
                     BorderRadius::all(Val::Percent(50.0)),
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(Color::BLACK),
+                    UI::EnterGameLoadingBar,
                     Visibility::Inherited,
                     SpawnRequest,
                 ))

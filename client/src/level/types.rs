@@ -47,6 +47,12 @@ pub struct EnterGameLoadingBar;
 pub struct EnterGameLoadingCursor;
 
 #[derive(Component)]
+pub struct InGameLevelEntity;
+
+#[derive(Component)]
+pub struct InGameLevelRoot;
+
+#[derive(Component)]
 pub struct OriginColor {
     pub none: Color,
     pub hovered: Color,
@@ -112,6 +118,7 @@ pub enum UI {
     InMatchingModal,
     InMatchingCancelButton,
 
+    EnterGameLoadingBackground,
     EnterGameLoadingBar,
 }
 

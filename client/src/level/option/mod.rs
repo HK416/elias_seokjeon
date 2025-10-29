@@ -1,4 +1,5 @@
 mod init;
+mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
@@ -14,21 +15,16 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(init::InnerPlugin)
+            .add_plugins(switch::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InOption),
-                (
-                    debug_label,
-                    show_interface,
-                    setup_ui_animation,
-                    init_selected_slider_flag,
-                ),
+                (debug_label, init_selected_slider_flag),
             )
             .add_systems(
                 OnExit(LevelStates::InOption),
                 (
                     hide_interface,
                     cleanup_resource,
-                    cleanup_backout_anim::<OptionLevelEntity>,
                     #[cfg(target_arch = "wasm32")]
                     save_volume_options,
                 ),
@@ -36,15 +32,11 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 PreUpdate,
                 (handle_keyboard_inputs, handle_button_interaction)
-                    .run_if(resource_exists::<Interactable>)
                     .run_if(in_state(LevelStates::InOption)),
             )
             .add_systems(
                 Update,
                 (
-                    update_backout_anim::<OptionLevelEntity>,
-                    check_backout_anim_finished::<OptionLevelEntity>
-                        .run_if(not(resource_exists::<Interactable>)),
                     handle_slider_pressed,
                     handle_slider_pressed_for_moblie,
                     handle_slider_release,
@@ -70,30 +62,6 @@ impl Plugin for InnerPlugin {
 
 fn debug_label() {
     info!("Current Level: InOption");
-}
-
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<OptionLevelEntity>)>) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
-}
-
-fn setup_ui_animation(
-    mut commands: Commands,
-    query: Query<(Entity, &UI), With<OptionLevelEntity>>,
-) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::InOptionModal => {
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    UI_POPUP_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
-    }
 }
 
 fn init_selected_slider_flag(mut commands: Commands) {

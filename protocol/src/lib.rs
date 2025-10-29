@@ -1,15 +1,18 @@
-use rand::{distr::{Distribution, StandardUniform}, Rng};
+pub use rand;
+use rand::{
+    Rng,
+    distr::{Distribution, StandardUniform},
+};
 pub use serde;
 pub use serde_json;
 pub use uuid;
-pub use rand;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-const NUM_HEROS: usize = 2;
+pub const NUM_HEROS: usize = 2;
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Hero {
     Butter,
     Kommy,
@@ -25,21 +28,26 @@ impl Distribution<Hero> for StandardUniform {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Packet {
     Connection {
+        // Server -> Client
         uuid: Uuid,
         name: String,
         hero: Hero,
     },
-    EnterGame,
-    TryCancelGame,
-    CancelSuccess,
+    EnterGame,     // Client -> Server
+    TryCancelGame, // Client -> Server
+    CancelSuccess, // Server -> Client
     MatchingStatus {
+        // Server -> Client
         millis: u16,
     },
     MatchingSuccess {
+        // Server -> Client
         other: String,
         hero: Hero,
     },
+    GameLoadSuccess, // Client -> Server
+    GameLoadTimeout, // Server -> Client
 }

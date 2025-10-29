@@ -70,6 +70,25 @@ impl AssetGroup for EnterGameAssets {
 }
 
 #[derive(Default, Resource)]
+pub struct InGameAssets {
+    handles: Vec<UntypedHandle>,
+}
+
+impl AssetGroup for InGameAssets {
+    fn push(&mut self, handle: impl Into<UntypedHandle>) {
+        self.handles.push(handle.into());
+    }
+
+    fn ids(&self) -> Vec<UntypedAssetId> {
+        self.handles.iter().map(|h| h.id()).collect()
+    }
+
+    fn len(&self) -> usize {
+        self.handles.len()
+    }
+}
+
+#[derive(Default, Resource)]
 pub struct LoadingEntities {
     entities: HashSet<Entity>,
     total: usize,
@@ -158,6 +177,3 @@ impl SelectedSliderCursor {
         }
     }
 }
-
-#[derive(Resource)]
-pub struct Interactable;

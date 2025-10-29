@@ -1,6 +1,5 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use bevy_spine::{Spine, SpineEvent};
 
 use super::*;
 
@@ -106,16 +105,6 @@ pub fn cleanup_loading_resource(mut commands: Commands) {
     commands.remove_resource::<LoadingEntities>();
 }
 
-pub fn cleanup_backout_anim<Marker: Component>(
-    mut commands: Commands,
-    query: Query<Entity, (With<UI>, With<Marker>, With<UiBackOutScale>)>,
-) {
-    commands.remove_resource::<Interactable>();
-    for entity in query.iter() {
-        commands.entity(entity).remove::<UiBackOutScale>();
-    }
-}
-
 // --- UPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
@@ -167,96 +156,4 @@ pub fn update_entity_spawn_progress(
 
     let progress = loading_assets.percent();
     node.width = Val::Percent(progress * 100.0);
-}
-
-pub fn handle_spine_animation_completed(
-    mut spine_events: MessageReader<SpineEvent>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
-) {
-    for event in spine_events.read() {
-        if let SpineEvent::Complete { entity, animation } = event
-            && let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(*entity)
-            && let Some(track) = spine.animation_state.get_current(0)
-        {
-            if track.animation().name() != animation {
-                continue;
-            }
-
-            *anim_state = match *anim_state {
-                CharacterAnimState::PatEnd
-                | CharacterAnimState::TouchEnd
-                | CharacterAnimState::SmashEnd2 => CharacterAnimState::Idle,
-                CharacterAnimState::SmashEnd1 => CharacterAnimState::SmashEnd2,
-                _ => continue,
-            };
-            play_character_animation(&mut spine, *character, *anim_state);
-        }
-    }
-}
-
-#[allow(clippy::type_complexity)]
-pub fn update_wave_animation(
-    mut commands: Commands,
-    mut spine_query: Query<(&mut Spine, &CharacterAnimState)>,
-    mut wave_anim_query: Query<(
-        Entity,
-        &TargetSpine,
-        &TargetSpineBone,
-        &SpineBoneOriginPosition,
-        &mut BallWaveAnimation,
-    )>,
-    time: Res<Time>,
-) {
-    for (entity, target_spine, target_spine_bone, origin_position, mut wave_anim) in
-        wave_anim_query.iter_mut()
-    {
-        wave_anim.elapsed += time.delta_secs();
-        let t = (wave_anim.elapsed / BALL_WAVE_DURATION).min(1.0);
-        let delta = normalized_wave(t, 0.5, 1.0, 5.0, PI);
-
-        if let Ok((mut spine, anim_state)) = spine_query.get_mut(target_spine.entity)
-            && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
-        {
-            if matches!(*anim_state, CharacterAnimState::TouchIdle) {
-                bone.set_position(origin_position.local);
-                spine.skeleton.update_world_transform();
-                commands.entity(entity).remove::<BallWaveAnimation>();
-                continue;
-            }
-
-            bone.set_position(
-                origin_position.local + wave_anim.direction.yx() * delta * wave_anim.power,
-            );
-            spine.skeleton.update_world_transform();
-        }
-
-        if wave_anim.elapsed > BALL_WAVE_DURATION {
-            commands.entity(entity).remove::<BallWaveAnimation>();
-        }
-    }
-}
-
-#[allow(clippy::type_complexity)]
-pub fn update_backout_anim<Marker: Component>(
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut UiBackOutScale, &mut UiTransform), (With<UI>, With<Marker>)>,
-    time: Res<Time>,
-) {
-    for (entity, mut back_out, mut transform) in query.iter_mut() {
-        back_out.tick(time.delta_secs());
-        transform.scale = back_out.scale();
-
-        if back_out.is_finished() {
-            commands.entity(entity).remove::<UiBackOutScale>();
-        }
-    }
-}
-
-pub fn check_backout_anim_finished<Marker: Component>(
-    mut commands: Commands,
-    query: Query<(), (With<UI>, With<Marker>, With<UiBackOutScale>)>,
-) {
-    if query.is_empty() {
-        commands.insert_resource(Interactable);
-    }
 }

@@ -71,10 +71,14 @@ async fn update_internal() {
                     }
                     StreamPollResult::Error(e) => {
                         println!("WebSocket disconnected ({:?}): {e}", node.player);
+                        #[cfg(not(feature = "no-debuging-log"))]
+                        println!("Queue Size: {}", nodes.len());
                         continue 'update; // Player is removed due to error.
                     }
                     StreamPollResult::Closed => {
                         println!("WebSocket disconnected ({:?})", node.player);
+                        #[cfg(not(feature = "no-debuging-log"))]
+                        println!("Queue Size: {}", nodes.len());
                         continue 'update; // Player is removed due to closure.
                     }
                 }
@@ -90,45 +94,9 @@ async fn update_internal() {
             let p1 = nodes.pop_front().unwrap().player;
 
             #[cfg(not(feature = "no-debuging-log"))]
-            println!(
-                "[{:?} VS {:?}] - Current State: Matching / Queue Size: {}",
-                p0,
-                p1,
-                nodes.len()
-            );
+            println!("[{:?} VS {:?}] - Queue Size: {}", p0, p1, nodes.len());
 
-            p0.tx
-                .send(Packet::MatchingSuccess {
-                    other: p1.name.clone(),
-                    hero: p1.hero,
-                })
-                .unwrap();
-            p1.tx
-                .send(Packet::MatchingSuccess {
-                    other: p0.name.clone(),
-                    hero: p0.hero,
-                })
-                .unwrap();
-
-            // --- Temp Code ---
-            tokio::spawn(async move {
-                const PERIOD: Duration = Duration::from_secs(1);
-                let mut previous_instant = Instant::now();
-                let mut interval = time::interval_at(previous_instant, PERIOD);
-                let mut millis = 3000u32;
-                while millis > 0 {
-                    let instant = interval.tick().await;
-                    let elapsed = instant
-                        .saturating_duration_since(previous_instant)
-                        .as_millis();
-                    previous_instant = instant;
-                    millis = millis.saturating_sub(elapsed as u32);
-                }
-
-                drop(p0);
-                drop(p1);
-            });
-            //------------------
+            tokio::spawn(sync::wait(p0, p1));
         }
 
         // 4. Update status for the remaining players.
@@ -141,6 +109,13 @@ async fn update_internal() {
 
             if node.millis == 0 {
                 // --- Temp code ---
+                #[cfg(not(feature = "no-debuging-log"))]
+                println!(
+                    "FIXME: Single player mode is not implemented yet. ({}/{})",
+                    file!(),
+                    line!()
+                );
+
                 next_state(State::Matching, node.player);
                 continue;
                 //-------------------
