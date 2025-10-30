@@ -32,7 +32,6 @@ pub const SMASH_END_2: &str = "Smash_End_2";
 pub const BUTTER_TITLE_IDLE: &str = "Idle_1";
 pub const KOMMY_TITLE_TAUNT: &str = "Taunt_1";
 
-pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;
 pub const BALL_WAVE_DURATION: f32 = 0.5;

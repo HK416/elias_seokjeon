@@ -1,5 +1,6 @@
 mod init;
 mod load;
+mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
@@ -20,6 +21,7 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(init::InnerPlugin)
             .add_plugins(load::InnerPlugin)
+            .add_plugins(switch::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::LoadGame),
                 (debug_label, setup_timeout_retry, load_necessary_assets),
@@ -92,7 +94,11 @@ fn handle_received_packets(
         match result {
             Ok(packet) => match packet {
                 Packet::GameLoadTimeout => {
-                    // --- TODO ---
+                    commands.insert_resource(ErrorMessage::new(
+                        "game_load_timeout",
+                        "Failed to enter the game due to a connection timeout.",
+                    ));
+                    next_state.set(LevelStates::SwitchToTitleMessage);
                 }
                 _ => { /* empty */ }
             },

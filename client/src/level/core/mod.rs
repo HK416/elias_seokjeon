@@ -5,8 +5,6 @@ mod setup;
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
-pub use self::error::ErrorMessage;
-
 use super::*;
 
 // --- PLUGIN ---

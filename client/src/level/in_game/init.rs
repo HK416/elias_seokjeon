@@ -68,7 +68,11 @@ fn handle_received_packets(
         match result {
             Ok(packet) => match packet {
                 Packet::GameLoadTimeout => {
-                    // --- TODO ---
+                    commands.insert_resource(ErrorMessage::new(
+                        "game_load_timeout",
+                        "Failed to enter the game due to a connection timeout.",
+                    ));
+                    next_state.set(LevelStates::SwitchToTitleMessage);
                 }
                 _ => { /* empty */ }
             },

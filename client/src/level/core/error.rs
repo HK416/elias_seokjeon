@@ -18,56 +18,6 @@ impl Plugin for InnerPlugin {
     }
 }
 
-// --- RESOURCES ---
-
-pub enum Args {
-    String(String),
-    Integer(i32),
-}
-
-#[derive(Resource)]
-pub struct ErrorMessage {
-    pub tag: String,
-    pub message: String,
-    pub args: Vec<Args>,
-}
-
-impl ErrorMessage {
-    pub fn new(tag: impl Into<String>, message: impl Into<String>) -> Self {
-        Self {
-            tag: tag.into(),
-            message: message.into(),
-            args: Vec::new(),
-        }
-    }
-
-    pub fn with_args(mut self, args: Vec<Args>) -> Self {
-        self.args = args;
-        self
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-impl From<NetError> for ErrorMessage {
-    fn from(e: NetError) -> Self {
-        match e {
-            NetError::NotFound => {
-                ErrorMessage::new("net_not_found", "Failed to connect to the game server.")
-            }
-            NetError::Closed(code) => ErrorMessage::new(
-                "net_closed",
-                format!("Disconnected from the server. ({})", code),
-            )
-            .with_args(vec![Args::Integer(code as i32)]),
-            NetError::Error(message) => ErrorMessage::new(
-                "net_error",
-                format!("Disconnected from the server. {}", message),
-            )
-            .with_args(vec![Args::String(message)]),
-        }
-    }
-}
-
 // --- SETUP SYSTEMS ---
 
 fn debug_label() {
@@ -79,7 +29,7 @@ fn setup_error_screen(
     asset_server: Res<AssetServer>,
     message: Option<Res<ErrorMessage>>,
     locale: Res<Locale>,
-    local_assets: Res<LocalizationAssets>,
+    locale_assets: Res<LocalizationAssets>,
     locale_data: Res<Assets<LocalizationData>>,
 ) {
     commands
@@ -114,7 +64,7 @@ fn setup_error_screen(
                     let message = message
                         .as_ref()
                         .map(|e| {
-                            if let Some(handle) = local_assets.locale.get(&*locale)
+                            if let Some(handle) = locale_assets.locale.get(&*locale)
                                 && let Some(data) = locale_data.get(handle.id())
                                 && let Some(message) = data.0.get(&e.tag)
                             {
@@ -125,8 +75,8 @@ fn setup_error_screen(
                                     buffer.push(word.to_string());
                                     if let Some(arg) = args.next() {
                                         buffer.push(match arg {
-                                            Args::String(s) => s.clone(),
-                                            Args::Integer(i) => i.to_string(),
+                                            MessageArgs::String(s) => s.clone(),
+                                            MessageArgs::Integer(i) => i.to_string(),
                                         });
                                     }
                                 }

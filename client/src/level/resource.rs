@@ -177,3 +177,53 @@ impl SelectedSliderCursor {
         }
     }
 }
+
+#[allow(dead_code)]
+pub enum MessageArgs {
+    String(String),
+    Integer(i32),
+}
+
+#[derive(Resource)]
+pub struct ErrorMessage {
+    pub tag: String,
+    pub message: String,
+    pub args: Vec<MessageArgs>,
+}
+
+impl ErrorMessage {
+    pub fn new(tag: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            tag: tag.into(),
+            message: message.into(),
+            args: Vec::new(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn with_args(mut self, args: Vec<MessageArgs>) -> Self {
+        self.args = args;
+        self
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<NetError> for ErrorMessage {
+    fn from(e: NetError) -> Self {
+        match e {
+            NetError::NotFound => {
+                ErrorMessage::new("net_not_found", "Failed to connect to the game server.")
+            }
+            NetError::Closed(code) => ErrorMessage::new(
+                "net_closed",
+                format!("Disconnected from the server. ({})", code),
+            )
+            .with_args(vec![MessageArgs::Integer(code as i32)]),
+            NetError::Error(message) => ErrorMessage::new(
+                "net_error",
+                format!("Disconnected from the server. {}", message),
+            )
+            .with_args(vec![MessageArgs::String(message)]),
+        }
+    }
+}

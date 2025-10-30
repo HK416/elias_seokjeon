@@ -21,7 +21,7 @@ use crate::{
 #[cfg(target_arch = "wasm32")]
 use crate::web::*;
 
-use self::{constants::*, core::ErrorMessage, resource::*, system::*, types::*, utils::*};
+use self::{constants::*, resource::*, system::*, types::*, utils::*};
 
 // --- PLUGIN ---
 
@@ -62,6 +62,10 @@ pub enum LevelStates {
     LoadTitle,
     InitTitle,
     InTitle,
+
+    InitInTitleMessage,
+    InTitleMessage,
+    SwitchToTitleMessage,
 
     InitMatchingCancel,
     InMatchingCancel,

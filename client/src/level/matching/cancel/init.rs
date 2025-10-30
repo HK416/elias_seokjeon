@@ -57,17 +57,16 @@ fn setup_matching_cancel_interface(
     let entity = commands
         .spawn((
             Node {
-                width: Val::Vw(100.0),
-                height: Val::Vh(100.0),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            BackgroundColor(Color::BLACK.with_alpha(0.5)),
-            UI::InMatchingCancelBackground,
+            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
-            ZIndex(3),
+            ZIndex(4),
         ))
         .with_children(|parent| {
             let entity = parent
@@ -75,31 +74,63 @@ fn setup_matching_cancel_interface(
                     Node {
                         width: Val::Percent(50.0),
                         height: Val::Percent(50.0),
+                        border: UiRect::all(Val::VMin(1.25)),
+                        flex_direction: FlexDirection::Column,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
                     BorderRadius::all(Val::Percent(30.0)),
-                    BackgroundColor(BORDER_GREEN_COLOR_0),
-                    UI::InMatchingCancelModal,
-                    Visibility::Hidden,
+                    BorderColor::all(BORDER_GREEN_COLOR_0),
+                    BackgroundColor(BG_GREEN_COLOR_3),
+                    Visibility::Inherited,
                     SpawnRequest,
+                    UI::Modal,
                 ))
                 .with_children(|parent| {
-                    let width = 0.97;
-                    let height = 1.0 - ASPECT_RATIO * (1.0 - width);
                     let entity = parent
                         .spawn((
                             Node {
-                                width: Val::Percent(width * 100.0),
-                                height: Val::Percent(height * 100.0),
-                                flex_direction: FlexDirection::Column,
+                                width: Val::Percent(90.0),
+                                height: Val::Percent(50.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
                             },
-                            BorderRadius::all(Val::Percent(30.0)),
-                            BackgroundColor(BG_GREEN_COLOR_3),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("Are you sure you want to cancel?"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    TranslatableText("cancel_message".into()),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(10.0));
+
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(90.0),
+                                height: Val::Percent(20.0),
+                                flex_direction: FlexDirection::Row,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
                             Visibility::Inherited,
                             SpawnRequest,
                         ))
@@ -107,26 +138,33 @@ fn setup_matching_cancel_interface(
                             let entity = parent
                                 .spawn((
                                     Node {
-                                        width: Val::Percent(90.0),
-                                        height: Val::Percent(50.0),
+                                        width: Val::Percent(44.0),
+                                        height: Val::Percent(100.0),
+                                        border: UiRect::all(Val::VMin(0.8)),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
                                     },
+                                    BorderRadius::all(Val::Percent(30.0)),
+                                    OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
+                                    BorderColor::all(BORDER_RED_COLOR_0),
+                                    BackgroundColor(BG_RED_COLOR_0),
+                                    UI::PositiveButton,
                                     Visibility::Inherited,
                                     SpawnRequest,
+                                    Button,
                                 ))
                                 .with_children(|parent| {
-                                    let font = asset_server.load(FONT_PATH);
                                     let entity = parent
                                         .spawn((
                                             Node::default(),
-                                            Text::new("Are you sure you want to cancel?"),
-                                            TextFont::from(font),
+                                            Text::new("Yes"),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
                                             TextLayout::new_with_justify(Justify::Center),
-                                            TextColor::BLACK,
-                                            TranslatableText("cancel_message".into()),
-                                            ResizableFont::vertical(1280.0, 64.0),
+                                            TranslatableText("yes".into()),
+                                            ResizableFont::vertical(1280.0, 32.0),
+                                            OriginColor::<TextColor>::new(Color::WHITE),
+                                            TextColor::WHITE,
                                             Visibility::Inherited,
                                             SpawnRequest,
                                         ))
@@ -136,103 +174,41 @@ fn setup_matching_cancel_interface(
                                 .id();
                             loading_entities.insert(entity);
 
-                            add_vertical_space(loading_entities, parent, Val::Percent(10.0));
+                            add_horizontal_space(loading_entities, parent, Val::Percent(5.0));
 
                             let entity = parent
                                 .spawn((
                                     Node {
-                                        width: Val::Percent(90.0),
-                                        height: Val::Percent(20.0),
-                                        flex_direction: FlexDirection::Row,
+                                        width: Val::Percent(44.0),
+                                        height: Val::Percent(100.0),
+                                        border: UiRect::all(Val::VMin(0.8)),
                                         justify_content: JustifyContent::Center,
                                         align_items: AlignItems::Center,
                                         ..Default::default()
                                     },
+                                    BorderRadius::all(Val::Percent(30.0)),
+                                    OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
+                                    BorderColor::all(BORDER_YELLO_COLOR_0),
+                                    BackgroundColor(BG_YELLO_COLOR_0),
+                                    UI::NegativeButton,
                                     Visibility::Inherited,
                                     SpawnRequest,
+                                    Button,
                                 ))
                                 .with_children(|parent| {
                                     let entity = parent
                                         .spawn((
-                                            Node {
-                                                width: Val::Percent(40.0),
-                                                height: Val::Percent(100.0),
-                                                border: UiRect::all(Val::VMin(0.8)),
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                ..Default::default()
-                                            },
-                                            BorderRadius::all(Val::Percent(30.0)),
-                                            OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
-                                            BorderColor::all(BORDER_RED_COLOR_0),
-                                            BackgroundColor(BG_RED_COLOR_0),
-                                            UI::InMatchingCancelYesButton,
+                                            Node::default(),
+                                            Text::new("No"),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            TranslatableText("no".into()),
+                                            ResizableFont::vertical(1280.0, 42.0),
+                                            OriginColor::<TextColor>::new(Color::BLACK),
+                                            TextColor::BLACK,
                                             Visibility::Inherited,
                                             SpawnRequest,
-                                            Button,
                                         ))
-                                        .with_children(|parent| {
-                                            let entity = parent
-                                                .spawn((
-                                                    Node::default(),
-                                                    Text::new("Yes"),
-                                                    TextFont::from(asset_server.load(FONT_PATH)),
-                                                    TextLayout::new_with_justify(Justify::Center),
-                                                    TranslatableText("yes".into()),
-                                                    ResizableFont::vertical(1280.0, 42.0),
-                                                    OriginColor::<TextColor>::new(Color::WHITE),
-                                                    TextColor::WHITE,
-                                                    Visibility::Inherited,
-                                                    SpawnRequest,
-                                                ))
-                                                .id();
-                                            loading_entities.insert(entity);
-                                        })
-                                        .id();
-                                    loading_entities.insert(entity);
-
-                                    add_horizontal_space(
-                                        loading_entities,
-                                        parent,
-                                        Val::Percent(5.0),
-                                    );
-
-                                    let entity = parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Percent(40.0),
-                                                height: Val::Percent(100.0),
-                                                border: UiRect::all(Val::VMin(0.8)),
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                ..Default::default()
-                                            },
-                                            BorderRadius::all(Val::Percent(30.0)),
-                                            OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
-                                            BorderColor::all(BORDER_YELLO_COLOR_0),
-                                            BackgroundColor(BG_YELLO_COLOR_0),
-                                            UI::InMatchingCancelNoButton,
-                                            Visibility::Inherited,
-                                            SpawnRequest,
-                                            Button,
-                                        ))
-                                        .with_children(|parent| {
-                                            let entity = parent
-                                                .spawn((
-                                                    Node::default(),
-                                                    Text::new("No"),
-                                                    TextFont::from(asset_server.load(FONT_PATH)),
-                                                    TextLayout::new_with_justify(Justify::Center),
-                                                    TranslatableText("no".into()),
-                                                    ResizableFont::vertical(1280.0, 42.0),
-                                                    OriginColor::<TextColor>::new(Color::BLACK),
-                                                    TextColor::BLACK,
-                                                    Visibility::Inherited,
-                                                    SpawnRequest,
-                                                ))
-                                                .id();
-                                            loading_entities.insert(entity);
-                                        })
                                         .id();
                                     loading_entities.insert(entity);
                                 })
@@ -274,6 +250,6 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::InTitle);
+        next_state.set(LevelStates::InitInTitleMessage);
     }
 }

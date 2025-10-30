@@ -10,10 +10,13 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(LevelStates::InitMatching),
-            (debug_label, setup_matching),
+            OnEnter(LevelStates::InitInTitleMessage),
+            (debug_label, setup_in_title_message),
         )
-        .add_systems(OnExit(LevelStates::InitMatching), cleanup_loading_resource)
+        .add_systems(
+            OnExit(LevelStates::InitInTitleMessage),
+            cleanup_loading_resource,
+        )
         .add_systems(
             Update,
             (
@@ -21,13 +24,13 @@ impl Plugin for InnerPlugin {
                 observe_entity_creation,
                 check_loading_progress,
             )
-                .run_if(in_state(LevelStates::InitMatching)),
+                .run_if(in_state(LevelStates::InitInTitleMessage)),
         );
 
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
-            packet_receive_loop.run_if(in_state(LevelStates::InitMatching)),
+            packet_receive_loop.run_if(in_state(LevelStates::InitInTitleMessage)),
         );
     }
 }
@@ -35,18 +38,18 @@ impl Plugin for InnerPlugin {
 // --- SETUP SYSTEMS ---
 
 fn debug_label() {
-    info!("Current Level: InitMatching");
+    info!("Current Level: InitInTitleMessage");
 }
 
-fn setup_matching(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_in_title_message(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut loading_entities = LoadingEntities::default();
-    setup_matching_interface(&mut commands, &asset_server, &mut loading_entities);
+    setup_in_title_message_interface(&mut commands, &asset_server, &mut loading_entities);
 
     // --- Resource Insertion ---
     commands.insert_resource(loading_entities);
 }
 
-fn setup_matching_interface(
+fn setup_in_title_message_interface(
     commands: &mut Commands,
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
@@ -63,7 +66,7 @@ fn setup_matching_interface(
             UI::Root,
             Visibility::Hidden,
             SpawnRequest,
-            ZIndex(4),
+            ZIndex(3),
         ))
         .with_children(|parent| {
             let entity = parent
@@ -77,7 +80,7 @@ fn setup_matching_interface(
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
-                    BorderRadius::all(Val::Percent(30.0)),
+                    BorderRadius::all(Val::Percent(15.0)),
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(BG_GREEN_COLOR_3),
                     Visibility::Inherited,
@@ -89,38 +92,7 @@ fn setup_matching_interface(
                         .spawn((
                             Node {
                                 width: Val::Percent(90.0),
-                                height: Val::Percent(30.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..Default::default()
-                            },
-                            Visibility::Inherited,
-                            SpawnRequest,
-                        ))
-                        .with_children(|parent| {
-                            let entity = parent
-                                .spawn((
-                                    Node::default(),
-                                    Text::new("Searching for an opponent..."),
-                                    TextFont::from(asset_server.load(FONT_PATH)),
-                                    TextLayout::new_with_justify(Justify::Center),
-                                    TranslatableText("matching_message".into()),
-                                    ResizableFont::vertical(1280.0, 52.0),
-                                    TextColor::BLACK,
-                                    Visibility::Inherited,
-                                    SpawnRequest,
-                                ))
-                                .id();
-                            loading_entities.insert(entity);
-                        })
-                        .id();
-                    loading_entities.insert(entity);
-
-                    let entity = parent
-                        .spawn((
-                            Node {
-                                width: Val::Percent(90.0),
-                                height: Val::Percent(20.0),
+                                height: Val::Percent(50.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
@@ -135,8 +107,8 @@ fn setup_matching_interface(
                                     Text::new(""),
                                     TextFont::from(asset_server.load(FONT_PATH)),
                                     TextLayout::new_with_justify(Justify::Center),
-                                    ResizableFont::vertical(1280.0, 42.0),
-                                    MatchingStatusMessage,
+                                    ResizableFont::vertical(1280.0, 48.0),
+                                    TitleMessageText,
                                     TextColor::BLACK,
                                     Visibility::Inherited,
                                     SpawnRequest,
@@ -147,24 +119,23 @@ fn setup_matching_interface(
                         .id();
                     loading_entities.insert(entity);
 
-                    add_vertical_space(loading_entities, parent, Val::Percent(10.0));
-
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(40.0),
                                 height: Val::Percent(20.0),
                                 border: UiRect::all(Val::VMin(0.8)),
+                                flex_direction: FlexDirection::Column,
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
                             },
                             BorderRadius::all(Val::Percent(30.0)),
-                            OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
-                            BorderColor::all(BORDER_RED_COLOR_0),
-                            BackgroundColor(BG_RED_COLOR_0),
-                            UI::NegativeButton,
+                            OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
+                            BorderColor::all(BORDER_YELLO_COLOR_0),
+                            BackgroundColor(BG_YELLO_COLOR_0),
                             Visibility::Inherited,
+                            UI::PositiveButton,
                             SpawnRequest,
                             Button,
                         ))
@@ -172,13 +143,13 @@ fn setup_matching_interface(
                             let entity = parent
                                 .spawn((
                                     Node::default(),
-                                    Text::new("Cancel"),
+                                    Text::new("Okay"),
                                     TextFont::from(asset_server.load(FONT_PATH)),
                                     TextLayout::new_with_justify(Justify::Center),
-                                    TranslatableText("cancel".into()),
+                                    TranslatableText("okay".into()),
                                     ResizableFont::vertical(1280.0, 42.0),
-                                    OriginColor::<TextColor>::new(Color::WHITE),
-                                    TextColor::WHITE,
+                                    OriginColor::<TextColor>::fill(Color::BLACK),
+                                    TextColor::BLACK,
                                     Visibility::Inherited,
                                     SpawnRequest,
                                 ))
@@ -208,7 +179,7 @@ fn observe_entity_creation(
         let mut commands = commands.entity(entity);
         commands.remove::<SpawnRequest>();
 
-        commands.insert(MatchingLevelEntity);
+        commands.insert(TitleMessageLevelEntity);
         if child_of.is_none() {
             commands.insert(TitleLevelRoot);
         }
@@ -220,6 +191,6 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::InitMatchingCancel);
+        next_state.set(LevelStates::InTitle);
     }
 }

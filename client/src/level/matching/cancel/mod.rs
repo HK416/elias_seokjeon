@@ -93,12 +93,12 @@ fn handle_button_interaction(
         );
 
         match (ui, interaction) {
-            (UI::InMatchingCancelYesButton, Interaction::Pressed) => {
+            (UI::PositiveButton, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_cancel_game_message(&network);
                 commands.insert_resource(CancelFlag);
             }
-            (UI::InMatchingCancelNoButton, Interaction::Pressed) => {
+            (UI::NegativeButton, Interaction::Pressed) => {
                 next_state.set(LevelStates::SwitchToInMatching);
             }
             _ => { /* empty */ }

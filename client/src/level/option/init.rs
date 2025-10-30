@@ -68,7 +68,7 @@ fn setup_option_interface(
             },
             BackgroundColor(Color::BLACK.with_alpha(0.5)),
             Visibility::Hidden,
-            UI::InOptionBackground,
+            UI::Root,
             SpawnRequest,
             ZIndex(3),
         ))
@@ -78,244 +78,212 @@ fn setup_option_interface(
                     Node {
                         width: Val::Percent(80.0),
                         height: Val::Percent(80.0),
+                        border: UiRect::all(Val::VMin(1.25)),
+                        flex_direction: FlexDirection::Column,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
                     BorderRadius::all(Val::Percent(30.0)),
-                    BackgroundColor(BORDER_GREEN_COLOR_1),
-                    UI::InOptionModal,
-                    Visibility::Hidden,
+                    BorderColor::all(BORDER_GREEN_COLOR_1),
+                    BackgroundColor(BG_GREEN_COLOR_1),
+                    Visibility::Inherited,
                     SpawnRequest,
+                    UI::Modal,
                 ))
                 .with_children(|parent| {
-                    let width = 0.975;
-                    let height = 1.0 - ASPECT_RATIO * (1.0 - width);
                     let entity = parent
                         .spawn((
                             Node {
-                                width: Val::Percent(width * 100.0),
-                                height: Val::Percent(height * 100.0),
-                                flex_direction: FlexDirection::Column,
+                                width: Val::Percent(50.0),
+                                height: Val::Percent(10.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
                             },
                             BorderRadius::all(Val::Percent(30.0)),
-                            BackgroundColor(BG_GREEN_COLOR_1),
+                            BackgroundColor(BG_GREEN_COLOR_3),
                             Visibility::Inherited,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
-                            add_modal_title(
-                                asset_server,
-                                loading_entities,
-                                parent,
-                                Val::Percent(10.0),
-                            );
-                            add_vertical_space(loading_entities, parent, Val::Percent(5.0));
-
-                            let percentage = system_volume.get_background().to_linear() * 100.0;
-                            add_volume_controller(
-                                loading_entities,
-                                parent,
-                                percentage,
-                                UI::BackgroundVolumeSlider,
-                                Val::Percent(90.0),
-                                Val::Percent(10.0),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("BGM"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        TranslatableText("background_volume".into()),
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                    ));
-                                },
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new(format!("{}", percentage as u32)),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                        UI::BackgroundVolume,
-                                    ));
-                                },
-                            );
-
-                            let percentage = system_volume.get_effect().to_linear() * 100.0;
-                            add_volume_controller(
-                                loading_entities,
-                                parent,
-                                percentage,
-                                UI::EffectVolumeSlider,
-                                Val::Percent(90.0),
-                                Val::Percent(10.0),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("SFX"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        TranslatableText("effect_volume".into()),
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                    ));
-                                },
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new(format!("{}", percentage as u32)),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                        UI::EffectVolume,
-                                    ));
-                                },
-                            );
-
-                            let percentage = system_volume.get_voice().to_linear() * 100.0;
-                            add_volume_controller(
-                                loading_entities,
-                                parent,
-                                percentage,
-                                UI::VoiceVolumeSlider,
-                                Val::Percent(90.0),
-                                Val::Percent(10.0),
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new("Voice"),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        TranslatableText("voice_volume".into()),
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                    ));
-                                },
-                                |commands| {
-                                    let font = asset_server.load(FONT_PATH);
-                                    commands.insert((
-                                        Text::new(format!("{}", percentage as u32)),
-                                        TextFont::from(font),
-                                        TextLayout::new_with_justify(Justify::Center),
-                                        TextColor::BLACK,
-                                        ResizableFont::vertical(1280.0, 54.0),
-                                        Visibility::Inherited,
-                                        UI::VoiceVolume,
-                                    ));
-                                },
-                            );
-
-                            add_vertical_space(loading_entities, parent, Val::Percent(10.0));
-
-                            add_locale_buttons(
-                                asset_server,
-                                loading_entities,
-                                parent,
-                                BORDER_GREEN_COLOR_2,
-                                BG_GREEN_COLOR_2,
-                                Some(BG_GREEN_COLOR_3),
-                                Some(BG_GREEN_COLOR_3),
-                                Val::Percent(90.0),
-                                Val::Percent(15.0),
-                            );
-
-                            add_vertical_space(loading_entities, parent, Val::Percent(10.0));
-
                             let entity = parent
                                 .spawn((
-                                    Node {
-                                        width: Val::Percent(24.0),
-                                        height: Val::Percent(12.0),
-                                        border: UiRect::all(Val::VMin(1.0)),
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        ..Default::default()
-                                    },
-                                    BorderRadius::all(Val::Percent(30.0)),
-                                    OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
-                                    BorderColor::all(BORDER_YELLO_COLOR_0),
-                                    BackgroundColor(BG_YELLO_COLOR_0),
-                                    UI::InOptionExitButton,
+                                    Node::default(),
+                                    Text::new("Settings"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    TranslatableText("game_settings".into()),
+                                    ResizableFont::vertical(1280.0, 64.0),
+                                    TextColor::BLACK,
                                     Visibility::Inherited,
                                     SpawnRequest,
-                                    Button,
                                 ))
-                                .with_children(|parent| {
-                                    let entity = parent
-                                        .spawn((
-                                            Node::default(),
-                                            Text::new("Back"),
-                                            TextFont::from(asset_server.load(FONT_PATH)),
-                                            TextLayout::new_with_justify(Justify::Center),
-                                            ResizableFont::vertical(1280.0, 42.0),
-                                            TranslatableText("back".into()),
-                                            OriginColor::<TextColor>::new(Color::BLACK),
-                                            TextColor::BLACK,
-                                            Visibility::Inherited,
-                                            SpawnRequest,
-                                        ))
-                                        .id();
-                                    loading_entities.insert(entity);
-                                })
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+
+                    let percentage = system_volume.get_background().to_linear() * 100.0;
+                    add_volume_controller(
+                        loading_entities,
+                        parent,
+                        percentage,
+                        UI::BackgroundVolumeSlider,
+                        Val::Percent(90.0),
+                        Val::Percent(10.0),
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new("BGM"),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                TranslatableText("background_volume".into()),
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                            ));
+                        },
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new(format!("{}", percentage as u32)),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                                UI::BackgroundVolume,
+                            ));
+                        },
+                    );
+
+                    let percentage = system_volume.get_effect().to_linear() * 100.0;
+                    add_volume_controller(
+                        loading_entities,
+                        parent,
+                        percentage,
+                        UI::EffectVolumeSlider,
+                        Val::Percent(90.0),
+                        Val::Percent(10.0),
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new("SFX"),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                TranslatableText("effect_volume".into()),
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                            ));
+                        },
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new(format!("{}", percentage as u32)),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                                UI::EffectVolume,
+                            ));
+                        },
+                    );
+
+                    let percentage = system_volume.get_voice().to_linear() * 100.0;
+                    add_volume_controller(
+                        loading_entities,
+                        parent,
+                        percentage,
+                        UI::VoiceVolumeSlider,
+                        Val::Percent(90.0),
+                        Val::Percent(10.0),
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new("Voice"),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                TranslatableText("voice_volume".into()),
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                            ));
+                        },
+                        |commands| {
+                            let font = asset_server.load(FONT_PATH);
+                            commands.insert((
+                                Text::new(format!("{}", percentage as u32)),
+                                TextFont::from(font),
+                                TextLayout::new_with_justify(Justify::Center),
+                                TextColor::BLACK,
+                                ResizableFont::vertical(1280.0, 54.0),
+                                Visibility::Inherited,
+                                UI::VoiceVolume,
+                            ));
+                        },
+                    );
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(10.0));
+
+                    add_locale_buttons(
+                        asset_server,
+                        loading_entities,
+                        parent,
+                        BORDER_GREEN_COLOR_2,
+                        BG_GREEN_COLOR_2,
+                        Some(BG_GREEN_COLOR_3),
+                        Some(BG_GREEN_COLOR_3),
+                        Val::Percent(90.0),
+                        Val::Percent(15.0),
+                    );
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(10.0));
+
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(24.0),
+                                height: Val::Percent(12.0),
+                                border: UiRect::all(Val::VMin(1.0)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(30.0)),
+                            OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
+                            BorderColor::all(BORDER_YELLO_COLOR_0),
+                            BackgroundColor(BG_YELLO_COLOR_0),
+                            UI::PositiveButton,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                            Button,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("Back"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 42.0),
+                                    TranslatableText("back".into()),
+                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
                                 .id();
                             loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);
                 })
-                .id();
-            loading_entities.insert(entity);
-        })
-        .id();
-    loading_entities.insert(entity);
-}
-
-fn add_modal_title(
-    asset_server: &AssetServer,
-    loading_entities: &mut LoadingEntities,
-    parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    height: Val,
-) {
-    let entity = parent
-        .spawn((
-            Node {
-                width: Val::Percent(50.0),
-                height,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..Default::default()
-            },
-            BorderRadius::all(Val::Percent(30.0)),
-            BackgroundColor(BG_GREEN_COLOR_3),
-            Visibility::Inherited,
-            SpawnRequest,
-        ))
-        .with_children(|parent| {
-            let font = asset_server.load(FONT_PATH);
-            let entity = parent
-                .spawn((
-                    Node::default(),
-                    Text::new("Settings"),
-                    TextFont::from(font),
-                    TextLayout::new_with_justify(Justify::Center),
-                    TextColor::BLACK,
-                    TranslatableText("game_settings".into()),
-                    ResizableFont::vertical(1280.0, 64.0),
-                    Visibility::Inherited,
-                    SpawnRequest,
-                ))
                 .id();
             loading_entities.insert(entity);
         })

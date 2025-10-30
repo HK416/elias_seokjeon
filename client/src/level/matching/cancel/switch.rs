@@ -54,7 +54,7 @@ fn setup_ui_animation(
 ) {
     for (entity, &ui) in query.iter() {
         match ui {
-            UI::InMatchingCancelModal => {
+            UI::Modal => {
                 commands.entity(entity).insert(UiBackOutScale::new(
                     SCENE_DURATION,
                     Vec2::ZERO,

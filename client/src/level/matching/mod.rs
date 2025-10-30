@@ -86,7 +86,7 @@ fn handle_button_interaction(
         );
 
         match (ui, interaction) {
-            (UI::InMatchingCancelButton, Interaction::Pressed) => {
+            (UI::NegativeButton, Interaction::Pressed) => {
                 next_state.set(LevelStates::SwitchToInMatchingCancel);
             }
             _ => { /* empty */ }

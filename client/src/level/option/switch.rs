@@ -24,12 +24,7 @@ impl Plugin for InnerPlugin {
         .add_systems(OnExit(LevelStates::SwitchToInOption), cleanup_scene_timer)
         .add_systems(
             Update,
-            (
-                handle_spine_animation_completed,
-                update_wave_animation,
-                update_scene_timer,
-            )
-                .run_if(in_state(LevelStates::SwitchToInOption)),
+            update_scene_timer.run_if(in_state(LevelStates::SwitchToInOption)),
         );
     }
 }
@@ -56,7 +51,7 @@ fn setup_ui_animation(
 ) {
     for (entity, &ui) in query.iter() {
         match ui {
-            UI::InOptionModal => {
+            UI::Modal => {
                 commands.entity(entity).insert(UiBackOutScale::new(
                     SCENE_DURATION,
                     Vec2::ZERO,

@@ -28,6 +28,12 @@ pub struct TitleLevelRoot;
 pub struct TitleLevelEntity;
 
 #[derive(Component)]
+pub struct TitleMessageText;
+
+#[derive(Component)]
+pub struct TitleMessageLevelEntity;
+
+#[derive(Component)]
 pub struct MatchingLevelEntity;
 
 #[derive(Component)]
@@ -96,6 +102,9 @@ impl<T> OriginColor<T> {
 #[allow(clippy::enum_variant_names)]
 pub enum UI {
     Root,
+    Modal,
+    PositiveButton,
+    NegativeButton,
 
     BackgroundVolumeSlider,
     BackgroundVolume,
@@ -111,19 +120,6 @@ pub enum UI {
     InTitleGameStartButton,
     InTitleOptionButton,
     InTitleHowToPlayButton,
-
-    InOptionBackground,
-    InOptionModal,
-    InOptionExitButton,
-
-    InMatchingCancelBackground,
-    InMatchingCancelModal,
-    InMatchingCancelYesButton,
-    InMatchingCancelNoButton,
-
-    InMatchingBackground,
-    InMatchingModal,
-    InMatchingCancelButton,
 
     EnterGameLoadingBackground,
     EnterGameLoadingBar,

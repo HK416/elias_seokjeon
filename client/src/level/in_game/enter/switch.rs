@@ -120,10 +120,10 @@ fn update_fade_in(
 
 fn update_fade_out(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut FadeOut, &mut Spine)>,
+    mut query: Query<(Entity, &mut Visibility, &mut FadeOut, &mut Spine)>,
     time: Res<Time>,
 ) {
-    for (entity, mut fade_out, mut spine) in query.iter_mut() {
+    for (entity, mut visibility, mut fade_out, mut spine) in query.iter_mut() {
         fade_out.tick(time.delta_secs());
         spine
             .0
@@ -131,7 +131,9 @@ fn update_fade_out(
             .color_mut()
             .set_a(1.0 - fade_out.progress());
         if fade_out.is_finished() {
-            commands.entity(entity).despawn();
+            *visibility = Visibility::Hidden;
+            spine.0.skeleton.color_mut().set_a(1.0);
+            commands.entity(entity).remove::<FadeOut>();
         }
     }
 }

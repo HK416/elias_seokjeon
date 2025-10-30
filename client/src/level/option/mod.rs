@@ -128,7 +128,7 @@ fn handle_button_interaction(
         );
 
         match (ui, interaction) {
-            (UI::InOptionExitButton, Interaction::Pressed) => {
+            (UI::PositiveButton, Interaction::Pressed) => {
                 next_state.set(LevelStates::InTitle);
             }
             (UI::LocaleButtonEn, Interaction::Pressed) => {
