@@ -80,7 +80,7 @@ fn setup_in_title_message_interface(
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
-                    BorderRadius::all(Val::Percent(15.0)),
+                    BorderRadius::all(Val::Percent(30.0)),
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(BG_GREEN_COLOR_3),
                     Visibility::Inherited,

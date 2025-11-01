@@ -14,7 +14,14 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(init::InnerPlugin)
             .add_plugins(switch::InnerPlugin)
-            .add_systems(OnEnter(LevelStates::InTitleMessage), debug_label)
+            .add_systems(
+                OnEnter(LevelStates::InTitleMessage),
+                (
+                    debug_label,
+                    cleanup_in_game_assets,
+                    cleanup_in_game_entities,
+                ),
+            )
             .add_systems(OnExit(LevelStates::InTitleMessage), hide_interface)
             .add_systems(
                 PreUpdate,
@@ -39,6 +46,16 @@ impl Plugin for InnerPlugin {
 
 fn debug_label() {
     info!("Current Level: InTitleMessage");
+}
+
+fn cleanup_in_game_assets(mut commands: Commands) {
+    commands.remove_resource::<InGameAssets>();
+}
+
+fn cleanup_in_game_entities(mut commands: Commands, query: Query<Entity, With<InGameLevelRoot>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
 }
 
 // --- CLEANUP SYSTEMS ---

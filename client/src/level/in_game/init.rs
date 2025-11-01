@@ -7,6 +7,7 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(LevelStates::InitGame), (debug_label, setup_in_game))
+            .add_systems(OnExit(LevelStates::InitGame), cleanup_loading_resource)
             .add_systems(
                 Update,
                 (

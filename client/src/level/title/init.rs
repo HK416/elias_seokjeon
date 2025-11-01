@@ -111,35 +111,6 @@ fn setup_title_screen(
         ))
         .id();
     loading_entities.insert(entity);
-
-    // --- DECO ---
-    let entity = commands
-        .spawn((
-            Sprite {
-                image: asset_server.load(IMG_PATH_LABEL_DECO_1),
-                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
-                ..Default::default()
-            },
-            Transform::from_xyz(128.0, 160.0, 1.0),
-            Visibility::Hidden,
-            SpawnRequest,
-        ))
-        .id();
-    loading_entities.insert(entity);
-
-    let entity = commands
-        .spawn((
-            Sprite {
-                image: asset_server.load(IMG_PATH_LABEL_DECO_2),
-                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
-                ..Default::default()
-            },
-            Transform::from_xyz(642.0, 160.0, 1.0),
-            Visibility::Hidden,
-            SpawnRequest,
-        ))
-        .id();
-    loading_entities.insert(entity);
 }
 
 fn setup_title_interface(
@@ -196,6 +167,36 @@ fn setup_title_interface(
                         .with_children(|parent| {
                             let entity = parent
                                 .spawn((
+                                    Node {
+                                        left: Val::Percent(-14.0),
+                                        bottom: Val::Percent(-34.0),
+                                        ..Default::default()
+                                    },
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let texture = asset_server.load(IMG_PATH_LABEL_DECO_0);
+                                    let entity = parent
+                                        .spawn((
+                                            ImageNode::new(texture).with_flip_x(),
+                                            Node {
+                                                height: Val::VMin(8.0),
+                                                ..Default::default()
+                                            },
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+
+                            add_horizontal_space(loading_entities, parent, Val::Percent(10.0));
+
+                            let entity = parent
+                                .spawn((
                                     Node::default(),
                                     Text::new(format!("{}pt", player_info.score)),
                                     TextFont::from(asset_server.load(FONT_PATH)),
@@ -205,6 +206,36 @@ fn setup_title_interface(
                                     Visibility::Inherited,
                                     SpawnRequest,
                                 ))
+                                .id();
+                            loading_entities.insert(entity);
+
+                            add_horizontal_space(loading_entities, parent, Val::Percent(10.0));
+
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        right: Val::Percent(-14.0),
+                                        bottom: Val::Percent(-34.0),
+                                        ..Default::default()
+                                    },
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let texture = asset_server.load(IMG_PATH_LABEL_DECO_0);
+                                    let entity = parent
+                                        .spawn((
+                                            ImageNode::new(texture),
+                                            Node {
+                                                height: Val::VMin(8.0),
+                                                ..Default::default()
+                                            },
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
                                 .id();
                             loading_entities.insert(entity);
                         })
@@ -380,7 +411,6 @@ fn setup_title_interface(
                                 width: Val::Percent(100.0),
                                 height: Val::Percent(10.0),
                                 border: UiRect::all(Val::VMin(1.25)),
-                                flex_direction: FlexDirection::Column,
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
@@ -394,6 +424,34 @@ fn setup_title_interface(
                         .with_children(|parent| {
                             let entity = parent
                                 .spawn((
+                                    Node {
+                                        top: Val::Percent(-74.0),
+                                        left: Val::Percent(-34.0),
+                                        ..Default::default()
+                                    },
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let texture = asset_server.load(IMG_PATH_LABEL_DECO_1);
+                                    let entity = parent
+                                        .spawn((
+                                            ImageNode::new(texture),
+                                            Node {
+                                                height: Val::VMin(5.0),
+                                                ..Default::default()
+                                            },
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+
+                            let entity = parent
+                                .spawn((
                                     Node::default(),
                                     Text::new(format!("{}", player_info.hero)),
                                     TextFont::from(asset_server.load(FONT_PATH)),
@@ -404,6 +462,34 @@ fn setup_title_interface(
                                     Visibility::Inherited,
                                     SpawnRequest,
                                 ))
+                                .id();
+                            loading_entities.insert(entity);
+
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        top: Val::Percent(-74.0),
+                                        right: Val::Percent(-34.0),
+                                        ..Default::default()
+                                    },
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let texture = asset_server.load(IMG_PATH_LABEL_DECO_2);
+                                    let entity = parent
+                                        .spawn((
+                                            ImageNode::new(texture),
+                                            Node {
+                                                height: Val::VMin(6.2),
+                                                ..Default::default()
+                                            },
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
                                 .id();
                             loading_entities.insert(entity);
                         })

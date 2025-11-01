@@ -1,5 +1,6 @@
 mod init;
 mod load;
+mod message;
 
 // Import necessary Bevy modules.
 use bevy::{
@@ -18,6 +19,7 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(init::InnerPlugin)
             .add_plugins(load::InnerPlugin)
+            .add_plugins(message::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InTitle),
                 (
