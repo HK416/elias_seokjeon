@@ -8,6 +8,7 @@ pub async fn wait(left: Player, right: Player) {
         .send(Packet::MatchingSuccess {
             other: right.name.clone(),
             hero: right.hero,
+            score: right.score,
         })
         .unwrap();
     right
@@ -15,6 +16,7 @@ pub async fn wait(left: Player, right: Player) {
         .send(Packet::MatchingSuccess {
             other: left.name.clone(),
             hero: left.hero,
+            score: left.score,
         })
         .unwrap();
 

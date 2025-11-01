@@ -181,7 +181,7 @@ fn observe_entity_creation(
 
         commands.insert(TitleMessageLevelEntity);
         if child_of.is_none() {
-            commands.insert(TitleLevelRoot);
+            commands.insert(MatchingLevelRoot);
         }
     }
 }
@@ -191,6 +191,6 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::InTitle);
+        next_state.set(LevelStates::LoadEnterGame);
     }
 }

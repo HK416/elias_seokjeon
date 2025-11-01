@@ -22,6 +22,9 @@ pub const LOADING_BAR_COLOR: Color = Color::srgb(0.2, 0.8, 0.2);
 #[rustfmt::skip] pub const BG_RED_COLOR_0: Color = Color::srgb(227.0 / 255.0, 96.0 / 255.0, 115.0 / 255.0);
 #[rustfmt::skip] pub const BORDER_RED_COLOR_0: Color = Color::srgb(221.0 / 255.0, 81.0 / 255.0, 100.0 / 255.0);
 
+pub const BALL_BONE_NAME: &str = "Character_Ball_Move";
+pub const HEAD_BONE_NAME: &str = "Character_Pat";
+
 pub const PAT_IDLE: &str = "Pat_Idle";
 pub const PAT_END: &str = "Pat_End";
 pub const TOUCH_IDLE: &str = "Touch_Idle";

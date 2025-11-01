@@ -151,12 +151,14 @@ pub struct PlayerInfo {
     pub uuid: Uuid,
     pub name: String,
     pub hero: Hero,
+    pub score: u16,
 }
 
 #[derive(Resource)]
 pub struct OtherInfo {
     pub name: String,
     pub hero: Hero,
+    pub score: u16,
 }
 
 #[derive(Default, Resource)]

@@ -27,7 +27,10 @@ impl Plugin for InnerPlugin {
                     setup_title_screen,
                 ),
             )
-            .add_systems(OnExit(LevelStates::InTitle), hide_interface)
+            .add_systems(
+                OnExit(LevelStates::InTitle),
+                (hide_entities, hide_interface),
+            )
             .add_systems(
                 PreUpdate,
                 (handle_button_interaction, handle_mouse_input)
@@ -95,6 +98,18 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
 }
 
 // --- CLEANUP SYSTEMS ---
+
+#[allow(clippy::type_complexity)]
+fn hide_entities(
+    mut query: Query<
+        &mut Visibility,
+        (With<TitleLevelRoot>, Without<UI>, Without<TitleBackground>),
+    >,
+) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Hidden;
+    }
+}
 
 #[allow(unreachable_patterns)]
 fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEntity>)>) {

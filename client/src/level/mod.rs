@@ -52,35 +52,35 @@ impl Plugin for InnerPlugin {
 pub enum LevelStates {
     Error,
     #[default]
-    Setup,
-    Connect,
+    Setup, // -> Connect, Error
+    Connect, // -> InitOption, Error
 
-    InitOption,
-    InOption,
-    SwitchToInOption,
+    InitOption,       // -> InitMatching, Error
+    InOption,         // -> InTitle, Error
+    SwitchToInOption, // -> InOption
 
-    LoadTitle,
-    InitTitle,
-    InTitle,
+    LoadTitle, // -> InitTitle, Error
+    InitTitle, // -> InTitle, Error
+    InTitle,   // -> SwitchToInMatching, SwitchToInOption, Error
 
-    InitInTitleMessage,
-    InTitleMessage,
-    SwitchToTitleMessage,
+    InitInTitleMessage,   // -> LoadEnterGame, Error
+    InTitleMessage,       // -> InTitle, Error
+    SwitchToTitleMessage, // -> InTitleMessage
 
-    InitMatchingCancel,
-    InMatchingCancel,
-    SwitchToInMatchingCancel,
+    InitMatchingCancel,       // -> InitInTitleMessage, Error
+    InMatchingCancel,         // -> InTitle, SwitchToInMatching, Error
+    SwitchToInMatchingCancel, // -> InMatchingCancel
 
-    InitMatching,
-    InMatching,
-    SwitchToInMatching,
+    InitMatching,       // -> InitMatchingCancel, Error
+    InMatching,         // -> SwitchToInMatchingCancel, SwitchToLoadGame, Error
+    SwitchToInMatching, // -> InMatching
 
-    LoadEnterGame,
-    InitEnterGame,
+    LoadEnterGame, // -> InitEnterGame, Error
+    InitEnterGame, // -> LoadTitle, Error
 
-    LoadGame,
-    InitGame,
-    SwitchToLoadGame,
+    LoadGame,         // -> SwitchToTitleMessage, InitGame, Error
+    InitGame,         // -> SwitchToTitleMessage, Error
+    SwitchToLoadGame, // -> LoadGame
 }
 
 // --- UPDATE SYSTEMS ---

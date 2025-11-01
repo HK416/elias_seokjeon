@@ -122,8 +122,12 @@ fn handle_received_packets(
                         });
                     }
                 }
-                Packet::MatchingSuccess { other, hero } => {
-                    commands.insert_resource(OtherInfo { name: other, hero });
+                Packet::MatchingSuccess { other, hero, score } => {
+                    commands.insert_resource(OtherInfo {
+                        name: other,
+                        hero,
+                        score,
+                    });
                     next_state.set(LevelStates::SwitchToLoadGame);
                 }
                 _ => { /* empty */ }

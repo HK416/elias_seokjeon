@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub use rand;
 use rand::{
     Rng,
@@ -18,6 +20,15 @@ pub enum Hero {
     Kommy,
 }
 
+impl fmt::Display for Hero {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Hero::Butter => write!(f, "butter"),
+            Hero::Kommy => write!(f, "kommy"),
+        }
+    }
+}
+
 impl Distribution<Hero> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Hero {
         match rng.random_range(0..NUM_HEROS) {
@@ -28,6 +39,9 @@ impl Distribution<Hero> for StandardUniform {
     }
 }
 
+pub const DEF_SCORE: u16 = 100;
+pub const MAX_SCORE: u16 = 9_999;
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Packet {
     Connection {
@@ -35,6 +49,7 @@ pub enum Packet {
         uuid: Uuid,
         name: String,
         hero: Hero,
+        score: u16,
     },
     EnterGame,     // Client -> Server
     TryCancelGame, // Client -> Server
@@ -47,6 +62,7 @@ pub enum Packet {
         // Server -> Client
         other: String,
         hero: Hero,
+        score: u16,
     },
     GameLoadSuccess, // Client -> Server
     GameLoadTimeout, // Server -> Client

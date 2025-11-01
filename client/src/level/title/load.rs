@@ -1,8 +1,7 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 use bevy_spine::SkeletonData;
-
-use crate::assets::collider::Collider;
+use protocol::Hero;
 
 use super::*;
 
@@ -46,33 +45,37 @@ fn debug_label() {
     info!("Current Level: LoadTitle");
 }
 
-fn load_necessary_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    load_assets(&mut commands, &asset_server);
+fn load_necessary_assets(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    player_info: Res<PlayerInfo>,
+) {
+    load_assets(&mut commands, &asset_server, player_info.hero);
 }
 
-fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
+fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) {
     let mut loading_assets = TitleAssets::default();
 
     // --- Font Loading ---
     let handle: Handle<Font> = asset_server.load(FONT_PATH);
     loading_assets.push(handle);
 
-    // --- Background Loading ---
+    // --- Texture Loading ---
     let handle: Handle<Image> = asset_server.load(IMG_PATH_BACKGROUND);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LABEL_DECO_0);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LABEL_DECO_1);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LABEL_DECO_2);
+    loading_assets.push(handle);
+
     // --- Model Loading ---
-    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_BUTTER);
-    loading_assets.push(handle);
-
-    let handle: Handle<SkeletonData> = asset_server.load(MODEL_PATH_KOMMY);
-    loading_assets.push(handle);
-
-    // --- Collider Loading ---
-    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_BUTTER);
-    loading_assets.push(handle);
-
-    let handle: Handle<Collider> = asset_server.load(COLLIDER_PATH_KOMMY);
+    let path = MODEL_PATH_HEROS.get(&hero).copied().unwrap();
+    let handle: Handle<SkeletonData> = asset_server.load(path);
     loading_assets.push(handle);
 
     // --- Resource Insersion ---
@@ -102,6 +105,7 @@ fn check_and_retry_asset_load_timeout(
     mut next_state: ResMut<NextState<LevelStates>>,
     mut counter: ResMut<RetryCounter>,
     mut scene_timer: ResMut<SceneTimer>,
+    player_info: Res<PlayerInfo>,
     time: Res<Time>,
 ) {
     scene_timer.tick(time.delta_secs());
@@ -117,7 +121,7 @@ fn check_and_retry_asset_load_timeout(
             ));
             next_state.set(LevelStates::Error);
         } else {
-            load_assets(&mut commands, &asset_server);
+            load_assets(&mut commands, &asset_server, player_info.hero);
         }
     }
 }

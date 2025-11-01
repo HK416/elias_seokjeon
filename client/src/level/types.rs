@@ -25,6 +25,9 @@ pub struct OptionLevelEntity;
 pub struct TitleLevelRoot;
 
 #[derive(Component)]
+pub struct TitleBackground;
+
+#[derive(Component)]
 pub struct TitleLevelEntity;
 
 #[derive(Component)]
@@ -43,10 +46,10 @@ pub struct MatchingCancelLevelEntity;
 pub struct MatchingStatusMessage;
 
 #[derive(Component)]
-pub struct EnterGameLevelEntity;
+pub struct MatchingLevelRoot;
 
 #[derive(Component)]
-pub struct BluredBackground;
+pub struct EnterGameLevelEntity;
 
 #[derive(Component)]
 pub struct EnterGameLoadingBar;
@@ -196,33 +199,6 @@ pub struct BallWaveAnimation {
 }
 
 #[derive(Component)]
-pub struct FadeIn {
-    duration: f32,
-    elapsed: f32,
-}
-
-impl FadeIn {
-    pub fn new(duration: f32) -> Self {
-        Self {
-            duration,
-            elapsed: 0.0,
-        }
-    }
-
-    pub fn tick(&mut self, delta: f32) {
-        self.elapsed = (self.elapsed + delta).min(self.duration);
-    }
-
-    pub fn progress(&self) -> f32 {
-        self.elapsed / self.duration
-    }
-
-    pub fn is_finished(&self) -> bool {
-        self.elapsed >= self.duration
-    }
-}
-
-#[derive(Component)]
 pub struct FadeOut {
     duration: f32,
     elapsed: f32,
@@ -246,6 +222,51 @@ impl FadeOut {
 
     pub fn is_finished(&self) -> bool {
         self.elapsed >= self.duration
+    }
+}
+
+#[derive(Component)]
+pub struct BackoutScale {
+    delay: f32,
+    duration: f32,
+    elapsed: f32,
+    start: Vec3,
+    end: Vec3,
+}
+
+impl BackoutScale {
+    pub fn new(duration: f32, start: Vec3, end: Vec3) -> Self {
+        assert!(duration > 0.0, "duration must be greater than 0.0");
+        Self {
+            delay: 0.0,
+            duration,
+            elapsed: 0.0,
+            start,
+            end,
+        }
+    }
+
+    pub fn with_delay(mut self, delay: f32) -> Self {
+        self.delay = delay;
+        self
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration + self.delay);
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration + self.delay
+    }
+
+    pub fn scale(&self) -> Vec3 {
+        if self.elapsed < self.delay {
+            self.start
+        } else {
+            let t = (self.elapsed - self.delay) / self.duration;
+            let t = 1.0 + 2.70158 * (t - 1.0).powi(3) - 1.70158 * (t - 1.0).powi(2);
+            (self.start * (1.0 - t) + self.end * t).max(Vec3::ZERO)
+        }
     }
 }
 
@@ -282,3 +303,6 @@ impl UiBackOutScale {
         (self.start * (1.0 - t) + self.end * t).max(Vec2::ZERO)
     }
 }
+
+#[derive(Component)]
+pub struct BackgroundPattern(pub usize);

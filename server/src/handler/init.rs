@@ -7,6 +7,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
     let uuid = Uuid::new_v4();
     let name = "Text".to_string();
     let hero = rand::random();
+    let score = DEF_SCORE;
     let (tx, mut rx) = unbounded_channel::<Packet>();
     let (mut write, read) = ws_stream.split();
     let write_task = tokio::spawn(async move {
@@ -25,6 +26,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
         uuid,
         name,
         hero,
+        score,
         addr,
         read,
         tx,
@@ -36,6 +38,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
             uuid,
             name: player.name.clone(),
             hero,
+            score,
         })
         .unwrap();
 

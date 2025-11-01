@@ -54,8 +54,14 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     let handle: Handle<Font> = asset_server.load(FONT_PATH);
     loading_assets.push(handle);
 
-    // --- Background Loading ---
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_BACKGROUND_BLURED);
+    // --- Texture Loading ---
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_DECO);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_MINIMI);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_PATTERN_0);
     loading_assets.push(handle);
 
     // --- Resource Insertion ---

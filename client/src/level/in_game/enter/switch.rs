@@ -19,15 +19,15 @@ impl Plugin for InnerPlugin {
                 debug_label,
                 show_interface,
                 setup_scene_timer,
-                setup_background_crossfade,
-                setup_entity_crossfade,
+                setup_background_popup,
+                setup_entity_fade_out,
                 setup_ui_animation,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToLoadGame), cleanup_scene_timer)
         .add_systems(
             Update,
-            (update_scene_timer, update_fade_in, update_fade_out)
+            (update_scene_timer, update_popup, update_fade_out)
                 .run_if(in_state(LevelStates::SwitchToLoadGame)),
         );
     }
@@ -49,16 +49,19 @@ fn setup_scene_timer(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
 }
 
-fn setup_background_crossfade(
+fn setup_background_popup(
     mut commands: Commands,
-    query: Query<Entity, (With<BluredBackground>, With<EnterGameLevelEntity>)>,
+    query: Query<(Entity, &BackgroundPattern), With<EnterGameLevelEntity>>,
 ) {
-    for entity in query.iter() {
-        commands.entity(entity).insert(FadeIn::new(SCENE_DURATION));
+    for (entity, pattern) in query.iter() {
+        let delay = pattern.0 as f32 * 0.05;
+        commands
+            .entity(entity)
+            .insert(BackoutScale::new(0.1, Vec3::ZERO, Vec3::ONE).with_delay(delay));
     }
 }
 
-fn setup_entity_crossfade(
+fn setup_entity_fade_out(
     mut commands: Commands,
     query: Query<Entity, (With<Spine>, With<TitleLevelEntity>)>,
 ) {
@@ -104,16 +107,16 @@ fn update_scene_timer(
     }
 }
 
-fn update_fade_in(
+fn update_popup(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut FadeIn, &mut Sprite)>,
+    mut query: Query<(Entity, &mut BackoutScale, &mut Transform), With<EnterGameLevelEntity>>,
     time: Res<Time>,
 ) {
-    for (entity, mut fade_in, mut sprite) in query.iter_mut() {
-        fade_in.tick(time.delta_secs());
-        sprite.color = sprite.color.with_alpha(fade_in.progress());
-        if fade_in.is_finished() {
-            commands.entity(entity).remove::<FadeIn>();
+    for (entity, mut popup, mut transform) in query.iter_mut() {
+        popup.tick(time.delta_secs());
+        *transform = transform.with_scale(popup.scale());
+        if popup.is_finished() {
+            commands.entity(entity).remove::<BackoutScale>();
         }
     }
 }

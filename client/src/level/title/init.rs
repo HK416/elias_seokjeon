@@ -1,8 +1,7 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 use bevy_spine::{SpineBundle, SpineSync};
-
-use crate::assets::collider::{Collider, ColliderHandle};
+use protocol::Hero;
 
 use super::*;
 
@@ -46,6 +45,7 @@ fn setup_title(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     image_assets: Res<Assets<Image>>,
+    player_info: Res<PlayerInfo>,
 ) {
     let mut loading_entities = LoadingEntities::default();
     setup_title_screen(
@@ -53,8 +53,14 @@ fn setup_title(
         &asset_server,
         &image_assets,
         &mut loading_entities,
+        player_info.hero,
     );
-    setup_title_interface(&mut commands, &asset_server, &mut loading_entities);
+    setup_title_interface(
+        &mut commands,
+        &asset_server,
+        &mut loading_entities,
+        &player_info,
+    );
 
     // --- Resource Insersion ---
     commands.insert_resource(loading_entities);
@@ -65,7 +71,9 @@ fn setup_title_screen(
     asset_server: &AssetServer,
     image_assets: &Assets<Image>,
     loading_entities: &mut LoadingEntities,
+    hero: Hero,
 ) {
+    // --- BACKGROUND ---
     let handle = asset_server.load(IMG_PATH_BACKGROUND);
     let image = image_assets.get(handle.id()).unwrap();
     let aspect_ratio = image.aspect_ratio().ratio();
@@ -81,6 +89,39 @@ fn setup_title_screen(
             },
             Transform::from_xyz(0.0, half_height, 0.0),
             Visibility::Hidden,
+            TitleBackground,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    // --- MODEL ---
+    let path = MODEL_PATH_HEROS.get(&hero).copied().unwrap();
+    let entity = commands
+        .spawn((
+            SpineBundle {
+                skeleton: asset_server.load(path).into(),
+                transform: Transform::from_xyz(385.0, 160.0, 1.0)
+                    .with_scale((1.0, 1.0, 1.0).into()),
+                visibility: Visibility::Hidden,
+                ..Default::default()
+            },
+            Character::Butter,
+            SpineSync,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    // --- DECO ---
+    let entity = commands
+        .spawn((
+            Sprite {
+                image: asset_server.load(IMG_PATH_LABEL_DECO_1),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(128.0, 160.0, 1.0),
+            Visibility::Hidden,
             SpawnRequest,
         ))
         .id();
@@ -88,31 +129,14 @@ fn setup_title_screen(
 
     let entity = commands
         .spawn((
-            SpineBundle {
-                skeleton: asset_server.load(MODEL_PATH_BUTTER).into(),
-                transform: Transform::from_xyz(640.0, 0.0, 1.0).with_scale((1.0, 1.0, 1.0).into()),
-                visibility: Visibility::Hidden,
+            Sprite {
+                image: asset_server.load(IMG_PATH_LABEL_DECO_2),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
                 ..Default::default()
             },
-            SpineSync,
-            ColliderHandle(asset_server.load(COLLIDER_PATH_BUTTER)),
-            Character::Butter,
-        ))
-        .id();
-    loading_entities.insert(entity);
-
-    let entity = commands
-        .spawn((
-            SpineBundle {
-                skeleton: asset_server.load(MODEL_PATH_KOMMY).into(),
-                transform: Transform::from_xyz(-640.0, 0.0, 1.0)
-                    .with_scale((-1.0, 1.0, 1.0).into()),
-                visibility: Visibility::Hidden,
-                ..Default::default()
-            },
-            SpineSync,
-            ColliderHandle(asset_server.load(COLLIDER_PATH_KOMMY)),
-            Character::Kommy,
+            Transform::from_xyz(642.0, 160.0, 1.0),
+            Visibility::Hidden,
+            SpawnRequest,
         ))
         .id();
     loading_entities.insert(entity);
@@ -122,12 +146,14 @@ fn setup_title_interface(
     commands: &mut Commands,
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
+    player_info: &PlayerInfo,
 ) {
     let entity = commands
         .spawn((
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
@@ -151,7 +177,41 @@ fn setup_title_interface(
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
-                    add_vertical_space(loading_entities, parent, Val::Percent(20.0));
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(90.0),
+                                height: Val::Percent(16.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_3),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new(format!("{}pt", player_info.score)),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 64.0),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(5.0));
 
                     let entity = parent
                         .spawn((
@@ -297,6 +357,61 @@ fn setup_title_interface(
                 })
                 .id();
             loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(14.0));
+
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(26.0),
+                        height: Val::Percent(90.0),
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::FlexEnd,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(10.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_3),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new(format!("{}", player_info.hero)),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TranslatableText(format!("{}", player_info.hero)),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
         })
         .id();
     loading_entities.insert(entity);
@@ -327,31 +442,32 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::InitMatching);
+        next_state.set(LevelStates::InTitle);
     }
 }
 
 #[allow(unreachable_patterns)]
 fn play_animation(
     mut commands: Commands,
-    collider_assets: Res<Assets<Collider>>,
     mut spine_ready_event: MessageReader<SpineReadyEvent>,
-    mut spine_query: Query<(&mut Spine, &Character, &ColliderHandle)>,
+    mut spine_query: Query<(&mut Spine, &Character)>,
 ) {
     for event in spine_ready_event.read() {
-        let (mut spine, character, handle) = spine_query.get_mut(event.entity).unwrap();
-        let collider = collider_assets.get(handle.id()).unwrap();
+        let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
         info!("Character:{:?}, bones:{:?}", character, event.bones.keys());
 
-        let bone_entity = event.bones.get(&collider.ball_bone_name).copied().unwrap();
+        let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
         let (bone, bone_index) = spine
             .skeleton
             .bones()
             .enumerate()
-            .find_map(|(i, b)| (b.data().name() == collider.ball_bone_name).then_some((b, i)))
+            .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
             .unwrap();
         commands.spawn((
-            collider.ball_collider,
+            Collider2d::Circle {
+                offset: (0.0, 0.0).into(),
+                radius: 60.0,
+            },
             ColliderType::Ball,
             TargetSpine::new(event.entity),
             TargetSpineBone::new(bone_entity, bone_index),
@@ -365,15 +481,18 @@ fn play_animation(
             TitleLevelRoot,
         ));
 
-        let bone_entity = event.bones.get(&collider.head_bone_name).copied().unwrap();
+        let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
         let (bone, bone_index) = spine
             .skeleton
             .bones()
             .enumerate()
-            .find_map(|(i, b)| (b.data().name() == collider.head_bone_name).then_some((b, i)))
+            .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
             .unwrap();
         commands.entity(bone_entity).insert((
-            collider.head_collider,
+            Collider2d::Circle {
+                offset: (0.0, 0.0).into(),
+                radius: 80.0,
+            },
             ColliderType::Head,
             TargetSpine::new(event.entity),
             TargetSpineBone::new(bone_entity, bone_index),
@@ -411,7 +530,6 @@ fn play_animation(
 
         commands
             .entity(event.entity)
-            .insert((CharacterAnimState::Idle, SpawnRequest))
-            .remove::<ColliderHandle>();
+            .insert((CharacterAnimState::Idle, SpawnRequest));
     }
 }

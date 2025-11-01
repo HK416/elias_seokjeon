@@ -25,6 +25,12 @@ impl Plugin for InnerPlugin {
             )
                 .run_if(in_state(LevelStates::InitOption)),
         );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            packet_receive_loop.run_if(in_state(LevelStates::InitOption)),
+        );
     }
 }
 
@@ -616,6 +622,6 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        next_state.set(LevelStates::LoadEnterGame);
+        next_state.set(LevelStates::InitMatching);
     }
 }

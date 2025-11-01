@@ -50,18 +50,21 @@ fn cleanup_other_player_info(mut commands: Commands) {
 
 fn hide_loading_screen(
     mut interfaces: Query<&mut Visibility, (With<EnterGameLevelEntity>, With<UI>)>,
-    mut sprites: Query<&mut Sprite, (With<BluredBackground>, With<EnterGameLevelEntity>)>,
+    mut patterns: Query<&mut Transform, (With<BackgroundPattern>, With<EnterGameLevelEntity>)>,
 ) {
     for mut visibility in interfaces.iter_mut() {
         *visibility = Visibility::Hidden;
     }
 
-    for mut sprite in sprites.iter_mut() {
-        sprite.color = sprite.color.with_alpha(0.0);
+    for mut transform in patterns.iter_mut() {
+        *transform = transform.with_scale(Vec3::ZERO);
     }
 }
 
-fn show_title_entities(mut query: Query<&mut Visibility, (With<TitleLevelRoot>, Without<UI>)>) {
+#[allow(clippy::type_complexity)]
+fn show_title_entities(
+    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleBackground>, Without<UI>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }

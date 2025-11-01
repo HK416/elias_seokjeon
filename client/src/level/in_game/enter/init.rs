@@ -23,6 +23,12 @@ impl Plugin for InnerPlugin {
             )
                 .run_if(in_state(LevelStates::InitEnterGame)),
         );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            Update,
+            packet_receive_loop.run_if(in_state(LevelStates::InitEnterGame)),
+        );
     }
 }
 
@@ -32,18 +38,9 @@ fn debug_label() {
     info!("Current Level: InitEnterGame");
 }
 
-fn setup_enter_game(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    image_assets: Res<Assets<Image>>,
-) {
+fn setup_enter_game(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut loading_entities = LoadingEntities::default();
-    setup_enter_game_screen(
-        &mut commands,
-        &asset_server,
-        &image_assets,
-        &mut loading_entities,
-    );
+    setup_enter_game_screen(&mut commands, &asset_server, &mut loading_entities);
     setup_enter_game_interface(&mut commands, &asset_server, &mut loading_entities);
 
     // --- Resource Insertion ---
@@ -53,30 +50,35 @@ fn setup_enter_game(
 fn setup_enter_game_screen(
     commands: &mut Commands,
     asset_server: &AssetServer,
-    image_assets: &Assets<Image>,
     loading_entities: &mut LoadingEntities,
 ) {
-    let handle = asset_server.load(IMG_PATH_BACKGROUND_BLURED);
-    let image = image_assets.get(handle.id()).unwrap();
-    let aspect_ratio = image.aspect_ratio().ratio();
-    let size = (WND_WIDTH as f32, WND_WIDTH as f32 / aspect_ratio);
-    let half_height = WND_HEIGHT as f32 * 0.5;
-    let entity = commands
-        .spawn((
-            Sprite {
-                image: handle,
-                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
-                custom_size: Some(size.into()),
-                color: Color::WHITE.with_alpha(0.0),
-                ..Default::default()
-            },
-            Transform::from_xyz(0.0, half_height, 1.0),
-            Visibility::Hidden,
-            BluredBackground,
-            SpawnRequest,
-        ))
-        .id();
-    loading_entities.insert(entity);
+    const SIZE: Vec2 = Vec2::splat(240.0);
+    const NUM_HORIZONTAL: usize = (WND_WIDTH as f32 / SIZE.x).ceil() as usize;
+    const NUM_VERTICAL: usize = (WND_HEIGHT as f32 / SIZE.y).ceil() as usize;
+
+    let handle = asset_server.load(IMG_PATH_PATTERN_0);
+    let base_x = -0.5 * NUM_HORIZONTAL as f32 * SIZE.x + 0.5 * SIZE.x;
+    let base_y = 0.5 * SIZE.y;
+    for r in 0..NUM_VERTICAL {
+        for c in 0..NUM_HORIZONTAL {
+            let x = base_x + c as f32 * SIZE.x;
+            let y = base_y + r as f32 * SIZE.y;
+            let entity = commands
+                .spawn((
+                    Sprite {
+                        image: handle.clone(),
+                        custom_size: Some(SIZE),
+                        image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                        ..Default::default()
+                    },
+                    Transform::from_xyz(x, y, 1.0).with_scale(Vec3::ZERO),
+                    BackgroundPattern(r + c),
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+        }
+    }
 }
 
 fn setup_enter_game_interface(
@@ -94,7 +96,7 @@ fn setup_enter_game_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::EnterGameLoadingBackground,
+            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(4),
@@ -135,7 +137,7 @@ fn setup_enter_game_interface(
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
-                            let texture = asset_server.load(IMG_PATH_LOADING_ICON_DECO);
+                            let texture = asset_server.load(IMG_PATH_LOADING_MINIMI);
                             let entity = parent
                                 .spawn((
                                     ImageNode::new(texture),
@@ -244,7 +246,7 @@ fn observe_entity_creation(
 
         commands.insert(EnterGameLevelEntity);
         if child_of.is_none() {
-            commands.insert(TitleLevelRoot);
+            commands.insert(MatchingLevelRoot);
         }
     }
 }

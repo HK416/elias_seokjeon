@@ -15,7 +15,7 @@ use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use protocol::{Hero, Packet, rand, serde_json, uuid::Uuid};
+use protocol::{DEF_SCORE, Hero, MAX_SCORE, Packet, rand, serde_json, uuid::Uuid};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -36,6 +36,7 @@ pub struct Player {
     uuid: Uuid,
     name: String,
     hero: Hero,
+    score: u16,
     addr: SocketAddr,
     read: SplitStream<WebSocketStream<TcpStream>>,
     tx: UnboundedSender<Packet>,
