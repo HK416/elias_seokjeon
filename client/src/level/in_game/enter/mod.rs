@@ -33,6 +33,7 @@ impl Plugin for InnerPlugin {
                     check_loading_progress,
                     check_and_retry_asset_load_timeout,
                     update_loading_progress,
+                    update_loading_minimi,
                 )
                     .run_if(in_state(LevelStates::LoadGame)),
             );
@@ -188,5 +189,17 @@ fn update_loading_progress(
 
     if let Ok(mut node) = set.p1().single_mut() {
         node.left = Val::Percent(progress * 100.0);
+    }
+}
+
+fn update_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+    time: Res<Time>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.tick(time.delta_secs());
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
     }
 }

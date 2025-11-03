@@ -58,10 +58,13 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_DECO);
     loading_assets.push(handle);
 
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_MINIMI);
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_PATTERN_0);
     loading_assets.push(handle);
 
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_PATTERN_0);
+    // --- Sprite Sheet Loading ---
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_MINIMI);
+    loading_assets.push(handle);
+    let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_LOADING_MINIMI);
     loading_assets.push(handle);
 
     // --- Resource Insertion ---

@@ -106,7 +106,7 @@ fn setup_title_screen(
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },
-            Character::Butter,
+            Character::new(hero),
             SpineSync,
         ))
         .id();

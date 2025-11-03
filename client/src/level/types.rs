@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
+use protocol::Hero;
 
 #[derive(Component)]
 pub struct LoadingStateRoot;
@@ -56,6 +57,12 @@ pub struct EnterGameLoadingBar;
 
 #[derive(Component)]
 pub struct EnterGameLoadingCursor;
+
+#[derive(Component)]
+pub struct InPrepareLevelEntity;
+
+#[derive(Component)]
+pub struct InPrepareLevelRoot;
 
 #[derive(Component)]
 pub struct InGameLevelEntity;
@@ -132,6 +139,15 @@ pub enum UI {
 pub enum Character {
     Butter,
     Kommy,
+}
+
+impl Character {
+    pub fn new(hero: Hero) -> Self {
+        match hero {
+            Hero::Butter => Self::Butter,
+            Hero::Kommy => Self::Kommy,
+        }
+    }
 }
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
@@ -306,3 +322,39 @@ impl UiBackOutScale {
 
 #[derive(Component)]
 pub struct BackgroundPattern(pub usize);
+
+#[derive(Component)]
+pub struct AnimationTimer {
+    num_sheets: usize,
+    repeat: bool,
+    duration: f32,
+    elapsed: f32,
+}
+
+impl AnimationTimer {
+    pub fn new(duration: f32, num_sheets: usize, repeat: bool) -> Self {
+        Self {
+            num_sheets,
+            repeat,
+            duration,
+            elapsed: 0.0,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed += delta;
+        if self.repeat {
+            self.elapsed %= self.duration;
+        } else {
+            self.elapsed = self.elapsed.min(self.duration);
+        }
+    }
+
+    pub fn frame_index(&self) -> usize {
+        (self.elapsed / self.duration * self.num_sheets as f32) as usize
+    }
+
+    pub fn is_finished(&self) -> bool {
+        !self.repeat && self.elapsed >= self.duration
+    }
+}

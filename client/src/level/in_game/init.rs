@@ -14,6 +14,7 @@ impl Plugin for InnerPlugin {
                     update_spawn_progress,
                     observe_entiey_creation,
                     check_loading_progress,
+                    update_loading_minimi,
                 )
                     .run_if(in_state(LevelStates::InitGame)),
             );
@@ -130,6 +131,18 @@ fn check_loading_progress(
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        // TODO
+        next_state.set(LevelStates::InitPrepareGame);
+    }
+}
+
+fn update_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+    time: Res<Time>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.tick(time.delta_secs());
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
     }
 }

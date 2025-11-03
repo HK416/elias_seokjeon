@@ -130,6 +130,7 @@ fn setup_enter_game_interface(
                         .spawn((
                             Node {
                                 left: Val::Percent(0.0),
+                                bottom: Val::VMin(5.0),
                                 ..Default::default()
                             },
                             Visibility::Inherited,
@@ -137,10 +138,12 @@ fn setup_enter_game_interface(
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
-                            let texture = asset_server.load(IMG_PATH_LOADING_MINIMI);
+                            let image = asset_server.load(IMG_PATH_LOADING_MINIMI);
+                            let atlas = asset_server.load(ATLAS_PATH_LOADING_MINIMI);
                             let entity = parent
                                 .spawn((
-                                    ImageNode::new(texture),
+                                    ImageNode::from_atlas_image(image, TextureAtlas::from(atlas)),
+                                    AnimationTimer::new(1.0, 3, true),
                                     Node {
                                         left: Val::VMin(-5.0),
                                         width: Val::VMin(10.0),

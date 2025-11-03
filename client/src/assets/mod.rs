@@ -7,6 +7,7 @@ pub mod skeleton;
 pub mod sound;
 pub mod spine;
 pub mod texture;
+pub mod texture_atlas;
 
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
 use anyhow::anyhow;
@@ -30,6 +31,7 @@ impl Plugin for InnerPlugin {
             .register_asset_loader(skeleton::SkelAssetLoader)
             .register_asset_loader(sound::SoundAssetLoader)
             .register_asset_loader(spine::ModelAssetLoader)
+            .register_asset_loader(texture_atlas::TextureAtlasAssetLoader)
             .register_asset_loader(texture::TexelAssetLoader);
     }
 }

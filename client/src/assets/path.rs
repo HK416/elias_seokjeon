@@ -21,8 +21,10 @@ use protocol::{Hero, NUM_HEROS};
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_1: &str = concatcp!("textures/Label_Deco_1.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_2: &str = concatcp!("textures/Label_Deco_2.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LOADING_DECO: &str = concatcp!("textures/Loading_Deco.texture", QUERY, VERSION);
-#[rustfmt::skip] pub const IMG_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_PATTERN_0: &str = concatcp!("textures/Pattern_0.texture", QUERY, VERSION);
+
+#[rustfmt::skip] pub const IMG_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const ATLAS_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.atlas", QUERY, VERSION);
 
 lazy_static! {
     pub static ref MODEL_PATH_HEROS: HashMap<Hero, &'static str> = {
