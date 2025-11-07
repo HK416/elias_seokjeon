@@ -40,12 +40,15 @@
         "textures": {
             "target_files": [
                 "Background.texture",
+                "FX_Firecartoon.texture",
+                "FX_Firecartoon.atlas",
                 "Label_Deco_0.texture",
                 "Label_Deco_1.texture",
                 "Label_Deco_2.texture",
                 "Loading_Deco.texture",
                 "Loading_minimi.texture",
                 "Loading_minimi.atlas",
+                "PVP_Ingame_VS.texture",
                 "Pattern_0.texture"
             ]
         }

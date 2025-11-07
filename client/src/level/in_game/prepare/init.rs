@@ -85,7 +85,7 @@ fn setup_in_prepare_entities(
                 skeleton: asset_server.load(path).into(),
                 transform: Transform::from_xyz(-480.0, 160.0, 1.0)
                     .with_scale(Vec3::new(-1.0, 1.0, 1.0)),
-                visibility: Visibility::Visible,
+                visibility: Visibility::Hidden,
                 ..Default::default()
             },
             Character::new(player_info.hero),
@@ -101,7 +101,7 @@ fn setup_in_prepare_entities(
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
                 transform: Transform::from_xyz(480.0, 160.0, 1.0),
-                visibility: Visibility::Visible,
+                visibility: Visibility::Hidden,
                 ..Default::default()
             },
             Character::new(other_info.hero),
@@ -128,7 +128,7 @@ fn setup_in_prepare_interface(
                 ..Default::default()
             },
             UI::Root,
-            Visibility::Visible,
+            Visibility::Hidden,
             SpawnRequest,
         ))
         .with_children(|parent| {
@@ -240,12 +240,50 @@ fn setup_in_prepare_interface(
                 .spawn((
                     Node {
                         width: Val::Percent(22.0),
-                        height: Val::Percent(80.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..Default::default()
                     },
                     Visibility::Inherited,
                     SpawnRequest,
                 ))
+                .with_children(|parent| {
+                    let image = asset_server.load(IMG_PATH_FX_FIRECARTOON);
+                    let layout = asset_server.load(ATLAS_PATH_FX_FIRECARTOON);
+                    let entity = parent
+                        .spawn((
+                            ImageNode::from_atlas_image(image, TextureAtlas { index: 0, layout }),
+                            AnimationTimer::new(0.7, 18, false),
+                            Node {
+                                bottom: Val::VMin(-15.0),
+                                width: Val::Percent(100.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(26.0 / 51.0),
+                                position_type: PositionType::Absolute,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(asset_server.load(IMG_PATH_PVP_INGAME_VS)),
+                            Node {
+                                width: Val::Percent(60.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(165.0 / 152.0),
+                                position_type: PositionType::Absolute,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
                 .id();
             loading_entities.insert(entity);
 
@@ -427,7 +465,6 @@ fn observe_entiey_creation(
 fn check_loading_progress(
     mut commands: Commands,
     loading_entities: Res<LoadingEntities>,
-    mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
         // TODO

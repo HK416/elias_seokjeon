@@ -78,7 +78,7 @@ pub enum LevelStates {
     LoadEnterGame, // -> InitEnterGame, Error
     InitEnterGame, // -> LoadTitle, Error
 
-    InitPrepareGame, // -> InPrepareGame, Error
+    InitPrepareGame, // -> SwitchToTitleMessage, InPrepareGame, Error
     InPrepareGame,   //
 
     LoadGame,         // -> SwitchToTitleMessage, InitGame, Error

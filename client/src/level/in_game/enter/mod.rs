@@ -79,6 +79,16 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
         loading_assets.push(handle);
     }
 
+    // --- Texture Loading ---
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_FX_FIRECARTOON);
+    loading_assets.push(handle);
+
+    let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_FX_FIRECARTOON);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_PVP_INGAME_VS);
+    loading_assets.push(handle);
+
     // --- Resource Insertion ---
     commands.insert_resource(loading_assets);
 }
