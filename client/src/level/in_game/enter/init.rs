@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 
@@ -143,7 +145,7 @@ fn setup_enter_game_interface(
                             let entity = parent
                                 .spawn((
                                     ImageNode::from_atlas_image(image, TextureAtlas::from(atlas)),
-                                    AnimationTimer::new(1.0, 3, true),
+                                    AnimationTimer::new(1.0, NonZeroUsize::new(3).unwrap(), true),
                                     Node {
                                         left: Val::VMin(-5.0),
                                         width: Val::VMin(10.0),

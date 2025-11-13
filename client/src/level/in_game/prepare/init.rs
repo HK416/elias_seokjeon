@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent, SpineSync};
@@ -12,18 +14,18 @@ impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(LevelStates::InitPrepareGame),
-            (debug_label, setup_in_prepare),
+            (debug_label, setup_in_prepare, setup_loading_minimi),
         )
         .add_systems(
             OnExit(LevelStates::InitPrepareGame),
-            cleanup_loading_resource,
+            (cleanup_loading_resource, cleanup_sync_flags),
         )
         .add_systems(
             Update,
             (
                 update_spawn_progress,
                 observe_entiey_creation,
-                check_loading_progress,
+                check_loading_progress.run_if(not(resource_exists::<SyncFlags>)),
                 play_animation,
                 update_loading_minimi,
             )
@@ -253,7 +255,7 @@ fn setup_in_prepare_interface(
                     let entity = parent
                         .spawn((
                             ImageNode::from_atlas_image(image, TextureAtlas { index: 0, layout }),
-                            AnimationTimer::new(0.7, 18, false),
+                            AnimationTimer::new(1.0, NonZeroUsize::new(10).unwrap(), true),
                             Node {
                                 bottom: Val::VMin(-15.0),
                                 width: Val::Percent(100.0),
@@ -395,6 +397,23 @@ fn setup_in_prepare_interface(
     loading_entities.insert(entity);
 }
 
+fn setup_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.reset();
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
+    }
+}
+
+// --- CLEANUP SYSTEMS ---
+
+fn cleanup_sync_flags(mut commands: Commands) {
+    commands.remove_resource::<SyncFlags>();
+}
+
 // --- PREUPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
@@ -412,6 +431,9 @@ fn handle_received_packets(
                         "Failed to enter the game due to a connection timeout.",
                     ));
                     next_state.set(LevelStates::SwitchToTitleMessage);
+                }
+                Packet::PrepareInGame => {
+                    next_state.set(LevelStates::SwitchToInPrepare);
                 }
                 _ => { /* empty */ }
             },
@@ -465,9 +487,12 @@ fn observe_entiey_creation(
 fn check_loading_progress(
     mut commands: Commands,
     loading_entities: Res<LoadingEntities>,
+    #[cfg(target_arch = "wasm32")] network: Res<Network>,
 ) {
     if loading_entities.is_empty() {
-        // TODO
+        #[cfg(target_arch = "wasm32")]
+        network.send(&Packet::GameLoadSuccess).unwrap();
+        commands.insert_resource(SyncFlags);
     }
 }
 

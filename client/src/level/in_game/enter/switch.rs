@@ -66,7 +66,9 @@ fn setup_entity_fade_out(
     query: Query<Entity, (With<Spine>, With<TitleLevelEntity>)>,
 ) {
     for entity in query.iter() {
-        commands.entity(entity).insert(FadeOut::new(SCENE_DURATION));
+        commands
+            .entity(entity)
+            .insert(FadeEffect::new(SCENE_DURATION));
     }
 }
 
@@ -123,7 +125,7 @@ fn update_popup(
 
 fn update_fade_out(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Visibility, &mut FadeOut, &mut Spine)>,
+    mut query: Query<(Entity, &mut Visibility, &mut FadeEffect, &mut Spine)>,
     time: Res<Time>,
 ) {
     for (entity, mut visibility, mut fade_out, mut spine) in query.iter_mut() {
@@ -136,7 +138,7 @@ fn update_fade_out(
         if fade_out.is_finished() {
             *visibility = Visibility::Hidden;
             spine.0.skeleton.color_mut().set_a(1.0);
-            commands.entity(entity).remove::<FadeOut>();
+            commands.entity(entity).remove::<FadeEffect>();
         }
     }
 }

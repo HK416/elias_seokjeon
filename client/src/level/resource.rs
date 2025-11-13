@@ -229,3 +229,6 @@ impl From<NetError> for ErrorMessage {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct SyncFlags;

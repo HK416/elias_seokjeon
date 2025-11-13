@@ -120,9 +120,16 @@ fn handle_collider_gizmo(
 }
 
 #[cfg(not(feature = "no-debuging-gizmo"))]
-fn draw_collider_gizmo(mut gizmos: Gizmos, query: Query<(&Collider2d, &GlobalTransform)>) {
+fn draw_collider_gizmo(
+    mut gizmos: Gizmos,
+    query: Query<(&Collider2d, &Visibility, &GlobalTransform)>,
+) {
     const GIZMO_COLOR: Color = Color::srgb(1.0, 1.0, 0.0);
-    for (collider, transform) in query.iter() {
+    for (collider, &visibility, transform) in query.iter() {
+        if visibility == Visibility::Hidden {
+            continue;
+        }
+
         match collider {
             Collider2d::Box { offset, size } => {
                 let center = transform.translation().xy() + *offset;

@@ -38,6 +38,7 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 Update,
                 (
+                    update_smooth_anim,
                     update_backout_anim,
                     handle_spine_animation_completed,
                     update_wave_animation,
@@ -78,8 +79,9 @@ pub enum LevelStates {
     LoadEnterGame, // -> InitEnterGame, Error
     InitEnterGame, // -> LoadTitle, Error
 
-    InitPrepareGame, // -> SwitchToTitleMessage, InPrepareGame, Error
-    InPrepareGame,   //
+    InitPrepareGame,   // -> SwitchToTitleMessage, SwitchToInPrepare, Error
+    SwitchToInPrepare, // -> InPrepareGame, Error
+    InPrepareGame,     //
 
     LoadGame,         // -> SwitchToTitleMessage, InitGame, Error
     InitGame,         // -> SwitchToTitleMessage, InitPrepareGame, Error
@@ -87,6 +89,21 @@ pub enum LevelStates {
 }
 
 // --- UPDATE SYSTEMS ---
+
+fn update_smooth_anim(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut UiSmoothScale, &mut UiTransform)>,
+    time: Res<Time>,
+) {
+    for (entity, mut back_out, mut transform) in query.iter_mut() {
+        back_out.tick(time.delta_secs());
+        transform.scale = back_out.scale();
+
+        if back_out.is_finished() {
+            commands.entity(entity).remove::<UiSmoothScale>();
+        }
+    }
+}
 
 fn update_backout_anim(
     mut commands: Commands,

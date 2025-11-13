@@ -94,6 +94,10 @@ pub async fn wait(left: Player, right: Player) {
         if loaded_player.len() == 2 {
             #[cfg(not(feature = "no-debuging-log"))]
             println!("All players loaded!");
+
+            let left = loaded_player.pop().unwrap();
+            let right = loaded_player.pop().unwrap();
+            tokio::spawn(prepare::wait(left, right));
             return;
         }
     }

@@ -66,4 +66,5 @@ pub enum Packet {
     },
     GameLoadSuccess, // Client -> Server
     GameLoadTimeout, // Server -> Client
+    PrepareInGame,
 }

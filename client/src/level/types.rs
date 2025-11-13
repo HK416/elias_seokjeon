@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, num::NonZeroUsize};
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
@@ -215,12 +215,12 @@ pub struct BallWaveAnimation {
 }
 
 #[derive(Component)]
-pub struct FadeOut {
+pub struct FadeEffect {
     duration: f32,
     elapsed: f32,
 }
 
-impl FadeOut {
+impl FadeEffect {
     pub fn new(duration: f32) -> Self {
         Self {
             duration,
@@ -287,6 +287,40 @@ impl BackoutScale {
 }
 
 #[derive(Component)]
+pub struct UiSmoothScale {
+    duration: f32,
+    elapsed: f32,
+    start: Vec2,
+    end: Vec2,
+}
+
+impl UiSmoothScale {
+    pub fn new(duration: f32, start: Vec2, end: Vec2) -> Self {
+        assert!(duration > 0.0, "duration must be greater than 0.0");
+        Self {
+            duration,
+            elapsed: 0.0,
+            start,
+            end,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration);
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration
+    }
+
+    pub fn scale(&self) -> Vec2 {
+        let t = self.elapsed / self.duration;
+        let t = 3.0 * t.powi(2) - 2.0 * t.powi(3);
+        self.start * (1.0 - t) + self.end * t
+    }
+}
+
+#[derive(Component)]
 pub struct UiBackOutScale {
     duration: f32,
     elapsed: f32,
@@ -325,14 +359,14 @@ pub struct BackgroundPattern(pub usize);
 
 #[derive(Component)]
 pub struct AnimationTimer {
-    num_sheets: usize,
+    num_sheets: NonZeroUsize,
     repeat: bool,
     duration: f32,
     elapsed: f32,
 }
 
 impl AnimationTimer {
-    pub fn new(duration: f32, num_sheets: usize, repeat: bool) -> Self {
+    pub fn new(duration: f32, num_sheets: NonZeroUsize, repeat: bool) -> Self {
         Self {
             num_sheets,
             repeat,
@@ -350,11 +384,11 @@ impl AnimationTimer {
         }
     }
 
-    pub fn frame_index(&self) -> usize {
-        (self.elapsed / self.duration * self.num_sheets as f32) as usize
+    pub fn reset(&mut self) {
+        self.elapsed = 0.0;
     }
 
-    pub fn is_finished(&self) -> bool {
-        !self.repeat && self.elapsed >= self.duration
+    pub fn frame_index(&self) -> usize {
+        (self.elapsed / self.duration * (self.num_sheets.get() - 1) as f32) as usize
     }
 }
