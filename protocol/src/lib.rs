@@ -60,11 +60,18 @@ pub enum Packet {
     },
     MatchingSuccess {
         // Server -> Client
-        other: String,
-        hero: Hero,
-        score: u16,
+        left: Player,
+        right: Player,
     },
     GameLoadSuccess, // Client -> Server
     GameLoadTimeout, // Server -> Client
     PrepareInGame,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Player {
+    pub uuid: Uuid,
+    pub name: String,
+    pub hero: Hero,
+    pub score: u16,
 }

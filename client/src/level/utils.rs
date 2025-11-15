@@ -85,8 +85,8 @@ pub fn play_character_animation(
 ) {
     let (animation_name, looping) = match anim_state {
         CharacterAnimState::Idle => match character {
-            Character::Butter => (BUTTER_TITLE_IDLE, true),
-            Character::Kommy => (KOMMY_TITLE_TAUNT, true),
+            Character::Butter => (BUTTER_TITLE, true),
+            Character::Kommy => (KOMMY_TITLE, true),
         },
         CharacterAnimState::PatIdle => (PAT_IDLE, true),
         CharacterAnimState::PatEnd => (PAT_END, false),

@@ -183,10 +183,9 @@ fn setup_in_prepare_interface(
                                     let entity = parent
                                         .spawn((
                                             Node::default(),
-                                            Text::new(format!("{}", player_info.hero)),
+                                            Text::new(&player_info.name),
                                             TextFont::from(asset_server.load(FONT_PATH)),
                                             TextLayout::new_with_justify(Justify::Center),
-                                            TranslatableText(format!("{}", player_info.hero)),
                                             ResizableFont::vertical(1280.0, 32.0),
                                             TextColor::BLACK,
                                             Visibility::Inherited,
@@ -338,10 +337,9 @@ fn setup_in_prepare_interface(
                                     let entity = parent
                                         .spawn((
                                             Node::default(),
-                                            Text::new(format!("{}", other_info.hero)),
+                                            Text::new(&other_info.name),
                                             TextFont::from(asset_server.load(FONT_PATH)),
                                             TextLayout::new_with_justify(Justify::Center),
-                                            TranslatableText(format!("{}", other_info.hero)),
                                             ResizableFont::vertical(1280.0, 32.0),
                                             TextColor::BLACK,
                                             Visibility::Inherited,
@@ -526,7 +524,7 @@ fn play_animation(
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
-            TitleLevelEntity,
+            EnterGameLevelEntity,
             TitleLevelRoot,
         ));
 
@@ -551,7 +549,7 @@ fn play_animation(
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
-            TitleLevelEntity,
+            EnterGameLevelEntity,
             TitleLevelRoot,
         ));
 
@@ -565,13 +563,13 @@ fn play_animation(
             Character::Butter => {
                 skeleton.set_skin_by_name("Normal").unwrap();
                 animation_state
-                    .set_animation_by_name(0, BUTTER_TITLE_IDLE, true)
+                    .set_animation_by_name(0, BUTTER_TITLE, true)
                     .unwrap();
             }
             Character::Kommy => {
                 skeleton.set_skin_by_name("Normal").unwrap();
                 animation_state
-                    .set_animation_by_name(0, KOMMY_TITLE_TAUNT, true)
+                    .set_animation_by_name(0, KOMMY_TITLE, true)
                     .unwrap();
             }
             _ => { /* empty */ }

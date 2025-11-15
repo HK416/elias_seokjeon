@@ -32,8 +32,11 @@ pub const TOUCH_END: &str = "Touch_End";
 pub const SMASH_END_1: &str = "Smash_End_1";
 pub const SMASH_END_2: &str = "Smash_End_2";
 
-pub const BUTTER_TITLE_IDLE: &str = "Idle_1";
-pub const KOMMY_TITLE_TAUNT: &str = "Taunt_1";
+pub const BUTTER_TITLE: &str = "Idle_1";
+pub const KOMMY_TITLE: &str = "Taunt_1";
+
+pub const BUTTER_IDLE: &str = "Idle_1";
+pub const KOMMY_IDLE: &str = "Idle_1";
 
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;

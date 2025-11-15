@@ -453,11 +453,10 @@ fn setup_title_interface(
                             let entity = parent
                                 .spawn((
                                     Node::default(),
-                                    Text::new(format!("{}", player_info.hero)),
+                                    Text::new(&player_info.name),
                                     TextFont::from(asset_server.load(FONT_PATH)),
                                     TextLayout::new_with_justify(Justify::Center),
                                     ResizableFont::vertical(1280.0, 52.0),
-                                    TranslatableText(format!("{}", player_info.hero)),
                                     TextColor::BLACK,
                                     Visibility::Inherited,
                                     SpawnRequest,
@@ -602,13 +601,13 @@ fn play_animation(
             Character::Butter => {
                 skeleton.set_skin_by_name("Normal").unwrap();
                 animation_state
-                    .set_animation_by_name(0, BUTTER_TITLE_IDLE, true)
+                    .set_animation_by_name(0, BUTTER_TITLE, true)
                     .unwrap();
             }
             Character::Kommy => {
                 skeleton.set_skin_by_name("Normal").unwrap();
                 animation_state
-                    .set_animation_by_name(0, KOMMY_TITLE_TAUNT, true)
+                    .set_animation_by_name(0, KOMMY_TITLE, true)
                     .unwrap();
             }
             _ => { /* empty */ }

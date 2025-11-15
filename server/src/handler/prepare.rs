@@ -3,7 +3,7 @@ use super::*;
 const MAX_WAIT_TIME: u32 = 5_000;
 const MAX_LOOP: usize = 100;
 
-pub async fn wait(left: Player, right: Player) {
+pub async fn wait(left: Session, right: Session) {
     left.tx.send(Packet::PrepareInGame).unwrap();
     right.tx.send(Packet::PrepareInGame).unwrap();
 

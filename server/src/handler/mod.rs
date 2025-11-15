@@ -16,7 +16,7 @@ use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use protocol::{DEF_SCORE, Hero, MAX_SCORE, Packet, rand, serde_json, uuid::Uuid};
+use protocol::{DEF_SCORE, Hero, MAX_SCORE, Packet, Player, rand, serde_json, uuid::Uuid};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -33,7 +33,7 @@ pub enum State {
     Matching,
 }
 
-pub struct Player {
+pub struct Session {
     uuid: Uuid,
     name: String,
     hero: Hero,
@@ -44,15 +44,15 @@ pub struct Player {
     _write_task: JoinHandle<SplitSink<WebSocketStream<TcpStream>, Message>>,
 }
 
-impl fmt::Debug for Player {
+impl fmt::Debug for Session {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple(stringify!(Player)).field(&self.addr).finish()
     }
 }
 
-pub fn next_state(state: State, player: Player) {
+pub fn next_state(state: State, session: Session) {
     match state {
-        State::Title => tokio::spawn(title::update(player)),
-        State::Matching => tokio::spawn(matching::regist(player)),
+        State::Title => tokio::spawn(title::update(session)),
+        State::Matching => tokio::spawn(matching::regist(session)),
     };
 }

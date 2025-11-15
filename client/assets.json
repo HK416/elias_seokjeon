@@ -40,6 +40,11 @@
         "textures": {
             "target_files": [
                 "Background.texture",
+                "BG_Fairy_0.texture",
+                "BG_Fairy_1.texture",
+                "BG_Fairy_2.texture",
+                "BG_Fairy_3.texture",
+                "BG_Fairy_4.texture",
                 "FX_Firecartoon.texture",
                 "FX_Firecartoon.atlas",
                 "Label_Deco_0.texture",

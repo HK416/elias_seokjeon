@@ -89,6 +89,12 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<Image> = asset_server.load(IMG_PATH_PVP_INGAME_VS);
     loading_assets.push(handle);
 
+    // --- Stage Loading ---
+    for path in IMG_PATH_BG_FAIRY {
+        let handle: Handle<Image> = asset_server.load(path);
+        loading_assets.push(handle);
+    }
+
     // --- Resource Insertion ---
     commands.insert_resource(loading_assets);
 }

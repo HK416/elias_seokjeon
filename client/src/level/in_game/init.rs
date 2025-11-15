@@ -1,3 +1,5 @@
+use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent};
+
 use super::*;
 
 // --- PLUGIN ---
@@ -14,6 +16,7 @@ impl Plugin for InnerPlugin {
                     update_spawn_progress,
                     observe_entiey_creation,
                     check_loading_progress,
+                    play_animation,
                     update_loading_minimi,
                 )
                     .run_if(in_state(LevelStates::InitGame)),
@@ -33,9 +36,20 @@ fn debug_label() {
     info!("Current Level: InitGame");
 }
 
-fn setup_in_game(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_in_game(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    player_info: Res<PlayerInfo>,
+    other_info: Res<OtherInfo>,
+) {
     let mut loading_entities = LoadingEntities::default();
-    setup_in_game_entities(&mut commands, &asset_server, &mut loading_entities);
+    setup_in_game_entities(
+        &mut commands,
+        &asset_server,
+        &mut loading_entities,
+        &player_info,
+        &other_info,
+    );
     setup_in_game_interface(&mut commands, &asset_server, &mut loading_entities);
 
     // --- Resource Insertion ---
@@ -46,8 +60,121 @@ fn setup_in_game_entities(
     commands: &mut Commands,
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
+    player_info: &PlayerInfo,
+    other_info: &OtherInfo,
 ) {
-    // TODO
+    // --- Spawn Stage ---
+    let entity = commands
+        .spawn((
+            Sprite {
+                custom_size: Some(Vec2::new(2880.0, 929.53125)),
+                image: asset_server.load(IMG_PATH_BG_FAIRY_4),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 320.0, 0.4),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Sprite {
+                custom_size: Some(Vec2::new(2880.0, 582.188)),
+                image: asset_server.load(IMG_PATH_BG_FAIRY_3),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 910.0, 0.3),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Sprite {
+                custom_size: Some(Vec2::new(1920.0, 401.25)),
+                image: asset_server.load(IMG_PATH_BG_FAIRY_2),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 840.0, 0.2),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Sprite {
+                custom_size: Some(Vec2::new(1920.0, 356.25)),
+                image: asset_server.load(IMG_PATH_BG_FAIRY_1),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 860.0, 0.1),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Sprite {
+                custom_size: Some(Vec2::new(1920.0, 390.0)),
+                image: asset_server.load(IMG_PATH_BG_FAIRY_0),
+                image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 960.0, 0.0),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    // -- Spawn Spine Player ---
+    let (left, right) = if other_info.left_side {
+        (other_info.hero, player_info.hero)
+    } else {
+        (player_info.hero, other_info.hero)
+    };
+
+    let path = MODEL_PATH_HEROS.get(&left).copied().unwrap();
+    let entity = commands
+        .spawn((
+            SpineBundle {
+                skeleton: asset_server.load(path).into(),
+                transform: Transform::from_xyz(-960.0, 340.0, 0.5)
+                    .with_scale(Vec3::new(-0.3, 0.3, 0.3)),
+                visibility: Visibility::Visible,
+                ..Default::default()
+            },
+            Character::new(left),
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let path = MODEL_PATH_HEROS.get(&right).copied().unwrap();
+    let entity = commands
+        .spawn((
+            SpineBundle {
+                skeleton: asset_server.load(path).into(),
+                transform: Transform::from_xyz(960.0, 340.0, 0.5)
+                    .with_scale(Vec3::new(0.3, 0.3, 0.3)),
+                visibility: Visibility::Visible,
+                ..Default::default()
+            },
+            Character::new(right),
+        ))
+        .id();
+    loading_entities.insert(entity);
 }
 
 fn setup_in_game_interface(
@@ -132,6 +259,93 @@ fn check_loading_progress(
 ) {
     if loading_entities.is_empty() {
         next_state.set(LevelStates::InitPrepareGame);
+    }
+}
+
+#[allow(unreachable_patterns)]
+fn play_animation(
+    mut commands: Commands,
+    mut spine_ready_event: MessageReader<SpineReadyEvent>,
+    mut spine_query: Query<(&mut Spine, &Character)>,
+) {
+    for event in spine_ready_event.read() {
+        let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
+
+        // let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
+        // let (bone, bone_index) = spine
+        //     .skeleton
+        //     .bones()
+        //     .enumerate()
+        //     .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
+        //     .unwrap();
+        // commands.spawn((
+        //     Collider2d::Circle {
+        //         offset: (0.0, 0.0).into(),
+        //         radius: 60.0,
+        //     },
+        //     ColliderType::Ball,
+        //     TargetSpine::new(event.entity),
+        //     TargetSpineBone::new(bone_entity, bone_index),
+        //     SpineBoneOriginPosition {
+        //         local: bone.position().into(),
+        //         world: bone.world_position().into(),
+        //     },
+        //     Transform::IDENTITY,
+        //     GlobalTransform::IDENTITY,
+        //     InGameLevelEntity,
+        //     InGameLevelRoot,
+        // ));
+
+        // let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
+        // let (bone, bone_index) = spine
+        //     .skeleton
+        //     .bones()
+        //     .enumerate()
+        //     .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
+        //     .unwrap();
+        // commands.entity(bone_entity).insert((
+        //     Collider2d::Circle {
+        //         offset: (0.0, 0.0).into(),
+        //         radius: 80.0,
+        //     },
+        //     ColliderType::Head,
+        //     TargetSpine::new(event.entity),
+        //     TargetSpineBone::new(bone_entity, bone_index),
+        //     SpineBoneOriginPosition {
+        //         local: bone.position().into(),
+        //         world: bone.world_position().into(),
+        //     },
+        //     Transform::IDENTITY,
+        //     GlobalTransform::IDENTITY,
+        //     InGameLevelEntity,
+        //     InGameLevelRoot,
+        // ));
+
+        let Spine(SkeletonController {
+            skeleton,
+            animation_state,
+            ..
+        }) = spine.as_mut();
+
+        match character {
+            Character::Butter => {
+                skeleton.set_skin_by_name("Normal").unwrap();
+                animation_state
+                    .set_animation_by_name(0, BUTTER_IDLE, true)
+                    .unwrap();
+            }
+            Character::Kommy => {
+                skeleton.set_skin_by_name("Normal").unwrap();
+                animation_state
+                    .set_animation_by_name(0, KOMMY_IDLE, true)
+                    .unwrap();
+            }
+            _ => { /* empty */ }
+        }
+
+        commands
+            .entity(event.entity)
+            .insert((CharacterAnimState::Idle, SpawnRequest));
     }
 }
 

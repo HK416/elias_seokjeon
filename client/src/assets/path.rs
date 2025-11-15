@@ -17,6 +17,20 @@ use protocol::{Hero, NUM_HEROS};
 #[rustfmt::skip] pub const MODEL_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.model", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND: &str = concatcp!("textures/Background.texture", QUERY, VERSION);
+
+#[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_0: &str = concatcp!("textures/BG_Fairy_0.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_1: &str = concatcp!("textures/BG_Fairy_1.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_2: &str = concatcp!("textures/BG_Fairy_2.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_3: &str = concatcp!("textures/BG_Fairy_3.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_4: &str = concatcp!("textures/BG_Fairy_4.texture", QUERY, VERSION);
+pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
+    IMG_PATH_BG_FAIRY_0,
+    IMG_PATH_BG_FAIRY_1,
+    IMG_PATH_BG_FAIRY_2,
+    IMG_PATH_BG_FAIRY_3,
+    IMG_PATH_BG_FAIRY_4,
+];
+
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_0: &str = concatcp!("textures/Label_Deco_0.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_1: &str = concatcp!("textures/Label_Deco_1.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_2: &str = concatcp!("textures/Label_Deco_2.texture", QUERY, VERSION);

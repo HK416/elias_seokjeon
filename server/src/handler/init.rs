@@ -22,7 +22,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
         write
     });
 
-    let player = Player {
+    let session = Session {
         uuid,
         name,
         hero,
@@ -32,15 +32,16 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
         tx,
         _write_task: write_task,
     };
-    player
+
+    session
         .tx
         .send(Packet::Connection {
             uuid,
-            name: player.name.clone(),
+            name: session.name.clone(),
             hero,
             score,
         })
         .unwrap();
 
-    next_state(State::Title, player);
+    next_state(State::Title, session);
 }

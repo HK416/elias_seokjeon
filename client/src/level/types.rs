@@ -389,6 +389,7 @@ impl AnimationTimer {
     }
 
     pub fn frame_index(&self) -> usize {
-        (self.elapsed / self.duration * (self.num_sheets.get() - 1) as f32) as usize
+        let num_sheets = self.num_sheets.get();
+        num_sheets.min((self.elapsed / self.duration * num_sheets as f32) as usize)
     }
 }

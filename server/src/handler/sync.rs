@@ -3,25 +3,38 @@ use super::*;
 const MAX_WAIT_TIME: u32 = 15_000;
 const MAX_LOOP: usize = 100;
 
-pub async fn wait(left: Player, right: Player) {
-    left.tx
-        .send(Packet::MatchingSuccess {
-            other: right.name.clone(),
-            hero: right.hero,
-            score: right.score,
-        })
-        .unwrap();
-    right
-        .tx
-        .send(Packet::MatchingSuccess {
-            other: left.name.clone(),
+struct Node {
+    session: Session,
+    left_side: bool,
+}
+
+impl Node {
+    pub fn new(session: Session, left_side: bool) -> Self {
+        Self { session, left_side }
+    }
+}
+
+pub async fn wait(left: Session, right: Session) {
+    let message = Packet::MatchingSuccess {
+        left: Player {
+            uuid: left.uuid,
+            name: left.name.clone(),
             hero: left.hero,
             score: left.score,
-        })
-        .unwrap();
+        },
+        right: Player {
+            uuid: right.uuid,
+            name: right.name.clone(),
+            hero: right.hero,
+            score: right.score,
+        },
+    };
 
-    let mut wait_players = vec![left, right];
-    let mut loaded_player: Vec<Player> = Vec::new();
+    left.tx.send(message.clone()).unwrap();
+    right.tx.send(message.clone()).unwrap();
+
+    let mut wait_sessions = vec![Node::new(left, true), Node::new(right, false)];
+    let mut loaded_sessions: Vec<Node> = Vec::new();
     let mut temp = Vec::new();
 
     const TICK: u64 = 1_000 / 15;
@@ -37,10 +50,10 @@ pub async fn wait(left: Player, right: Player) {
         millis = millis.saturating_sub(elapsed as u32);
         previous_instant = instant;
 
-        'update: while let Some(mut p) = wait_players.pop() {
+        'update: while let Some(mut n) = wait_sessions.pop() {
             let mut cnt = MAX_LOOP;
             while cnt > 0 {
-                match poll_stream_nonblocking(&mut p.read) {
+                match poll_stream_nonblocking(&mut n.session.read) {
                     StreamPollResult::Pending => break,
                     StreamPollResult::Item(message) => {
                         if let Message::Text(s) = message
@@ -48,66 +61,72 @@ pub async fn wait(left: Player, right: Player) {
                         {
                             match packet {
                                 Packet::GameLoadSuccess => {
-                                    loaded_player.push(p);
-                                    continue 'update; // Player is removed from waiting.
+                                    loaded_sessions.push(n);
+                                    continue 'update; // Session is removed from waiting.
                                 }
                                 _ => { /* empty */ }
                             }
                         }
                     }
                     StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", p);
-                        continue 'update; // Player is removed due to error.
+                        println!("WebSocket disconnected ({:?}): {e}", n.session);
+                        continue 'update; // Session is removed due to error.
                     }
                     StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", p);
-                        continue 'update; // Player is removed due to closure.
+                        println!("WebSocket disconnected ({:?})", n.session);
+                        continue 'update; // Session is removed due to closure.
                     }
                 }
                 cnt -= 1;
             }
-            temp.push(p);
+            temp.push(n);
         }
-        mem::swap(&mut wait_players, &mut temp);
+        mem::swap(&mut wait_sessions, &mut temp);
 
-        'update: while let Some(mut p) = loaded_player.pop() {
+        'update: while let Some(mut n) = loaded_sessions.pop() {
             let mut cnt = MAX_LOOP;
             while cnt > 0 {
-                match poll_stream_nonblocking(&mut p.read) {
+                match poll_stream_nonblocking(&mut n.session.read) {
                     StreamPollResult::Pending => break,
                     StreamPollResult::Item(_) => { /* empty */ }
                     StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", p);
-                        continue 'update; // Player is removed due to error.
+                        println!("WebSocket disconnected ({:?}): {e}", n.session);
+                        continue 'update; // Session is removed due to error.
                     }
                     StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", p);
-                        continue 'update; // Player is removed due to closure.
+                        println!("WebSocket disconnected ({:?})", n.session);
+                        continue 'update; // Session is removed due to closure.
                     }
                 }
                 cnt -= 1;
             }
-            temp.push(p);
+            temp.push(n);
         }
-        mem::swap(&mut loaded_player, &mut temp);
+        mem::swap(&mut loaded_sessions, &mut temp);
 
-        if loaded_player.len() == 2 {
+        if loaded_sessions.len() == 2 {
             #[cfg(not(feature = "no-debuging-log"))]
             println!("All players loaded!");
 
-            let left = loaded_player.pop().unwrap();
-            let right = loaded_player.pop().unwrap();
+            let n0 = loaded_sessions.pop().unwrap();
+            let n1 = loaded_sessions.pop().unwrap();
+            let (left, right) = if n0.left_side {
+                (n0.session, n1.session)
+            } else {
+                (n1.session, n0.session)
+            };
+
             tokio::spawn(prepare::wait(left, right));
             return;
         }
     }
 
-    while let Some(player) = wait_players.pop() {
-        player.tx.send(Packet::GameLoadTimeout).unwrap();
-        next_state(State::Title, player);
+    while let Some(n) = wait_sessions.pop() {
+        n.session.tx.send(Packet::GameLoadTimeout).unwrap();
+        next_state(State::Title, n.session);
     }
 
-    while let Some(player) = loaded_player.pop() {
+    while let Some(n) = loaded_sessions.pop() {
         // --- Temp Code ---
         #[cfg(not(feature = "no-debuging-log"))]
         println!(
@@ -116,8 +135,8 @@ pub async fn wait(left: Player, right: Player) {
             line!()
         );
 
-        player.tx.send(Packet::GameLoadTimeout).unwrap();
-        next_state(State::Title, player);
+        n.session.tx.send(Packet::GameLoadTimeout).unwrap();
+        next_state(State::Title, n.session);
         //------------------
     }
 }

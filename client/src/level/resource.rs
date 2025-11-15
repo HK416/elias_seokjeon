@@ -156,6 +156,7 @@ pub struct PlayerInfo {
 
 #[derive(Resource)]
 pub struct OtherInfo {
+    pub left_side: bool,
     pub name: String,
     pub hero: Hero,
     pub score: u16,

@@ -103,6 +103,7 @@ fn handle_received_packets(
     mut query: Query<&mut Text, With<MatchingStatusMessage>>,
     locale: Res<Locale>,
     network: Res<Network>,
+    player_info: Res<PlayerInfo>,
 ) {
     for result in network.try_iter() {
         match result {
@@ -122,11 +123,18 @@ fn handle_received_packets(
                         });
                     }
                 }
-                Packet::MatchingSuccess { other, hero, score } => {
+                Packet::MatchingSuccess { left, right } => {
+                    let (other, left_side) = if left.uuid == player_info.uuid {
+                        (right, false)
+                    } else {
+                        (left, true)
+                    };
+
                     commands.insert_resource(OtherInfo {
-                        name: other,
-                        hero,
-                        score,
+                        left_side,
+                        name: other.name.clone(),
+                        hero: other.hero,
+                        score: other.score,
                     });
                     next_state.set(LevelStates::SwitchToLoadGame);
                 }

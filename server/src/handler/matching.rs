@@ -6,15 +6,15 @@ const MAX_LOOP: usize = 100;
 static NEW: SegQueue<Node> = SegQueue::new();
 
 struct Node {
-    player: Player,
+    session: Session,
     previous_instant: Instant,
     millis: u16,
 }
 
 impl Node {
-    pub fn new(player: Player) -> Self {
+    pub fn new(session: Session) -> Self {
         Self {
-            player,
+            session,
             previous_instant: Instant::now(),
             millis: MAX_MATCHING_TIME,
         }
@@ -37,12 +37,12 @@ async fn update_internal() {
     loop {
         let instant = interval.tick().await;
 
-        // 1. Move new players from the global queue to the local queue.
+        // 1. Move new sessions from the global queue to the local queue.
         while let Some(n) = NEW.pop() {
             #[cfg(not(feature = "no-debuging-log"))]
             println!(
                 "Added Matching Queue ({:?}) - Queue Size: {}",
-                n.player,
+                n.session,
                 nodes.len() + 1
             );
             nodes.push_back(n);
@@ -53,7 +53,7 @@ async fn update_internal() {
         'update: while let Some(mut node) = nodes.pop_front() {
             let mut cnt = MAX_LOOP;
             while cnt > 0 {
-                match poll_stream_nonblocking(&mut node.player.read) {
+                match poll_stream_nonblocking(&mut node.session.read) {
                     StreamPollResult::Pending => break,
                     StreamPollResult::Item(message) => {
                         if let Message::Text(s) = message
@@ -61,25 +61,25 @@ async fn update_internal() {
                         {
                             match packet {
                                 Packet::TryCancelGame => {
-                                    node.player.tx.send(Packet::CancelSuccess).unwrap();
-                                    next_state(State::Title, node.player);
-                                    continue 'update; // Player is removed from matching.
+                                    node.session.tx.send(Packet::CancelSuccess).unwrap();
+                                    next_state(State::Title, node.session);
+                                    continue 'update; // Session is removed from matching.
                                 }
                                 _ => { /* empty */ }
                             }
                         }
                     }
                     StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", node.player);
+                        println!("WebSocket disconnected ({:?}): {e}", node.session);
                         #[cfg(not(feature = "no-debuging-log"))]
                         println!("Queue Size: {}", nodes.len());
-                        continue 'update; // Player is removed due to error.
+                        continue 'update; // Session is removed due to error.
                     }
                     StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", node.player);
+                        println!("WebSocket disconnected ({:?})", node.session);
                         #[cfg(not(feature = "no-debuging-log"))]
                         println!("Queue Size: {}", nodes.len());
-                        continue 'update; // Player is removed due to closure.
+                        continue 'update; // Session is removed due to closure.
                     }
                 }
                 cnt -= 1;
@@ -88,18 +88,18 @@ async fn update_internal() {
         }
         mem::swap(&mut nodes, &mut temp);
 
-        // 3. Try to match players who are still in the queue.
+        // 3. Try to match sessions who are still in the queue.
         while nodes.len() >= 2 {
-            let p0 = nodes.pop_front().unwrap().player;
-            let p1 = nodes.pop_front().unwrap().player;
+            let left = nodes.pop_front().unwrap().session;
+            let right = nodes.pop_front().unwrap().session;
 
             #[cfg(not(feature = "no-debuging-log"))]
-            println!("[{:?} VS {:?}] - Queue Size: {}", p0, p1, nodes.len());
+            println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
 
-            tokio::spawn(sync::wait(p0, p1));
+            tokio::spawn(sync::wait(left, right));
         }
 
-        // 4. Update status for the remaining players.
+        // 4. Update status for the remaining sessions.
         while let Some(mut node) = nodes.pop_front() {
             let elapsed = instant
                 .saturating_duration_since(node.previous_instant)
@@ -116,12 +116,12 @@ async fn update_internal() {
                     line!()
                 );
 
-                next_state(State::Matching, node.player);
+                next_state(State::Matching, node.session);
                 continue;
                 //-------------------
             }
 
-            node.player
+            node.session
                 .tx
                 .send(Packet::MatchingStatus {
                     millis: node.millis,
@@ -135,8 +135,8 @@ async fn update_internal() {
     }
 }
 
-pub async fn regist(player: Player) {
+pub async fn regist(session: Session) {
     #[cfg(not(feature = "no-debuging-log"))]
-    println!("{:?} - Current State: Matching", player);
-    NEW.push(Node::new(player));
+    println!("{:?} - Current State: Matching", session);
+    NEW.push(Node::new(session));
 }
