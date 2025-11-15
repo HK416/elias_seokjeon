@@ -56,9 +56,6 @@ pub struct EnterGameLoadingCursor;
 pub struct InPrepareLevelEntity;
 
 #[derive(Component)]
-pub struct InPrepareLevelRoot;
-
-#[derive(Component)]
 pub struct InGameLevelEntity;
 
 #[derive(Component)]
@@ -232,6 +229,51 @@ impl FadeEffect {
 
     pub fn is_finished(&self) -> bool {
         self.elapsed >= self.duration
+    }
+}
+
+#[derive(Component)]
+pub struct SmoothScale {
+    delay: f32,
+    duration: f32,
+    elapsed: f32,
+    start: Vec3,
+    end: Vec3,
+}
+
+impl SmoothScale {
+    pub fn new(duration: f32, start: Vec3, end: Vec3) -> Self {
+        assert!(duration > 0.0, "duration must be greater than 0.0");
+        Self {
+            delay: 0.0,
+            duration,
+            elapsed: 0.0,
+            start,
+            end,
+        }
+    }
+
+    pub fn with_delay(mut self, delay: f32) -> Self {
+        self.delay = delay;
+        self
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        self.elapsed = (self.elapsed + delta).min(self.duration + self.delay);
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.elapsed >= self.duration + self.delay
+    }
+
+    pub fn scale(&self) -> Vec3 {
+        if self.elapsed < self.delay {
+            self.start
+        } else {
+            let t = (self.elapsed - self.delay) / self.duration;
+            let t = 3.0 * t.powi(2) - 2.0 * t.powi(3);
+            (self.start * (1.0 - t) + self.end * t).max(Vec3::ZERO)
+        }
     }
 }
 

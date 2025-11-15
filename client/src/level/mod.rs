@@ -65,25 +65,27 @@ pub enum LevelStates {
     InitTitle,          // -> InTitle, Error
     InTitle,            // -> SwitchToInMatching, SwitchToInOption, Error
 
-    InOption,         // -> InTitle, Error
     SwitchToInOption, // -> InOption
+    InOption,         // -> InTitle, Error
 
     InTitleMessage,       // -> InTitle, Error
     SwitchToTitleMessage, // -> InTitleMessage
 
-    InMatchingCancel,         // -> InTitle, SwitchToInMatching, Error
-    SwitchToInMatchingCancel, // -> InMatchingCancel
-
-    InMatching,         // -> SwitchToInMatchingCancel, SwitchToLoadGame, Error
     SwitchToInMatching, // -> InMatching
+    InMatching,         // -> SwitchToInMatchingCancel, SwitchToLoadGame, Error
+
+    SwitchToInMatchingCancel, // -> InMatchingCancel
+    InMatchingCancel,         // -> InTitle, SwitchToInMatching, Error
 
     InitPrepareGame,   // -> SwitchToTitleMessage, SwitchToInPrepare, Error
     SwitchToInPrepare, // -> InPrepareGame, Error
-    InPrepareGame,     //
+    InPrepareGame,     // -> SwitchToInGame, Error
 
+    SwitchToLoadGame, // -> LoadGame
     LoadGame,         // -> SwitchToTitleMessage, InitGame, Error
     InitGame,         // -> SwitchToTitleMessage, InitPrepareGame, Error
-    SwitchToLoadGame, // -> LoadGame
+
+    SwitchToInGame,
 }
 
 // --- UPDATE SYSTEMS ---

@@ -28,8 +28,8 @@ impl Plugin for InnerPlugin {
             Update,
             (
                 update_scene_timer,
-                update_fade_in,
-                update_pvp_vs_fire_effect,
+                update_prepare_entity,
+                update_prepare_interface,
             )
                 .run_if(in_state(LevelStates::SwitchToInPrepare)),
         );
@@ -83,9 +83,13 @@ fn setup_prepare_ui(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_prepare_entities(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Visibility, &mut Spine), With<InPrepareLevelRoot>>,
+    mut query: Query<
+        (Entity, &mut Visibility, &mut Spine),
+        (With<InGameLevelRoot>, With<InPrepareLevelEntity>),
+    >,
 ) {
     for (entity, mut visibility, mut spine) in query.iter_mut() {
         commands
@@ -126,7 +130,7 @@ fn update_scene_timer(
     }
 }
 
-fn update_fade_in(
+fn update_prepare_entity(
     mut commands: Commands,
     mut query: Query<(Entity, &mut FadeEffect, &mut Spine)>,
     time: Res<Time>,
@@ -140,7 +144,7 @@ fn update_fade_in(
     }
 }
 
-fn update_pvp_vs_fire_effect(
+fn update_prepare_interface(
     mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<InPrepareLevelEntity>>,
     time: Res<Time>,
 ) {

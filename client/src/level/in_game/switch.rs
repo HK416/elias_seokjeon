@@ -1,6 +1,5 @@
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use bevy_spine::Spine;
 
 use super::*;
 
@@ -14,25 +13,27 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(LevelStates::SwitchToLoadGame),
+            OnEnter(LevelStates::SwitchToInGame),
             (
                 debug_label,
-                show_interface,
                 setup_scene_timer,
                 setup_background_patterns,
-                setup_entity_fade_out,
-                setup_ui_animation,
+                setup_prepare_interface,
+                setup_prepare_entities,
             ),
         )
-        .add_systems(OnExit(LevelStates::SwitchToLoadGame), cleanup_scene_timer)
+        .add_systems(
+            OnExit(LevelStates::SwitchToInGame),
+            (cleanup_scene_timer, hide_prepare_entities),
+        )
         .add_systems(
             Update,
             (
                 update_scene_timer,
                 update_background_patterns,
-                update_fade_out,
+                update_prepare_entity,
             )
-                .run_if(in_state(LevelStates::SwitchToLoadGame)),
+                .run_if(in_state(LevelStates::SwitchToInGame)),
         );
     }
 }
@@ -40,16 +41,7 @@ impl Plugin for InnerPlugin {
 // --- SETUP SYSTEMS ---
 
 fn debug_label() {
-    info!("Current Level: SwitchToLoadGame");
-}
-
-#[allow(clippy::type_complexity)]
-fn show_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<EnterGameLevelEntity>)>,
-) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
+    info!("Current Level: SwitchToInGame");
 }
 
 fn setup_scene_timer(mut commands: Commands) {
@@ -64,13 +56,13 @@ fn setup_background_patterns(
         let delay = pattern.0 as f32 * 0.05;
         commands
             .entity(entity)
-            .insert(BackoutScale::new(0.1, Vec3::ZERO, Vec3::ONE).with_delay(delay));
+            .insert(SmoothScale::new(0.1, Vec3::ONE, Vec3::ZERO).with_delay(delay));
     }
 }
 
-fn setup_entity_fade_out(
+fn setup_prepare_entities(
     mut commands: Commands,
-    query: Query<Entity, (With<Spine>, With<TitleLevelEntity>)>,
+    query: Query<Entity, (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
 ) {
     for entity in query.iter() {
         commands
@@ -79,17 +71,17 @@ fn setup_entity_fade_out(
     }
 }
 
-fn setup_ui_animation(
+fn setup_prepare_interface(
     mut commands: Commands,
-    query: Query<(Entity, &UI), With<EnterGameLevelEntity>>,
+    query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
 ) {
     for (entity, &ui) in query.iter() {
         match ui {
-            UI::EnterGameLoadingBar => {
-                commands.entity(entity).insert(UiBackOutScale::new(
+            UI::Root => {
+                commands.entity(entity).insert(UiSmoothScale::new(
                     SCENE_DURATION,
-                    Vec2::ZERO,
                     Vec2::ONE,
+                    Vec2::ZERO,
                 ));
             }
             _ => { /* empty */ }
@@ -103,48 +95,43 @@ fn cleanup_scene_timer(mut commands: Commands) {
     commands.remove_resource::<SceneTimer>();
 }
 
+fn hide_prepare_entities(
+    mut query: Query<&mut Visibility, (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
+) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Hidden;
+    }
+}
+
 // --- UPDATE SYSTEMS ---
 
-fn update_scene_timer(
-    mut next_state: ResMut<NextState<LevelStates>>,
-    mut scene_timer: ResMut<SceneTimer>,
-    time: Res<Time>,
-) {
+fn update_scene_timer(mut scene_timer: ResMut<SceneTimer>, time: Res<Time>) {
     scene_timer.tick(time.delta_secs());
-    if scene_timer.elapsed_sec() >= SCENE_DURATION {
-        next_state.set(LevelStates::LoadGame);
-    }
 }
 
 fn update_background_patterns(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BackoutScale, &mut Transform), With<EnterGameLevelEntity>>,
+    mut query: Query<(Entity, &mut SmoothScale, &mut Transform), With<EnterGameLevelEntity>>,
     time: Res<Time>,
 ) {
     for (entity, mut scale, mut transform) in query.iter_mut() {
         scale.tick(time.delta_secs());
         *transform = transform.with_scale(scale.scale());
         if scale.is_finished() {
-            commands.entity(entity).remove::<BackoutScale>();
+            commands.entity(entity).remove::<SmoothScale>();
         }
     }
 }
 
-fn update_fade_out(
+fn update_prepare_entity(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Visibility, &mut FadeEffect, &mut Spine)>,
+    mut query: Query<(Entity, &mut FadeEffect, &mut Spine)>,
     time: Res<Time>,
 ) {
-    for (entity, mut visibility, mut fade_out, mut spine) in query.iter_mut() {
-        fade_out.tick(time.delta_secs());
-        spine
-            .0
-            .skeleton
-            .color_mut()
-            .set_a(1.0 - fade_out.progress());
-        if fade_out.is_finished() {
-            *visibility = Visibility::Hidden;
-            spine.0.skeleton.color_mut().set_a(1.0);
+    for (entity, mut fade_in, mut spine) in query.iter_mut() {
+        fade_in.tick(time.delta_secs());
+        spine.0.skeleton.color_mut().set_a(1.0 - fade_in.progress());
+        if fade_in.is_finished() {
             commands.entity(entity).remove::<FadeEffect>();
         }
     }

@@ -477,7 +477,7 @@ fn observe_entiey_creation(
 
         commands.insert(InPrepareLevelEntity);
         if child_of.is_none() {
-            commands.insert(InPrepareLevelRoot);
+            commands.insert(InGameLevelRoot);
         }
     }
 }
