@@ -70,7 +70,10 @@ fn init_selected_slider_flag(mut commands: Commands) {
 
 // --- CLEANUP SYSTEMS ---
 
-fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<OptionLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn hide_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<OptionLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
     }

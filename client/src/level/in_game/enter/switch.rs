@@ -39,7 +39,10 @@ fn debug_label() {
     info!("Current Level: SwitchToLoadGame");
 }
 
-fn show_interface(mut query: Query<&mut Visibility, (With<EnterGameLevelEntity>, With<UI>)>) {
+#[allow(clippy::type_complexity)]
+fn show_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<EnterGameLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }

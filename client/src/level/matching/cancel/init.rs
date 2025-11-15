@@ -240,7 +240,7 @@ fn observe_entity_creation(
 
         commands.insert(MatchingCancelLevelEntity);
         if child_of.is_none() {
-            commands.insert(MatchingLevelRoot);
+            commands.insert(TitleLevelRoot);
         }
     }
 }

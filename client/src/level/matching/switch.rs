@@ -40,7 +40,10 @@ fn debug_label() {
     info!("Current Level: SwitchToInMatching");
 }
 
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn show_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<MatchingLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }

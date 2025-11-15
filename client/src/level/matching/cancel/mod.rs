@@ -47,7 +47,17 @@ fn debug_label() {
 
 // --- CLEANUP SYSTEMS ---
 
-fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCancelLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn hide_interface(
+    mut query: Query<
+        &mut Visibility,
+        (
+            With<UI>,
+            With<TitleLevelRoot>,
+            With<MatchingCancelLevelEntity>,
+        ),
+    >,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
     }
@@ -71,9 +81,8 @@ fn handle_keyboard_input(
 #[allow(clippy::type_complexity)]
 #[allow(clippy::too_many_arguments)]
 fn handle_button_interaction(
-    #[cfg(target_arch = "wasm32")] network: Res<Network>,
-    #[cfg(target_arch = "wasm32")] player_info: Res<PlayerInfo>,
     mut commands: Commands,
+    #[cfg(target_arch = "wasm32")] network: Res<Network>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,

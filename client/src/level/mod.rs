@@ -54,30 +54,28 @@ pub enum LevelStates {
     Error,
     #[default]
     Setup, // -> Connect, Error
-    Connect, // -> InitOption, Error
+    Connect, // -> LoadTitle, Error
 
-    InitOption,       // -> InitMatching, Error
+    LoadTitle,          // -> InitOption, Error
+    InitOption,         // -> InitMatching, Error
+    InitMatching,       // -> InitMatchingCancel, Error
+    InitMatchingCancel, // -> InitInTitleMessage, Error
+    InitInTitleMessage, // -> InitEnterGame, Error
+    InitEnterGame,      // -> InitTitle, Error
+    InitTitle,          // -> InTitle, Error
+    InTitle,            // -> SwitchToInMatching, SwitchToInOption, Error
+
     InOption,         // -> InTitle, Error
     SwitchToInOption, // -> InOption
 
-    LoadTitle, // -> InitTitle, Error
-    InitTitle, // -> InTitle, Error
-    InTitle,   // -> SwitchToInMatching, SwitchToInOption, Error
-
-    InitInTitleMessage,   // -> LoadEnterGame, Error
     InTitleMessage,       // -> InTitle, Error
     SwitchToTitleMessage, // -> InTitleMessage
 
-    InitMatchingCancel,       // -> InitInTitleMessage, Error
     InMatchingCancel,         // -> InTitle, SwitchToInMatching, Error
     SwitchToInMatchingCancel, // -> InMatchingCancel
 
-    InitMatching,       // -> InitMatchingCancel, Error
     InMatching,         // -> SwitchToInMatchingCancel, SwitchToLoadGame, Error
     SwitchToInMatching, // -> InMatching
-
-    LoadEnterGame, // -> InitEnterGame, Error
-    InitEnterGame, // -> LoadTitle, Error
 
     InitPrepareGame,   // -> SwitchToTitleMessage, SwitchToInPrepare, Error
     SwitchToInPrepare, // -> InPrepareGame, Error

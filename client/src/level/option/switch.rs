@@ -35,7 +35,10 @@ fn debug_label() {
     info!("Current Level: SwitchToInOption");
 }
 
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<OptionLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn show_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<OptionLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }

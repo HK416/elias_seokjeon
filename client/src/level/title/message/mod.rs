@@ -60,7 +60,17 @@ fn cleanup_in_game_entities(mut commands: Commands, query: Query<Entity, With<In
 
 // --- CLEANUP SYSTEMS ---
 
-fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleMessageLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn hide_interface(
+    mut query: Query<
+        &mut Visibility,
+        (
+            With<UI>,
+            With<TitleLevelRoot>,
+            With<TitleMessageLevelEntity>,
+        ),
+    >,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
     }

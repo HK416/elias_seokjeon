@@ -68,14 +68,19 @@ fn debug_label() {
     info!("Current Level: InTitle");
 }
 
-fn show_entities(mut query: Query<&mut Visibility, (With<TitleLevelRoot>, Without<UI>)>) {
+#[allow(clippy::type_complexity)]
+fn show_entities(
+    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleLevelEntity>, Without<UI>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }
 }
 
-#[allow(unreachable_patterns)]
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn show_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<TitleLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }
@@ -105,7 +110,12 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
 fn hide_entities(
     mut query: Query<
         &mut Visibility,
-        (With<TitleLevelRoot>, Without<UI>, Without<TitleBackground>),
+        (
+            With<TitleLevelRoot>,
+            With<TitleLevelEntity>,
+            Without<UI>,
+            Without<TitleBackground>,
+        ),
     >,
 ) {
     for mut visibility in query.iter_mut() {
@@ -113,8 +123,10 @@ fn hide_entities(
     }
 }
 
-#[allow(unreachable_patterns)]
-fn hide_interface(mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn hide_interface(
+    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<TitleLevelEntity>)>,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
     }

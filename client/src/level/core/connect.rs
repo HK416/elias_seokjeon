@@ -114,7 +114,7 @@ fn check_connection_progress(
             player_info.name,
             player_info.hero,
         );
-        next_state.set(LevelStates::InitOption);
+        next_state.set(LevelStates::LoadTitle);
     }
 }
 

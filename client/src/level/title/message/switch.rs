@@ -48,8 +48,12 @@ fn cleanup_other_player_info(mut commands: Commands) {
     commands.remove_resource::<OtherInfo>();
 }
 
+#[allow(clippy::type_complexity)]
 fn hide_loading_screen(
-    mut interfaces: Query<&mut Visibility, (With<EnterGameLevelEntity>, With<UI>)>,
+    mut interfaces: Query<
+        &mut Visibility,
+        (With<UI>, With<TitleLevelRoot>, With<EnterGameLevelEntity>),
+    >,
     mut patterns: Query<&mut Transform, (With<BackgroundPattern>, With<EnterGameLevelEntity>)>,
 ) {
     for mut visibility in interfaces.iter_mut() {
@@ -63,15 +67,23 @@ fn hide_loading_screen(
 
 #[allow(clippy::type_complexity)]
 fn show_title_entities(
-    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleBackground>, Without<UI>)>,
+    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleBackground>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn show_message_interface(
-    mut query: Query<&mut Visibility, (With<TitleMessageLevelEntity>, With<UI>)>,
+    mut query: Query<
+        &mut Visibility,
+        (
+            With<UI>,
+            With<TitleLevelRoot>,
+            With<TitleMessageLevelEntity>,
+        ),
+    >,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;

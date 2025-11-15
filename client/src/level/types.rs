@@ -17,9 +17,6 @@ pub struct LoadingBar;
 pub struct SpawnRequest;
 
 #[derive(Component)]
-pub struct OptionLevelRoot;
-
-#[derive(Component)]
 pub struct OptionLevelEntity;
 
 #[derive(Component)]
@@ -45,9 +42,6 @@ pub struct MatchingCancelLevelEntity;
 
 #[derive(Component)]
 pub struct MatchingStatusMessage;
-
-#[derive(Component)]
-pub struct MatchingLevelRoot;
 
 #[derive(Component)]
 pub struct EnterGameLevelEntity;

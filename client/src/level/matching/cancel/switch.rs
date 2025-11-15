@@ -38,7 +38,17 @@ fn debug_label() {
     info!("Current Level: SwitchToInMatchingCancel");
 }
 
-fn show_interface(mut query: Query<&mut Visibility, (With<UI>, With<MatchingCancelLevelEntity>)>) {
+#[allow(clippy::type_complexity)]
+fn show_interface(
+    mut query: Query<
+        &mut Visibility,
+        (
+            With<UI>,
+            With<TitleLevelRoot>,
+            With<MatchingCancelLevelEntity>,
+        ),
+    >,
+) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }

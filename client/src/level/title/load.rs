@@ -73,6 +73,19 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     let handle: Handle<Image> = asset_server.load(IMG_PATH_LABEL_DECO_2);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_DECO);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_PATTERN_0);
+    loading_assets.push(handle);
+
+    // --- Sprite Sheet Loading ---
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_LOADING_MINIMI);
+    loading_assets.push(handle);
+
+    let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_LOADING_MINIMI);
+    loading_assets.push(handle);
+
     // --- Model Loading ---
     let path = MODEL_PATH_HEROS.get(&hero).copied().unwrap();
     let handle: Handle<SkeletonData> = asset_server.load(path);
@@ -95,7 +108,7 @@ fn check_loading_progress(
         .all(|&id| asset_server.is_loaded_with_dependencies(id));
 
     if all_loaded {
-        next_state.set(LevelStates::InitTitle);
+        next_state.set(LevelStates::InitOption);
     }
 }
 

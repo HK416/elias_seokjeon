@@ -612,7 +612,7 @@ fn observe_entity_creation(
 
         commands.insert(OptionLevelEntity);
         if child_of.is_none() {
-            commands.insert(OptionLevelRoot);
+            commands.insert(TitleLevelRoot);
         }
     }
 }

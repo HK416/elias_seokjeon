@@ -51,25 +51,6 @@ impl AssetGroup for TitleAssets {
 }
 
 #[derive(Default, Resource)]
-pub struct EnterGameAssets {
-    handles: Vec<UntypedHandle>,
-}
-
-impl AssetGroup for EnterGameAssets {
-    fn push(&mut self, handle: impl Into<UntypedHandle>) {
-        self.handles.push(handle.into());
-    }
-
-    fn ids(&self) -> Vec<UntypedAssetId> {
-        self.handles.iter().map(|h| h.id()).collect()
-    }
-
-    fn len(&self) -> usize {
-        self.handles.len()
-    }
-}
-
-#[derive(Default, Resource)]
 pub struct InGameAssets {
     handles: Vec<UntypedHandle>,
 }
