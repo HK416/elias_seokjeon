@@ -470,8 +470,6 @@ fn observe_entiey_creation(
     query: Query<(Entity, Option<&ChildOf>), Added<SpawnRequest>>,
 ) {
     for (entity, child_of) in query.iter() {
-        loading_entities.remove(entity);
-
         let mut commands = commands.entity(entity);
         commands.remove::<SpawnRequest>();
 
@@ -479,6 +477,8 @@ fn observe_entiey_creation(
         if child_of.is_none() {
             commands.insert(InGameLevelRoot);
         }
+
+        loading_entities.remove(entity);
     }
 }
 

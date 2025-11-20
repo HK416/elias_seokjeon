@@ -45,6 +45,9 @@
                 "BG_Fairy_2.texture",
                 "BG_Fairy_3.texture",
                 "BG_Fairy_4.texture",
+                "Green_Flag.texture",
+                "ID_Panel.atlas",
+                "ID_Panel.texture",
                 "FX_Firecartoon.texture",
                 "FX_Firecartoon.atlas",
                 "Label_Deco_0.texture",
@@ -54,7 +57,10 @@
                 "Loading_minimi.texture",
                 "Loading_minimi.atlas",
                 "PVP_Ingame_VS.texture",
-                "Pattern_0.texture"
+                "Pattern_0.texture",
+                "Red_Dot.texture",
+                "Red_Flag.texture",
+                "Wind_Indicator_Deco.texture"
             ]
         }
     }

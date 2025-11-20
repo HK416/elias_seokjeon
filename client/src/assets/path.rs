@@ -31,12 +31,19 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
     IMG_PATH_BG_FAIRY_4,
 ];
 
+#[rustfmt::skip] pub const IMG_PATH_GREEN_FLAG: &str = concatcp!("textures/Green_Flag.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_0: &str = concatcp!("textures/Label_Deco_0.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_1: &str = concatcp!("textures/Label_Deco_1.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_2: &str = concatcp!("textures/Label_Deco_2.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LOADING_DECO: &str = concatcp!("textures/Loading_Deco.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_PATTERN_0: &str = concatcp!("textures/Pattern_0.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_PVP_INGAME_VS: &str = concatcp!("textures/PVP_Ingame_VS.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_RED_DOT: &str = concatcp!("textures/Red_Dot.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_RED_FLAG: &str = concatcp!("textures/Red_Flag.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_WIND_INDICATOR_DECO: &str = concatcp!("textures/Wind_Indicator_Deco.texture", QUERY, VERSION);
+
+#[rustfmt::skip] pub const IMG_PATH_ID_PANEL: &str = concatcp!("textures/ID_Panel.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const ATLAS_PATH_ID_PANEL: &str = concatcp!("textures/ID_Panel.atlas", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_FX_FIRECARTOON: &str = concatcp!("textures/FX_Firecartoon.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const ATLAS_PATH_FX_FIRECARTOON: &str = concatcp!("textures/FX_Firecartoon.atlas", QUERY, VERSION);

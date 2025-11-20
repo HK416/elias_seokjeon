@@ -18,13 +18,14 @@ impl Plugin for InnerPlugin {
                 debug_label,
                 setup_scene_timer,
                 setup_background_patterns,
-                setup_prepare_interface,
                 setup_prepare_entities,
+                setup_prepare_interface,
+                setup_ingame_interface,
             ),
         )
         .add_systems(
             OnExit(LevelStates::SwitchToInGame),
-            (cleanup_scene_timer, hide_prepare_entities),
+            (cleanup_scene_timer, cleanup_prepare_interface),
         )
         .add_systems(
             Update,
@@ -89,17 +90,40 @@ fn setup_prepare_interface(
     }
 }
 
+fn setup_ingame_interface(
+    mut commands: Commands,
+    mut query: Query<
+        (Entity, &UI, &mut Visibility),
+        (With<InGameLevelRoot>, With<InGameLevelEntity>),
+    >,
+) {
+    for (entity, &ui, mut visibility) in query.iter_mut() {
+        match ui {
+            UI::Root => {
+                *visibility = Visibility::Visible;
+            }
+            _ => { /* empty */ }
+        }
+    }
+}
+
 // --- CLEANUP SYSTEMS ---
 
 fn cleanup_scene_timer(mut commands: Commands) {
     commands.remove_resource::<SceneTimer>();
 }
 
-fn hide_prepare_entities(
-    mut query: Query<&mut Visibility, (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
+fn cleanup_prepare_interface(
+    mut commands: Commands,
+    query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
 ) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Hidden;
+    for (entity, &ui) in query.iter() {
+        match ui {
+            UI::Root => {
+                commands.entity(entity).despawn();
+            }
+            _ => { /* empty */ }
+        }
     }
 }
 
@@ -132,7 +156,7 @@ fn update_prepare_entity(
         fade_in.tick(time.delta_secs());
         spine.0.skeleton.color_mut().set_a(1.0 - fade_in.progress());
         if fade_in.is_finished() {
-            commands.entity(entity).remove::<FadeEffect>();
+            commands.entity(entity).despawn();
         }
     }
 }

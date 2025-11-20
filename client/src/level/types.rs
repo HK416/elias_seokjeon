@@ -104,6 +104,7 @@ impl<T> OriginColor<T> {
 pub enum UI {
     Root,
     Modal,
+    Layout,
     PositiveButton,
     NegativeButton,
 

@@ -39,6 +39,7 @@ fn debug_label() {
 fn setup_in_game(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    image_assets: Res<Assets<Image>>,
     player_info: Res<PlayerInfo>,
     other_info: Res<OtherInfo>,
 ) {
@@ -50,7 +51,14 @@ fn setup_in_game(
         &player_info,
         &other_info,
     );
-    setup_in_game_interface(&mut commands, &asset_server, &mut loading_entities);
+    setup_in_game_interface(
+        &mut commands,
+        &asset_server,
+        &image_assets,
+        &mut loading_entities,
+        &player_info,
+        &other_info,
+    );
 
     // --- Resource Insertion ---
     commands.insert_resource(loading_entities);
@@ -180,9 +188,489 @@ fn setup_in_game_entities(
 fn setup_in_game_interface(
     commands: &mut Commands,
     asset_server: &AssetServer,
+    image_assets: &Assets<Image>,
     loading_entities: &mut LoadingEntities,
+    player_info: &PlayerInfo,
+    other_info: &OtherInfo,
 ) {
-    // TODO
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Start,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            SpawnRequest,
+            UI::Root,
+        ))
+        .with_children(|parent| {
+            add_horizontal_space(loading_entities, parent, Val::Percent(3.0));
+            let texture = asset_server.load(IMG_PATH_GREEN_FLAG);
+            let image = image_assets.get(&texture).unwrap();
+            let ratio = image.aspect_ratio().ratio();
+            let entity = parent
+                .spawn((
+                    ImageNode::new(texture),
+                    Node {
+                        width: Val::Percent(12.0),
+                        height: Val::Auto,
+                        aspect_ratio: Some(ratio),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(5.0));
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(30.0),
+                        height: Val::Percent(15.0),
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                    UI::Layout,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(35.0),
+                                border: UiRect::all(Val::VMin(1.0)),
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(Color::BLACK),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(1.0));
+
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(10.0),
+                        height: Val::Percent(15.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(70.0),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                border: UiRect::all(Val::VMin(1.0)),
+                                ..Default::default()
+                            },
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BorderRadius::all(Val::Percent(30.0)),
+                            BackgroundColor(BG_GREEN_COLOR_3),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Text::new("000"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    ResizableFont::vertical(1280.0, 64.0),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(1.0));
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(30.0),
+                        height: Val::Percent(15.0),
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(35.0),
+                                border: UiRect::all(Val::VMin(1.0)),
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(Color::BLACK),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(5.0));
+            let texture = asset_server.load(IMG_PATH_RED_FLAG);
+            let image = image_assets.get(&texture).unwrap();
+            let ratio = image.aspect_ratio().ratio();
+            let entity = parent
+                .spawn((
+                    ImageNode::new(texture),
+                    Node {
+                        width: Val::Percent(12.0),
+                        height: Val::Auto,
+                        aspect_ratio: Some(ratio),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(3.0));
+        })
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::End,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            SpawnRequest,
+            UI::Root,
+        ))
+        .with_children(|parent| {
+            let texture = asset_server.load(IMG_PATH_WIND_INDICATOR_DECO);
+            let image = image_assets.get(&texture).unwrap();
+            let ratio = image.aspect_ratio().ratio();
+            let entity = parent
+                .spawn((
+                    ImageNode::new(texture),
+                    Node {
+                        top: Val::VMin(1.5),
+                        width: Val::Percent(30.0),
+                        height: Val::Auto,
+                        aspect_ratio: Some(ratio),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+        })
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::End,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            SpawnRequest,
+            UI::Root,
+        ))
+        .with_children(|parent| {
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(15.0),
+                        height: Val::Auto,
+                        aspect_ratio: Some(1.0),
+                        border: UiRect::all(Val::VMin(1.25)),
+                        ..Default::default()
+                    },
+                    BorderColor::all(BORDER_GREEN_COLOR_0),
+                    BorderRadius::all(Val::Percent(50.0)),
+                    BackgroundColor(BG_GREEN_COLOR_3),
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+        })
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::End,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            SpawnRequest,
+            UI::Root,
+        ))
+        .with_children(|parent| {
+            let handle = asset_server.load(IMG_PATH_ID_PANEL);
+            let atlas = asset_server.load(ATLAS_PATH_ID_PANEL);
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 0,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Auto,
+                        height: Val::Percent(10.0),
+                        aspect_ratio: Some(60.0 / 106.0),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    if !other_info.left_side {
+                        let entity = parent
+                            .spawn((
+                                ImageNode::new(asset_server.load(IMG_PATH_RED_DOT)),
+                                Node {
+                                    top: Val::Px(0.0),
+                                    right: Val::Px(0.0),
+                                    width: Val::VMin(5.0),
+                                    height: Val::VMin(5.0),
+                                    ..Default::default()
+                                },
+                                Visibility::Inherited,
+                                SpawnRequest,
+                            ))
+                            .id();
+                        loading_entities.insert(entity);
+                    }
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 1,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Percent(20.0),
+                        height: Val::Percent(10.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node::default(),
+                            Text::new(match other_info.left_side {
+                                true => &other_info.name,
+                                false => &player_info.name,
+                            }),
+                            TextFont::from(asset_server.load(FONT_PATH)),
+                            ResizableFont::vertical(1280.0, 48.0),
+                            TextColor::BLACK,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 2,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Auto,
+                        height: Val::Percent(10.0),
+                        aspect_ratio: Some(60.0 / 106.0),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+
+            add_horizontal_space(loading_entities, parent, Val::Percent(30.0));
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 0,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Auto,
+                        height: Val::Percent(10.0),
+                        aspect_ratio: Some(60.0 / 106.0),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    if other_info.left_side {
+                        let entity = parent
+                            .spawn((
+                                ImageNode::new(asset_server.load(IMG_PATH_RED_DOT)),
+                                Node {
+                                    top: Val::Px(0.0),
+                                    right: Val::Px(0.0),
+                                    width: Val::VMin(5.0),
+                                    height: Val::VMin(5.0),
+                                    ..Default::default()
+                                },
+                                Visibility::Inherited,
+                                SpawnRequest,
+                            ))
+                            .id();
+                        loading_entities.insert(entity);
+                    }
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 1,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Percent(20.0),
+                        height: Val::Percent(10.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node::default(),
+                            Text::new(match other_info.left_side {
+                                true => &player_info.name,
+                                false => &other_info.name,
+                            }),
+                            TextFont::from(asset_server.load(FONT_PATH)),
+                            ResizableFont::vertical(1280.0, 48.0),
+                            TextColor::BLACK,
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    ImageNode {
+                        image: handle.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: atlas.clone(),
+                            index: 2,
+                        }),
+                        ..Default::default()
+                    },
+                    Node {
+                        width: Val::Auto,
+                        height: Val::Percent(10.0),
+                        aspect_ratio: Some(60.0 / 106.0),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+        })
+        .id();
+    loading_entities.insert(entity);
 }
 
 // --- PREUPDATE SYSTEMS ---
@@ -253,7 +741,6 @@ fn observe_entiey_creation(
 }
 
 fn check_loading_progress(
-    mut commands: Commands,
     loading_entities: Res<LoadingEntities>,
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {

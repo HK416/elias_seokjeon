@@ -87,6 +87,24 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<Image> = asset_server.load(IMG_PATH_PVP_INGAME_VS);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_WIND_INDICATOR_DECO);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GREEN_FLAG);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_RED_FLAG);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_RED_DOT);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_ID_PANEL);
+    loading_assets.push(handle);
+
+    let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_ID_PANEL);
+    loading_assets.push(handle);
+
     // --- Stage Loading ---
     for path in IMG_PATH_BG_FAIRY {
         let handle: Handle<Image> = asset_server.load(path);
