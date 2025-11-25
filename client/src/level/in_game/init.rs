@@ -241,7 +241,6 @@ fn setup_in_game_interface(
                     },
                     Visibility::Inherited,
                     SpawnRequest,
-                    UI::Layout,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -303,6 +302,7 @@ fn setup_in_game_interface(
                                     ResizableFont::vertical(1280.0, 64.0),
                                     TextColor::BLACK,
                                     Visibility::Inherited,
+                                    HUDInGameTimer,
                                     SpawnRequest,
                                 ))
                                 .id();
@@ -430,6 +430,8 @@ fn setup_in_game_interface(
                         height: Val::Auto,
                         aspect_ratio: Some(1.0),
                         border: UiRect::all(Val::VMin(1.25)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..Default::default()
                     },
                     BorderColor::all(BORDER_GREEN_COLOR_0),
@@ -438,6 +440,26 @@ fn setup_in_game_interface(
                     Visibility::Inherited,
                     SpawnRequest,
                 ))
+                .with_children(|parent| {
+                    let texture = asset_server.load(IMG_PATH_WIND_INDICATOR_ARROW);
+                    let image = image_assets.get(&texture).unwrap();
+                    let ratio = image.aspect_ratio().ratio();
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(texture),
+                            Node {
+                                width: Val::Percent(70.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(ratio),
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            WindIndicator,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
                 .id();
             loading_entities.insert(entity);
         })

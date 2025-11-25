@@ -101,6 +101,11 @@ fn setup_ingame_interface(
         match ui {
             UI::Root => {
                 *visibility = Visibility::Visible;
+                commands.entity(entity).insert(UiBackOutScale::new(
+                    SCENE_DURATION,
+                    Vec2::ZERO,
+                    Vec2::ONE,
+                ));
             }
             _ => { /* empty */ }
         }
@@ -129,8 +134,15 @@ fn cleanup_prepare_interface(
 
 // --- UPDATE SYSTEMS ---
 
-fn update_scene_timer(mut scene_timer: ResMut<SceneTimer>, time: Res<Time>) {
+fn update_scene_timer(
+    mut next_state: ResMut<NextState<LevelStates>>,
+    mut scene_timer: ResMut<SceneTimer>,
+    time: Res<Time>,
+) {
     scene_timer.tick(time.delta_secs());
+    if scene_timer.elapsed_sec() >= SCENE_DURATION {
+        next_state.set(LevelStates::InGame);
+    }
 }
 
 fn update_background_patterns(

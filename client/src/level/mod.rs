@@ -85,7 +85,8 @@ pub enum LevelStates {
     LoadGame,         // -> SwitchToTitleMessage, InitGame, Error
     InitGame,         // -> SwitchToTitleMessage, InitPrepareGame, Error
 
-    SwitchToInGame,
+    SwitchToInGame, // -> InGame, Error
+    InGame,         // -> Error
 }
 
 // --- UPDATE SYSTEMS ---

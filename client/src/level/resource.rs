@@ -127,6 +127,11 @@ impl Default for SceneTimer {
     }
 }
 
+#[derive(Default, Resource)]
+pub struct InGameTimer {
+    pub miliis: u32,
+}
+
 #[derive(Resource)]
 pub struct PlayerInfo {
     pub uuid: Uuid,
@@ -214,3 +219,43 @@ impl From<NetError> for ErrorMessage {
 
 #[derive(Resource)]
 pub struct SyncFlags;
+
+#[derive(Default, Resource)]
+pub enum PlaySide {
+    #[default]
+    Left,
+    Right,
+    Thrown,
+}
+
+#[derive(Resource)]
+pub struct Wind {
+    angle: f32,
+    power: f32,
+}
+
+impl Wind {
+    pub fn new(angle: u8, power: u8) -> Self {
+        Self {
+            angle: angle as f32 / 255.0,
+            power: power as f32 / 255.0,
+        }
+    }
+
+    pub fn get_rotation(&self) -> Rot2 {
+        Rot2::degrees(self.angle * 360.0)
+    }
+
+    pub fn get_scale(&self) -> Vec2 {
+        Vec2::splat(self.power)
+    }
+}
+
+impl Default for Wind {
+    fn default() -> Self {
+        Self {
+            angle: 0.0,
+            power: 0.0,
+        }
+    }
+}

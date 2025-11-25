@@ -12,6 +12,7 @@ publish = false
 [dependencies]
 crossbeam-queue = "0.3"
 futures-util = "0.3"
+glam = "0.30"
 tokio = { version = "1.48",features = ["full"] }
 tokio-tungstenite = "0.28"
 

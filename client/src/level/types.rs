@@ -430,3 +430,9 @@ impl AnimationTimer {
         num_sheets.min((self.elapsed / self.duration * num_sheets as f32) as usize)
     }
 }
+
+#[derive(Component)]
+pub struct HUDInGameTimer;
+
+#[derive(Component)]
+pub struct WindIndicator;

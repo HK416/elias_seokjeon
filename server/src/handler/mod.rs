@@ -1,3 +1,4 @@
+pub mod in_game;
 pub mod init;
 pub mod matching;
 pub mod prepare;
@@ -16,7 +17,10 @@ use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use protocol::{DEF_SCORE, Hero, MAX_SCORE, Packet, Player, rand, serde_json, uuid::Uuid};
+use protocol::{
+    DEF_SCORE, Hero, MAX_CTRL_TIME, MAX_HEALTH, MAX_PLAY_TIME, MAX_SCORE, Packet, Player, rand,
+    serde_json, uuid::Uuid,
+};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
