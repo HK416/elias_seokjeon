@@ -107,11 +107,10 @@ pub enum Packet {
     // Server -> Client
     InGameProjectileThrown {
         total_remaining_millis: u32,
-        remaining_millis: u32,
         wind_angle: u8,
         wind_power: u8,
-        left_heath: u16,
-        right_heath: u16,
+        left_health: u16,
+        right_health: u16,
         projectile_pos: (f32, f32),
         projectile_vel: (f32, f32),
     },

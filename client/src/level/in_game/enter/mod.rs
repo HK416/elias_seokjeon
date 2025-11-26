@@ -87,16 +87,13 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<Image> = asset_server.load(IMG_PATH_PVP_INGAME_VS);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_INGAME_TIME_ICON);
+    loading_assets.push(handle);
+
     let handle: Handle<Image> = asset_server.load(IMG_PATH_WIND_INDICATOR_ARROW);
     loading_assets.push(handle);
 
     let handle: Handle<Image> = asset_server.load(IMG_PATH_WIND_INDICATOR_DECO);
-    loading_assets.push(handle);
-
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_GREEN_FLAG);
-    loading_assets.push(handle);
-
-    let handle: Handle<Image> = asset_server.load(IMG_PATH_RED_FLAG);
     loading_assets.push(handle);
 
     let handle: Handle<Image> = asset_server.load(IMG_PATH_RED_DOT);

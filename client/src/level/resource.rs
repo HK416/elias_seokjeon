@@ -1,6 +1,6 @@
 // Import necessary Bevy modules.
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
-use protocol::{Hero, uuid::Uuid};
+use protocol::{Hero, MAX_HEALTH, uuid::Uuid};
 
 use super::*;
 
@@ -127,11 +127,6 @@ impl Default for SceneTimer {
     }
 }
 
-#[derive(Default, Resource)]
-pub struct InGameTimer {
-    pub miliis: u32,
-}
-
 #[derive(Resource)]
 pub struct PlayerInfo {
     pub uuid: Uuid,
@@ -221,6 +216,16 @@ impl From<NetError> for ErrorMessage {
 pub struct SyncFlags;
 
 #[derive(Default, Resource)]
+pub struct InGameTimer {
+    pub miliis: u32,
+}
+
+#[derive(Default, Resource)]
+pub struct PlayerTimer {
+    pub miliis: u16,
+}
+
+#[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub enum PlaySide {
     #[default]
     Left,
@@ -256,6 +261,27 @@ impl Default for Wind {
         Self {
             angle: 0.0,
             power: 0.0,
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct PlayerHealth {
+    pub left: u16,
+    pub right: u16,
+}
+
+impl PlayerHealth {
+    pub fn new(left: u16, right: u16) -> Self {
+        Self { left, right }
+    }
+}
+
+impl Default for PlayerHealth {
+    fn default() -> Self {
+        Self {
+            left: MAX_HEALTH,
+            right: MAX_HEALTH,
         }
     }
 }

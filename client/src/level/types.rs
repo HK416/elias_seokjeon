@@ -104,7 +104,6 @@ impl<T> OriginColor<T> {
 pub enum UI {
     Root,
     Modal,
-    Layout,
     PositiveButton,
     NegativeButton,
 
@@ -436,3 +435,15 @@ pub struct HUDInGameTimer;
 
 #[derive(Component)]
 pub struct WindIndicator;
+
+#[derive(Component)]
+pub struct LeftHealthBar;
+
+#[derive(Component)]
+pub struct RightHealthBar;
+
+#[derive(Component)]
+pub struct HUDPlayerTimer;
+
+#[derive(Component)]
+pub struct PlayerTimerBar;

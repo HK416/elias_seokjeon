@@ -5,7 +5,7 @@ mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use protocol::{LEFT_CAM_POS_X, RIGHT_CAM_POS_X};
+use protocol::{LEFT_CAM_POS_X, MAX_CTRL_TIME, RIGHT_CAM_POS_X};
 
 use super::*;
 
@@ -27,7 +27,8 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 Update,
                 (
-                    update_hud_timer,
+                    update_hud_ingame_timer,
+                    update_hud_player_timer,
                     update_camera_position,
                     update_wind_indicator,
                 )
@@ -52,6 +53,8 @@ fn debug_label() {
 
 fn setup_resource(mut commands: Commands) {
     commands.insert_resource(InGameTimer::default());
+    commands.insert_resource(PlayerTimer::default());
+    commands.insert_resource(PlayerHealth::default());
     commands.insert_resource(PlaySide::default());
     commands.insert_resource(Wind::default());
 }
@@ -60,6 +63,8 @@ fn setup_resource(mut commands: Commands) {
 
 fn cleanup_resource(mut commands: Commands) {
     commands.remove_resource::<InGameTimer>();
+    commands.remove_resource::<PlayerTimer>();
+    commands.remove_resource::<PlayerHealth>();
     commands.remove_resource::<PlaySide>();
     commands.remove_resource::<Wind>();
 }
@@ -75,11 +80,14 @@ fn reset_camera_position(mut query: Query<&mut Transform, With<Camera>>) {
 // --- PREUPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
+#[allow(clippy::too_many_arguments)]
 fn handle_received_packets(
     mut commands: Commands,
     mut wind: ResMut<Wind>,
     mut side: ResMut<PlaySide>,
-    mut timer: ResMut<InGameTimer>,
+    mut health: ResMut<PlayerHealth>,
+    mut player_timer: ResMut<PlayerTimer>,
+    mut in_game_timer: ResMut<InGameTimer>,
     mut next_state: ResMut<NextState<LevelStates>>,
     network: Res<Network>,
 ) {
@@ -88,33 +96,46 @@ fn handle_received_packets(
             Ok(packet) => match packet {
                 Packet::InGameLeftTurn {
                     total_remaining_millis,
+                    remaining_millis,
                     wind_angle,
                     wind_power,
+                    left_health,
+                    right_health,
                     ..
                 } => {
-                    timer.miliis = total_remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *side = PlaySide::Left;
+                    in_game_timer.miliis = total_remaining_millis;
+                    player_timer.miliis = remaining_millis;
+                    *wind = Wind::new(wind_angle, wind_power);
+                    *health = PlayerHealth::new(left_health, right_health);
                 }
                 Packet::InGameRightTurn {
                     total_remaining_millis,
+                    remaining_millis,
                     wind_angle,
                     wind_power,
+                    left_health,
+                    right_health,
                     ..
                 } => {
-                    timer.miliis = total_remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *side = PlaySide::Right;
+                    in_game_timer.miliis = total_remaining_millis;
+                    player_timer.miliis = remaining_millis;
+                    *wind = Wind::new(wind_angle, wind_power);
+                    *health = PlayerHealth::new(left_health, right_health);
                 }
                 Packet::InGameProjectileThrown {
                     total_remaining_millis,
                     wind_angle,
                     wind_power,
+                    left_health,
+                    right_health,
                     ..
                 } => {
-                    timer.miliis = total_remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *side = PlaySide::Thrown;
+                    in_game_timer.miliis = total_remaining_millis;
+                    *wind = Wind::new(wind_angle, wind_power);
+                    *health = PlayerHealth::new(left_health, right_health);
                 }
                 _ => { /* empty */ }
             },
@@ -128,10 +149,52 @@ fn handle_received_packets(
 
 // --- UPDATE SYSTEMS ---
 
-fn update_hud_timer(timer: Res<InGameTimer>, mut query: Query<&mut Text, With<HUDInGameTimer>>) {
+fn update_hud_ingame_timer(
+    timer: Res<InGameTimer>,
+    mut query: Query<&mut Text, With<HUDInGameTimer>>,
+) {
     for mut text in query.iter_mut() {
         let seconds = (timer.miliis as f32 / 1000.0).ceil() as u32;
         *text = Text::new(format!("{:0>3}", seconds));
+    }
+}
+
+fn update_hud_player_timer(
+    timer: Res<PlayerTimer>,
+    side: Res<PlaySide>,
+    other_info: Res<OtherInfo>,
+    mut hud: Query<&mut Visibility, With<HUDPlayerTimer>>,
+    mut timer_bar: Query<(&mut Node, &mut BackgroundColor), With<PlayerTimerBar>>,
+) {
+    let Ok(mut visibility) = hud.single_mut() else {
+        return;
+    };
+    let Ok((mut node, mut color)) = timer_bar.single_mut() else {
+        return;
+    };
+
+    match (*side, other_info.left_side) {
+        (PlaySide::Left, false) | (PlaySide::Right, true) => {
+            *visibility = Visibility::Visible;
+            let p = (timer.miliis as f32 / MAX_CTRL_TIME as f32).clamp(0.0, 1.0);
+            node.width = Val::Percent(p * 100.0);
+
+            const MIN_VAL: f32 = 0.2;
+            const MAX_VAL: f32 = 0.8;
+            let (red, green) = if p < 0.5 {
+                let red = MAX_VAL;
+                let green = MIN_VAL.lerp(MAX_VAL, p * 2.0);
+                (red, green)
+            } else {
+                let red = MAX_VAL.lerp(MIN_VAL, (p - 0.5) * 2.0);
+                let green = MAX_VAL;
+                (red, green)
+            };
+            *color = BackgroundColor(Color::srgb(red, green, MIN_VAL));
+        }
+        _ => {
+            *visibility = Visibility::Hidden;
+        }
     }
 }
 

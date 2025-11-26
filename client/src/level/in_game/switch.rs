@@ -72,6 +72,7 @@ fn setup_prepare_entities(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_prepare_interface(
     mut commands: Commands,
     query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
@@ -90,6 +91,7 @@ fn setup_prepare_interface(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_ingame_interface(
     mut commands: Commands,
     mut query: Query<
@@ -118,6 +120,7 @@ fn cleanup_scene_timer(mut commands: Commands) {
     commands.remove_resource::<SceneTimer>();
 }
 
+#[allow(clippy::type_complexity)]
 fn cleanup_prepare_interface(
     mut commands: Commands,
     query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
