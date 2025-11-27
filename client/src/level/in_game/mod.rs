@@ -5,7 +5,12 @@ mod switch;
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
-use protocol::{LEFT_CAM_POS_X, MAX_CTRL_TIME, RIGHT_CAM_POS_X};
+use bevy_vector_shapes::prelude::*;
+use protocol::{
+    LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_START_ANGLE, LEFT_THROW_POS_X, LEFT_THROW_POS_Y,
+    MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE, RIGHT_START_ANGLE, RIGHT_THROW_POS_X,
+    RIGHT_THROW_POS_Y, THROW_RANGE,
+};
 
 use super::*;
 
@@ -31,6 +36,8 @@ impl Plugin for InnerPlugin {
                     update_hud_player_timer,
                     update_camera_position,
                     update_wind_indicator,
+                    draw_range_indicator,
+                    draw_range_arrow_indicator,
                 )
                     .run_if(in_state(LevelStates::InGame)),
             );
@@ -39,7 +46,11 @@ impl Plugin for InnerPlugin {
         {
             app.add_systems(
                 PreUpdate,
-                handle_received_packets.run_if(in_state(LevelStates::InGame)),
+                (
+                    handle_received_packets,
+                    handle_cursor_movement.after(handle_received_packets),
+                )
+                    .run_if(in_state(LevelStates::InGame)),
             );
         }
     }
@@ -101,9 +112,10 @@ fn handle_received_packets(
                     wind_power,
                     left_health,
                     right_health,
-                    ..
+                    angle,
+                    power,
                 } => {
-                    *side = PlaySide::Left;
+                    *side = PlaySide::Left { angle, power };
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
                     *wind = Wind::new(wind_angle, wind_power);
@@ -116,9 +128,10 @@ fn handle_received_packets(
                     wind_power,
                     left_health,
                     right_health,
-                    ..
+                    angle,
+                    power,
                 } => {
-                    *side = PlaySide::Right;
+                    *side = PlaySide::Right { angle, power };
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
                     *wind = Wind::new(wind_angle, wind_power);
@@ -144,6 +157,87 @@ fn handle_received_packets(
                 next_state.set(LevelStates::Error);
             }
         }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(clippy::too_many_arguments)]
+fn handle_cursor_movement(
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut play_side: ResMut<PlaySide>,
+    other_info: Res<OtherInfo>,
+    network: Res<Network>,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left { .. }, false) => {
+            if let Ok(window) = windows.single()
+                && let Ok((camera, camera_transform)) = cameras.single()
+                && let Some(cursor_pos) = window.cursor_position()
+            {
+                let result = camera.viewport_to_world_2d(camera_transform, cursor_pos);
+                let Ok(cursor_pos) = result else { return };
+
+                let start = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                let dist = cursor_pos - start;
+                let length = dist.length();
+                if length > f32::EPSILON {
+                    let angle = dist.to_angle();
+                    let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                    let power = length.clamp(THROW_RANGE, 2.0 * THROW_RANGE);
+
+                    let angle = ((clamped_angle - LEFT_START_ANGLE)
+                        / (LEFT_END_ANGLE - LEFT_START_ANGLE)
+                        * 255.0) as u8;
+                    let power = (power / (2.0 * THROW_RANGE) * 255.0) as u8;
+
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+
+                    *play_side = PlaySide::Left {
+                        angle: Some(angle),
+                        power: Some(power),
+                    };
+                }
+            };
+        }
+        (PlaySide::Right { .. }, true) => {
+            if let Ok(window) = windows.single()
+                && let Ok((camera, camera_transform)) = cameras.single()
+                && let Some(cursor_pos) = window.cursor_position()
+            {
+                let result = camera.viewport_to_world_2d(camera_transform, cursor_pos);
+                let Ok(cursor_pos) = result else { return };
+
+                let start = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                let dist = cursor_pos - start;
+                let length = dist.length();
+                if length > f32::EPSILON {
+                    let mut angle = dist.to_angle();
+                    if angle < 0.0 {
+                        angle += TAU;
+                    }
+                    let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                    let power = length.clamp(THROW_RANGE, 2.0 * THROW_RANGE);
+
+                    let angle = ((clamped_angle - RIGHT_START_ANGLE)
+                        / (RIGHT_END_ANGLE - RIGHT_START_ANGLE)
+                        * 255.0) as u8;
+                    let power = (power / (2.0 * THROW_RANGE) * 255.0) as u8;
+
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+
+                    *play_side = PlaySide::Right {
+                        angle: Some(angle),
+                        power: Some(power),
+                    };
+                }
+            };
+        }
+        _ => { /* empty */ }
     }
 }
 
@@ -174,7 +268,7 @@ fn update_hud_player_timer(
     };
 
     match (*side, other_info.left_side) {
-        (PlaySide::Left, false) | (PlaySide::Right, true) => {
+        (PlaySide::Left { .. }, false) | (PlaySide::Right { .. }, true) => {
             *visibility = Visibility::Visible;
             let p = (timer.miliis as f32 / MAX_CTRL_TIME as f32).clamp(0.0, 1.0);
             node.width = Val::Percent(p * 100.0);
@@ -207,8 +301,8 @@ fn update_camera_position(
     };
 
     transform.translation.x = match *play_side {
-        PlaySide::Left => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
-        PlaySide::Right => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
+        PlaySide::Left { .. } => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
+        PlaySide::Right { .. } => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
         PlaySide::Thrown => transform.translation.x,
     };
 }
@@ -220,4 +314,72 @@ fn update_wind_indicator(mut query: Query<&mut UiTransform, With<WindIndicator>>
 
     transform.scale = wind.get_scale();
     transform.rotation = wind.get_rotation();
+}
+
+fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
+    match *play_side {
+        PlaySide::Left { .. } => {
+            painter.cap = Cap::None;
+            painter.hollow = true;
+            painter.thickness = THROW_RANGE;
+            painter.set_color(Color::WHITE.with_alpha(0.5));
+            painter.set_translation(Vec3::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y, 0.6));
+
+            let start_angle = FRAC_PI_2 - LEFT_END_ANGLE;
+            let end_angle = FRAC_PI_2 - LEFT_START_ANGLE;
+            painter.arc(2.0 * THROW_RANGE, start_angle, end_angle);
+        }
+        PlaySide::Right { .. } => {
+            painter.cap = Cap::None;
+            painter.hollow = true;
+            painter.thickness = THROW_RANGE;
+            painter.set_color(Color::WHITE.with_alpha(0.5));
+            painter.set_translation(Vec3::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, 0.6));
+
+            let start_angle = FRAC_PI_2 - RIGHT_END_ANGLE;
+            let end_angle = FRAC_PI_2 - RIGHT_START_ANGLE;
+            painter.arc(2.0 * THROW_RANGE, start_angle, end_angle);
+        }
+        PlaySide::Thrown => { /* empty */ }
+    }
+}
+
+fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
+    let (angle, power) = match *play_side {
+        PlaySide::Left { angle, power } => (angle, power),
+        PlaySide::Right { angle, power } => (angle, power),
+        PlaySide::Thrown => return,
+    };
+
+    if let (Some(angle), Some(power)) = (angle, power) {
+        painter.cap = Cap::Round;
+        painter.thickness = 12.0;
+        painter.set_color(BG_RED_COLOR_0);
+
+        let (start_pos, start_angle, end_angle) = if matches!(*play_side, PlaySide::Left { .. }) {
+            (
+                Vec3::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y, 0.7),
+                LEFT_START_ANGLE,
+                LEFT_END_ANGLE,
+            )
+        } else {
+            (
+                Vec3::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, 0.7),
+                RIGHT_START_ANGLE,
+                RIGHT_END_ANGLE,
+            )
+        };
+
+        // u8 값을 다시 각도와 길이로 변환
+        let t = angle as f32 / 255.0;
+        let angle_rad = start_angle.lerp(end_angle, t);
+
+        let p = power as f32 / 255.0;
+        let length = 2.0 * THROW_RANGE * p;
+
+        let end = Vec3::new(angle_rad.cos() * length, angle_rad.sin() * length, 0.0);
+
+        painter.set_translation(start_pos);
+        painter.line(Vec3::ZERO, end);
+    }
 }

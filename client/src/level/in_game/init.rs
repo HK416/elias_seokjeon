@@ -1,4 +1,5 @@
 use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent};
+use protocol::{LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y};
 
 use super::*;
 
@@ -159,7 +160,7 @@ fn setup_in_game_entities(
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
-                transform: Transform::from_xyz(-960.0, 340.0, 0.5)
+                transform: Transform::from_xyz(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, 0.5)
                     .with_scale(Vec3::new(-0.3, 0.3, 0.3)),
                 visibility: Visibility::Visible,
                 ..Default::default()
@@ -174,7 +175,7 @@ fn setup_in_game_entities(
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
-                transform: Transform::from_xyz(960.0, 340.0, 0.5)
+                transform: Transform::from_xyz(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y, 0.5)
                     .with_scale(Vec3::new(0.3, 0.3, 0.3)),
                 visibility: Visibility::Visible,
                 ..Default::default()

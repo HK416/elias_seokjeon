@@ -1,5 +1,3 @@
-use protocol::rand::Rng;
-
 use super::*;
 
 const MAX_LOOP: usize = 100;
@@ -89,7 +87,7 @@ pub async fn play(left: Session, right: Session) {
             cnt -= 1;
         }
 
-        let mut cnt = 0;
+        let mut cnt = MAX_LOOP;
         'update: while cnt > 0 {
             match poll_stream_nonblocking(&mut broadcaster.right.read) {
                 StreamPollResult::Pending => break,

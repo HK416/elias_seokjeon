@@ -227,9 +227,15 @@ pub struct PlayerTimer {
 
 #[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub enum PlaySide {
+    Left {
+        angle: Option<u8>,
+        power: Option<u8>,
+    },
+    Right {
+        angle: Option<u8>,
+        power: Option<u8>,
+    },
     #[default]
-    Left,
-    Right,
     Thrown,
 }
 

@@ -22,6 +22,7 @@ static_assertions = "1.1"
 aes-gcm = "0.10"
 anyhow = "1.0"
 bevy_spine = { git = "https://github.com/HK416/bevy_spine", branch = "v17" }
+bevy_vector_shapes = "0.11"
 const_format = "0.2"
 flume = "0.11"
 image = { version = "0.25", default-features = false, features = ["png"] }

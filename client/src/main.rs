@@ -14,6 +14,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_spine::SpinePlugin;
+use bevy_vector_shapes::Shape2dPlugin;
 
 const WND_WIDTH: u32 = 1920;
 const WND_HEIGHT: u32 = 1080;
@@ -48,6 +49,7 @@ fn main() {
                 }),
         )
         .add_plugins(SpinePlugin)
+        .add_plugins(Shape2dPlugin::default())
         .add_plugins(assets::InnerPlugin)
         .add_plugins(collider::InnerPlugin)
         .add_plugins(level::InnerPlugin)

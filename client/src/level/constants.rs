@@ -1,4 +1,4 @@
-pub use std::f32::consts::{PI, TAU};
+pub use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;

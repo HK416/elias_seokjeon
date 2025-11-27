@@ -77,8 +77,8 @@ pub enum Packet {
     PrepareInGame, 
     // Client -> Server
     UpdateThrowParams {
-        angle: f32,
-        power: f32,
+        angle: u8,
+        power: u8,
     },
     // Client -> Server
     ThrowProjectile,
@@ -90,8 +90,8 @@ pub enum Packet {
         wind_power: u8,
         left_health: u16,
         right_health: u16,
-        angle: Option<f32>,
-        power: Option<f32>,
+        angle: Option<u8>,
+        power: Option<u8>,
     },
     // Server -> Client
     InGameRightTurn {
@@ -101,8 +101,8 @@ pub enum Packet {
         wind_power: u8,
         left_health: u16,
         right_health: u16,
-        angle: Option<f32>,
-        power: Option<f32>,
+        angle: Option<u8>,
+        power: Option<u8>,
     },
     // Server -> Client
     InGameProjectileThrown {
@@ -137,3 +137,17 @@ pub const LEFT_PLAYER_POS_Y : f32 = 340.0;
 
 pub const RIGHT_PLAYER_POS_X: f32 = 960.0;
 pub const RIGHT_PLAYER_POS_Y: f32 = 340.0;
+
+pub const LEFT_THROW_POS_X: f32 = LEFT_PLAYER_POS_X;
+pub const LEFT_THROW_POS_Y: f32 = LEFT_PLAYER_POS_Y + 96.0;
+
+pub const LEFT_START_ANGLE: f32 = 15f32.to_radians();
+pub const LEFT_END_ANGLE: f32 = 75f32.to_radians();
+
+pub const RIGHT_THROW_POS_X: f32 = RIGHT_PLAYER_POS_X;
+pub const RIGHT_THROW_POS_Y: f32 = RIGHT_PLAYER_POS_Y + 96.0;
+
+pub const RIGHT_START_ANGLE: f32 = 105f32.to_radians();
+pub const RIGHT_END_ANGLE: f32 = 165f32.to_radians();
+
+pub const THROW_RANGE: f32 = 256.0;
