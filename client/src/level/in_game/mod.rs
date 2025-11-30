@@ -48,7 +48,13 @@ impl Plugin for InnerPlugin {
                 PreUpdate,
                 (
                     handle_received_packets,
-                    handle_cursor_movement.after(handle_received_packets),
+                    (
+                        handle_mouse_button_pressed
+                            .run_if(not(resource_exists::<MouseButtonPressed>)),
+                        handle_mouse_button_released.run_if(resource_exists::<MouseButtonPressed>),
+                        handle_cursor_movement.run_if(resource_exists::<MouseButtonPressed>),
+                    )
+                        .after(handle_received_packets),
                 )
                     .run_if(in_state(LevelStates::InGame)),
             );
@@ -108,46 +114,42 @@ fn handle_received_packets(
                 Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    wind_angle,
-                    wind_power,
                     left_health,
                     right_health,
-                    angle,
-                    power,
+                    control,
                 } => {
-                    *side = PlaySide::Left { angle, power };
+                    *side = PlaySide::Left(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *health = PlayerHealth::new(left_health, right_health);
                 }
                 Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    wind_angle,
-                    wind_power,
                     left_health,
                     right_health,
-                    angle,
-                    power,
+                    control,
                 } => {
-                    *side = PlaySide::Right { angle, power };
+                    *side = PlaySide::Right(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *health = PlayerHealth::new(left_health, right_health);
+                }
+                Packet::InGameTurnSetup {
+                    wind_angle,
+                    wind_power,
+                } => {
+                    *wind = Wind::new(wind_angle, wind_power);
+                    commands.remove_resource::<MouseButtonPressed>();
                 }
                 Packet::InGameProjectileThrown {
                     total_remaining_millis,
-                    wind_angle,
-                    wind_power,
                     left_health,
                     right_health,
                     ..
                 } => {
                     *side = PlaySide::Thrown;
                     in_game_timer.miliis = total_remaining_millis;
-                    *wind = Wind::new(wind_angle, wind_power);
                     *health = PlayerHealth::new(left_health, right_health);
                 }
                 _ => { /* empty */ }
@@ -162,6 +164,108 @@ fn handle_received_packets(
 
 #[cfg(target_arch = "wasm32")]
 #[allow(clippy::too_many_arguments)]
+fn handle_mouse_button_pressed(
+    mut commands: Commands,
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    left_player_trigger: Query<(&Collider2d, &GlobalTransform), With<LeftPlayerTrigger>>,
+    right_player_trigger: Query<(&Collider2d, &GlobalTransform), With<RightPlayerTrigger>>,
+    mouse_button_events: Res<ButtonInput<MouseButton>>,
+    other_info: Res<OtherInfo>,
+    play_side: Res<PlaySide>,
+    network: Res<Network>,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left(_), false) => {
+            if mouse_button_events.just_pressed(MouseButton::Left)
+                && let Ok(window) = windows.single()
+                && let Ok((camera, camera_transform)) = cameras.single()
+                && let Ok((collider, transform)) = left_player_trigger.single()
+                && let Some(viewport_position) = window.cursor_position()
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
+                && Collider2d::contains((collider, transform), point)
+            {
+                network
+                    .send(&Packet::UpdateThrowParams { angle: 0, power: 0 })
+                    .unwrap();
+                commands.insert_resource(MouseButtonPressed);
+            }
+        }
+        (PlaySide::Right(_), true) => {
+            if mouse_button_events.just_pressed(MouseButton::Left)
+                && let Ok(window) = windows.single()
+                && let Ok((camera, camera_transform)) = cameras.single()
+                && let Ok((collider, transform)) = right_player_trigger.single()
+                && let Some(viewport_position) = window.cursor_position()
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
+                && Collider2d::contains((collider, transform), point)
+            {
+                network
+                    .send(&Packet::UpdateThrowParams { angle: 0, power: 0 })
+                    .unwrap();
+                commands.insert_resource(MouseButtonPressed);
+            }
+        }
+        _ => { /* empty */ }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(clippy::too_many_arguments)]
+fn handle_mouse_button_released(
+    mut commands: Commands,
+    windows: Query<&Window>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mouse_button_events: Res<ButtonInput<MouseButton>>,
+    other_info: Res<OtherInfo>,
+    network: Res<Network>,
+) {
+    if mouse_button_events.just_released(MouseButton::Left) {
+        commands.remove_resource::<MouseButtonPressed>();
+
+        if let Ok(window) = windows.single()
+            && let Ok((camera, camera_transform)) = cameras.single()
+            && let Some(viewport_position) = window.cursor_position()
+            && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
+        {
+            let center = match other_info.left_side {
+                true => Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y),
+                false => Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
+            };
+            let dist = center - point;
+            let norm = dist.try_normalize().unwrap_or(Vec2::X);
+            let length = dist.length().min(THROW_RANGE);
+            let delta = length / THROW_RANGE;
+            let power = (delta * 255.0) as u8;
+
+            let mut angle = norm.to_angle();
+            let angle = if other_info.left_side {
+                // I'm right side player.
+                if angle < 0.0 {
+                    angle += TAU;
+                }
+
+                let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                let delta =
+                    (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
+                (delta * 255.0) as u8
+            } else {
+                // I'm left side player.
+                let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                let delta =
+                    (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
+                (delta * 255.0) as u8
+            };
+
+            network
+                .send(&Packet::UpdateThrowParams { angle, power })
+                .unwrap();
+            network.send(&Packet::ThrowProjectile).unwrap();
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 fn handle_cursor_movement(
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
@@ -170,72 +274,60 @@ fn handle_cursor_movement(
     network: Res<Network>,
 ) {
     match (*play_side, other_info.left_side) {
-        (PlaySide::Left { .. }, false) => {
+        (PlaySide::Left(_), false) => {
             if let Ok(window) = windows.single()
                 && let Ok((camera, camera_transform)) = cameras.single()
-                && let Some(cursor_pos) = window.cursor_position()
+                && let Some(viewport_position) = window.cursor_position()
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
             {
-                let result = camera.viewport_to_world_2d(camera_transform, cursor_pos);
-                let Ok(cursor_pos) = result else { return };
+                let center = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                let dist = center - point;
+                let norm = dist.try_normalize().unwrap_or(Vec2::X);
+                let length = dist.length().min(THROW_RANGE);
+                let delta = length / THROW_RANGE;
+                let power = (delta * 255.0) as u8;
 
-                let start = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
-                let dist = cursor_pos - start;
-                let length = dist.length();
-                if length > f32::EPSILON {
-                    let angle = dist.to_angle();
-                    let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
-                    let power = length.clamp(THROW_RANGE, 2.0 * THROW_RANGE);
+                let angle = norm.to_angle();
 
-                    let angle = ((clamped_angle - LEFT_START_ANGLE)
-                        / (LEFT_END_ANGLE - LEFT_START_ANGLE)
-                        * 255.0) as u8;
-                    let power = (power / (2.0 * THROW_RANGE) * 255.0) as u8;
+                let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                let delta =
+                    (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
+                let angle = (delta * 255.0) as u8;
 
-                    network
-                        .send(&Packet::UpdateThrowParams { angle, power })
-                        .unwrap();
-
-                    *play_side = PlaySide::Left {
-                        angle: Some(angle),
-                        power: Some(power),
-                    };
-                }
-            };
+                *play_side = PlaySide::Left(Some((angle, power)));
+                network
+                    .send(&Packet::UpdateThrowParams { angle, power })
+                    .unwrap();
+            }
         }
-        (PlaySide::Right { .. }, true) => {
+        (PlaySide::Right(_), true) => {
             if let Ok(window) = windows.single()
                 && let Ok((camera, camera_transform)) = cameras.single()
-                && let Some(cursor_pos) = window.cursor_position()
+                && let Some(viewport_position) = window.cursor_position()
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
             {
-                let result = camera.viewport_to_world_2d(camera_transform, cursor_pos);
-                let Ok(cursor_pos) = result else { return };
+                let center = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                let dist = center - point;
+                let norm = dist.try_normalize().unwrap_or(Vec2::X);
+                let length = dist.length().min(THROW_RANGE);
+                let delta = length / THROW_RANGE;
+                let power = (delta * 255.0) as u8;
 
-                let start = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
-                let dist = cursor_pos - start;
-                let length = dist.length();
-                if length > f32::EPSILON {
-                    let mut angle = dist.to_angle();
-                    if angle < 0.0 {
-                        angle += TAU;
-                    }
-                    let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
-                    let power = length.clamp(THROW_RANGE, 2.0 * THROW_RANGE);
-
-                    let angle = ((clamped_angle - RIGHT_START_ANGLE)
-                        / (RIGHT_END_ANGLE - RIGHT_START_ANGLE)
-                        * 255.0) as u8;
-                    let power = (power / (2.0 * THROW_RANGE) * 255.0) as u8;
-
-                    network
-                        .send(&Packet::UpdateThrowParams { angle, power })
-                        .unwrap();
-
-                    *play_side = PlaySide::Right {
-                        angle: Some(angle),
-                        power: Some(power),
-                    };
+                let mut angle = norm.to_angle();
+                if angle < 0.0 {
+                    angle += TAU;
                 }
-            };
+
+                let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                let delta =
+                    (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
+                let angle = (delta * 255.0) as u8;
+
+                *play_side = PlaySide::Right(Some((angle, power)));
+                network
+                    .send(&Packet::UpdateThrowParams { angle, power })
+                    .unwrap();
+            }
         }
         _ => { /* empty */ }
     }
@@ -268,7 +360,7 @@ fn update_hud_player_timer(
     };
 
     match (*side, other_info.left_side) {
-        (PlaySide::Left { .. }, false) | (PlaySide::Right { .. }, true) => {
+        (PlaySide::Left(_), false) | (PlaySide::Right(_), true) => {
             *visibility = Visibility::Visible;
             let p = (timer.miliis as f32 / MAX_CTRL_TIME as f32).clamp(0.0, 1.0);
             node.width = Val::Percent(p * 100.0);
@@ -318,7 +410,7 @@ fn update_wind_indicator(mut query: Query<&mut UiTransform, With<WindIndicator>>
 
 fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
     match *play_side {
-        PlaySide::Left { .. } => {
+        PlaySide::Left(_) => {
             painter.cap = Cap::None;
             painter.hollow = true;
             painter.thickness = THROW_RANGE;
@@ -329,7 +421,7 @@ fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
             let end_angle = FRAC_PI_2 - LEFT_START_ANGLE;
             painter.arc(2.0 * THROW_RANGE, start_angle, end_angle);
         }
-        PlaySide::Right { .. } => {
+        PlaySide::Right(_) => {
             painter.cap = Cap::None;
             painter.hollow = true;
             painter.thickness = THROW_RANGE;
@@ -345,13 +437,13 @@ fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
 }
 
 fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
-    let (angle, power) = match *play_side {
-        PlaySide::Left { angle, power } => (angle, power),
-        PlaySide::Right { angle, power } => (angle, power),
+    let control = match *play_side {
+        PlaySide::Left(control) => control,
+        PlaySide::Right(control) => control,
         PlaySide::Thrown => return,
     };
 
-    if let (Some(angle), Some(power)) = (angle, power) {
+    if let Some((angle, power)) = control {
         painter.cap = Cap::Round;
         painter.thickness = 12.0;
         painter.set_color(BG_RED_COLOR_0);

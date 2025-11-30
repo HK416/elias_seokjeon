@@ -447,3 +447,9 @@ pub struct HUDPlayerTimer;
 
 #[derive(Component)]
 pub struct PlayerTimerBar;
+
+#[derive(Component)]
+pub struct LeftPlayerTrigger;
+
+#[derive(Component)]
+pub struct RightPlayerTrigger;

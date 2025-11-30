@@ -184,6 +184,34 @@ fn setup_in_game_entities(
         ))
         .id();
     loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Collider2d::Circle {
+                offset: Vec2::ZERO,
+                radius: 120.0,
+            },
+            Transform::from_xyz(LEFT_THROW_POS_X, LEFT_THROW_POS_Y, 0.5),
+            Visibility::Visible,
+            LeftPlayerTrigger,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Collider2d::Circle {
+                offset: Vec2::ZERO,
+                radius: 120.0,
+            },
+            Transform::from_xyz(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, 0.5),
+            Visibility::Visible,
+            RightPlayerTrigger,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
 }
 
 fn setup_in_game_interface(

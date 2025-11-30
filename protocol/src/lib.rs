@@ -86,29 +86,26 @@ pub enum Packet {
     InGameLeftTurn {
         total_remaining_millis: u32,
         remaining_millis: u16,
-        wind_angle: u8,
-        wind_power: u8,
         left_health: u16,
         right_health: u16,
-        angle: Option<u8>,
-        power: Option<u8>,
+        control: Option<(u8, u8)>,
     },
     // Server -> Client
     InGameRightTurn {
         total_remaining_millis: u32,
         remaining_millis: u16,
-        wind_angle: u8,
-        wind_power: u8,
         left_health: u16,
         right_health: u16,
-        angle: Option<u8>,
-        power: Option<u8>,
+        control: Option<(u8, u8)>,
+    },
+    // Server -> Client
+    InGameTurnSetup {
+        wind_angle: u8,
+        wind_power: u8,
     },
     // Server -> Client
     InGameProjectileThrown {
         total_remaining_millis: u32,
-        wind_angle: u8,
-        wind_power: u8,
         left_health: u16,
         right_health: u16,
         projectile_pos: (f32, f32),
@@ -150,4 +147,4 @@ pub const RIGHT_THROW_POS_Y: f32 = RIGHT_PLAYER_POS_Y + 96.0;
 pub const RIGHT_START_ANGLE: f32 = 105f32.to_radians();
 pub const RIGHT_END_ANGLE: f32 = 165f32.to_radians();
 
-pub const THROW_RANGE: f32 = 256.0;
+pub const THROW_RANGE: f32 = 280.0;

@@ -1,6 +1,7 @@
 use super::*;
 
 const MAX_LOOP: usize = 100;
+const WIND_THRESHOLD: usize = 6;
 
 struct Broadcaster {
     left: Session,
@@ -31,12 +32,12 @@ pub async fn play(left: Session, right: Session) {
 
     const TICK: u64 = 1_000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
+    let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH;
     let mut right_health = MAX_HEALTH;
-    let mut throw_angle = None;
-    let mut throw_power = None;
-    let mut wind_angle = rand::random_range(0..255);
-    let mut wind_power = rand::random_range(0..255);
+    let mut control = None;
+    let mut wind_angle = 0;
+    let mut wind_power = 0;
     let mut game_state = GameState::default();
     let mut remaining_millis = MAX_CTRL_TIME;
     let mut total_remaining_millis = MAX_PLAY_TIME;
@@ -52,7 +53,9 @@ pub async fn play(left: Session, right: Session) {
         previous_instant = instant;
 
         total_remaining_millis = total_remaining_millis.saturating_sub(elapsed_u32);
-        remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+        if !matches!(game_state, GameState::ProjectileThrown) {
+            remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+        }
 
         let mut cnt = MAX_LOOP;
         'update: while cnt > 0 {
@@ -64,8 +67,7 @@ pub async fn play(left: Session, right: Session) {
                     {
                         match (game_state, packet) {
                             (GameState::LeftTurn, Packet::UpdateThrowParams { angle, power }) => {
-                                throw_angle = Some(angle);
-                                throw_power = Some(power);
+                                control = Some((angle, power));
                             }
                             (GameState::LeftTurn, Packet::ThrowProjectile) => {
                                 game_state = GameState::ProjectileThrown;
@@ -97,8 +99,7 @@ pub async fn play(left: Session, right: Session) {
                     {
                         match (game_state, packet) {
                             (GameState::RightTurn, Packet::UpdateThrowParams { angle, power }) => {
-                                throw_angle = Some(angle);
-                                throw_power = Some(power);
+                                control = Some((angle, power));
                             }
                             (GameState::RightTurn, Packet::ThrowProjectile) => {
                                 game_state = GameState::ProjectileThrown;
@@ -125,46 +126,80 @@ pub async fn play(left: Session, right: Session) {
                 broadcaster.broadcast(&Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    wind_angle,
-                    wind_power,
                     left_health,
                     right_health,
-                    angle: throw_angle,
-                    power: throw_power,
+                    control,
                 });
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debuging-log"))]
                     println!("Left turn ended.");
+
+                    turn_counter += 1;
+                    if turn_counter > WIND_THRESHOLD {
+                        wind_angle = rand::random_range(0..255);
+                        wind_power = rand::random_range(128..255);
+                    }
+                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                        wind_angle,
+                        wind_power,
+                    });
+
                     game_state = GameState::RightTurn;
                     remaining_millis = MAX_CTRL_TIME;
-                    throw_angle = None;
-                    throw_power = None;
+                    control = None;
                 }
             }
             GameState::RightTurn => {
                 broadcaster.broadcast(&Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    wind_angle,
-                    wind_power,
                     left_health,
                     right_health,
-                    angle: throw_angle,
-                    power: throw_power,
+                    control,
                 });
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debuging-log"))]
                     println!("Right turn ended.");
+
+                    turn_counter += 1;
+                    if turn_counter > WIND_THRESHOLD {
+                        wind_angle = rand::random_range(0..255);
+                        wind_power = rand::random_range(128..255);
+                    }
+                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                        wind_angle,
+                        wind_power,
+                    });
+
                     game_state = GameState::LeftTurn;
                     remaining_millis = MAX_CTRL_TIME;
-                    throw_angle = None;
-                    throw_power = None;
+                    control = None;
                 }
             }
             GameState::ProjectileThrown => {
+                #[cfg(not(feature = "no-debuging-log"))]
+                println!("Projectile thrown.");
+
                 // TODO
+
+                turn_counter += 1;
+                if turn_counter > WIND_THRESHOLD {
+                    wind_angle = rand::random_range(0..255);
+                    wind_power = rand::random_range(128..255);
+                }
+                broadcaster.broadcast(&Packet::InGameTurnSetup {
+                    wind_angle,
+                    wind_power,
+                });
+
+                game_state = match turn_counter % 2 == 0 {
+                    true => GameState::LeftTurn,
+                    false => GameState::RightTurn,
+                };
+                remaining_millis = MAX_CTRL_TIME;
+                control = None;
             }
         }
     }

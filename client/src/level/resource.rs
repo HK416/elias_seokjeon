@@ -215,6 +215,9 @@ impl From<NetError> for ErrorMessage {
 #[derive(Resource)]
 pub struct SyncFlags;
 
+#[derive(Resource)]
+pub struct MouseButtonPressed;
+
 #[derive(Default, Resource)]
 pub struct InGameTimer {
     pub miliis: u32,
@@ -227,14 +230,8 @@ pub struct PlayerTimer {
 
 #[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub enum PlaySide {
-    Left {
-        angle: Option<u8>,
-        power: Option<u8>,
-    },
-    Right {
-        angle: Option<u8>,
-        power: Option<u8>,
-    },
+    Left(Option<(u8, u8)>),
+    Right(Option<(u8, u8)>),
     #[default]
     Thrown,
 }
