@@ -1,7 +1,9 @@
+use glam::FloatExt;
+
 use super::*;
 
 const MAX_LOOP: usize = 100;
-const WIND_THRESHOLD: usize = 6;
+const GRAVITY: f32 = -9.80665 * 50.0;
 
 struct Broadcaster {
     left: Session,
@@ -30,14 +32,15 @@ enum GameState {
 pub async fn play(left: Session, right: Session) {
     let mut broadcaster = Broadcaster::new(left, right);
 
-    const TICK: u64 = 1_000 / 15;
+    const TICK: u64 = 1_000 / 60;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH;
     let mut right_health = MAX_HEALTH;
     let mut control = None;
-    let mut wind_angle = 0;
-    let mut wind_power = 0;
+    let (mut wind_angle, mut wind_power, mut wind_vel) = update_wind_parameter();
+    let mut projectile_vel = Vec2::ZERO;
+    let mut projectile_pos = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
     let mut game_state = GameState::default();
     let mut remaining_millis = MAX_CTRL_TIME;
     let mut total_remaining_millis = MAX_PLAY_TIME;
@@ -70,8 +73,19 @@ pub async fn play(left: Session, right: Session) {
                                 control = Some((angle, power));
                             }
                             (GameState::LeftTurn, Packet::ThrowProjectile) => {
+                                projectile_pos = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                                projectile_vel = control
+                                    .map(|(angle, power)| {
+                                        let delta = angle as f32 / 255.0;
+                                        let radian = LEFT_START_ANGLE
+                                            + (LEFT_END_ANGLE - LEFT_START_ANGLE) * delta;
+                                        let direction = Vec2::new(radian.cos(), radian.sin());
+                                        let power = (power as f32 / 255.0) * THROW_POWER;
+                                        direction * power
+                                    })
+                                    .unwrap_or_default();
                                 game_state = GameState::ProjectileThrown;
-                                remaining_millis = 0;
+                                remaining_millis = THROW_END_TIME;
                             }
                             _ => { /* empty */ }
                         }
@@ -102,8 +116,19 @@ pub async fn play(left: Session, right: Session) {
                                 control = Some((angle, power));
                             }
                             (GameState::RightTurn, Packet::ThrowProjectile) => {
+                                projectile_pos = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                                projectile_vel = control
+                                    .map(|(angle, power)| {
+                                        let delta = angle as f32 / 255.0;
+                                        let radian = RIGHT_START_ANGLE
+                                            + (RIGHT_END_ANGLE - RIGHT_START_ANGLE) * delta;
+                                        let direction = Vec2::new(radian.cos(), radian.sin());
+                                        let power = (power as f32 / 255.0) * THROW_POWER;
+                                        direction * power
+                                    })
+                                    .unwrap_or_default();
                                 game_state = GameState::ProjectileThrown;
-                                remaining_millis = 0;
+                                remaining_millis = THROW_END_TIME;
                             }
                             _ => { /* empty */ }
                         }
@@ -136,10 +161,7 @@ pub async fn play(left: Session, right: Session) {
                     println!("Left turn ended.");
 
                     turn_counter += 1;
-                    if turn_counter > WIND_THRESHOLD {
-                        wind_angle = rand::random_range(0..255);
-                        wind_power = rand::random_range(128..255);
-                    }
+                    (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     broadcaster.broadcast(&Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
@@ -164,10 +186,7 @@ pub async fn play(left: Session, right: Session) {
                     println!("Right turn ended.");
 
                     turn_counter += 1;
-                    if turn_counter > WIND_THRESHOLD {
-                        wind_angle = rand::random_range(0..255);
-                        wind_power = rand::random_range(128..255);
-                    }
+                    (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     broadcaster.broadcast(&Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
@@ -179,31 +198,66 @@ pub async fn play(left: Session, right: Session) {
                 }
             }
             GameState::ProjectileThrown => {
-                #[cfg(not(feature = "no-debuging-log"))]
-                println!("Projectile thrown.");
+                let delta_time = elapsed_u16 as f32 / 1000.0;
+                projectile_pos += (projectile_vel + wind_vel) * delta_time;
+                projectile_vel.y += GRAVITY * delta_time;
 
-                // TODO
-
-                turn_counter += 1;
-                if turn_counter > WIND_THRESHOLD {
-                    wind_angle = rand::random_range(0..255);
-                    wind_power = rand::random_range(128..255);
+                if projectile_pos.y < LEFT_PLAYER_POS_Y {
+                    wind_vel = Vec2::ZERO;
+                    projectile_vel.x = projectile_vel.x.lerp(0.0, 0.25);
+                    projectile_pos.y = LEFT_PLAYER_POS_Y;
                 }
-                broadcaster.broadcast(&Packet::InGameTurnSetup {
-                    wind_angle,
-                    wind_power,
+
+                if projectile_pos.y <= LEFT_PLAYER_POS_Y
+                    || projectile_pos.x <= WORLD_MIN_X
+                    || projectile_pos.x >= WORLD_MAX_X
+                {
+                    remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+                }
+
+                broadcaster.broadcast(&Packet::InGameProjectileThrown {
+                    total_remaining_millis,
+                    remaining_millis,
+                    left_health,
+                    right_health,
+                    projectile_pos: projectile_pos.into(),
+                    projectile_vel: projectile_vel.into(),
                 });
 
-                game_state = match turn_counter % 2 == 0 {
-                    true => GameState::LeftTurn,
-                    false => GameState::RightTurn,
-                };
-                remaining_millis = MAX_CTRL_TIME;
-                control = None;
+                if remaining_millis == 0 {
+                    #[cfg(not(feature = "no-debuging-log"))]
+                    println!("Projectile thrown.");
+
+                    turn_counter += 1;
+                    (wind_angle, wind_power, wind_vel) = update_wind_parameter();
+                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                        wind_angle,
+                        wind_power,
+                    });
+
+                    game_state = match turn_counter % 2 == 0 {
+                        true => GameState::LeftTurn,
+                        false => GameState::RightTurn,
+                    };
+                    remaining_millis = MAX_CTRL_TIME;
+                    control = None;
+                }
             }
         }
     }
 
     #[cfg(not(feature = "no-debuging-log"))]
     println!("Game ended.");
+}
+
+fn update_wind_parameter() -> (u8, u8, Vec2) {
+    let wind_angle = rand::random_range(0..255);
+    let wind_power = rand::random_range(128..255);
+
+    let radian = (wind_angle as f32 / 255.0) * TAU;
+    let direction = Vec2::new(radian.cos(), radian.sin());
+    let power = (wind_power as f32 / 255.0) * WIND_POWER;
+    let wind_vel = direction * power;
+
+    (wind_angle, wind_power, wind_vel)
 }

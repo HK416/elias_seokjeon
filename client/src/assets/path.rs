@@ -38,6 +38,7 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
 #[rustfmt::skip] pub const IMG_PATH_LOADING_DECO: &str = concatcp!("textures/Loading_Deco.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_PATTERN_0: &str = concatcp!("textures/Pattern_0.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_PVP_INGAME_VS: &str = concatcp!("textures/PVP_Ingame_VS.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_PROJECTILE: &str = concatcp!("textures/Projectile.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_RED_DOT: &str = concatcp!("textures/Red_Dot.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_WIND_INDICATOR_ARROW: &str = concatcp!("textures/Wind_Indicator_Arrow.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_WIND_INDICATOR_DECO: &str = concatcp!("textures/Wind_Indicator_Deco.texture", QUERY, VERSION);

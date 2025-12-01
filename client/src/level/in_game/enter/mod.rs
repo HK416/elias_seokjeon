@@ -87,6 +87,9 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<Image> = asset_server.load(IMG_PATH_PVP_INGAME_VS);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_PROJECTILE);
+    loading_assets.push(handle);
+
     let handle: Handle<Image> = asset_server.load(IMG_PATH_INGAME_TIME_ICON);
     loading_assets.push(handle);
 

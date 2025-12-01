@@ -1,5 +1,7 @@
 use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent};
-use protocol::{LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y};
+use protocol::{
+    LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, PROJECTILE_SIZE, RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y,
+};
 
 use super::*;
 
@@ -209,6 +211,22 @@ fn setup_in_game_entities(
             Visibility::Visible,
             RightPlayerTrigger,
             SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let entity = commands
+        .spawn((
+            Sprite {
+                image: asset_server.load(IMG_PATH_PROJECTILE),
+                custom_size: Some(Vec2::splat(PROJECTILE_SIZE)),
+                color: Color::WHITE,
+                ..Default::default()
+            },
+            Transform::from_xyz(0.0, 0.0, 0.0),
+            Visibility::Hidden,
+            SpawnRequest,
+            Projectile,
         ))
         .id();
     loading_entities.insert(entity);

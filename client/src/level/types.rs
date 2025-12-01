@@ -453,3 +453,6 @@ pub struct LeftPlayerTrigger;
 
 #[derive(Component)]
 pub struct RightPlayerTrigger;
+
+#[derive(Component)]
+pub struct Projectile;

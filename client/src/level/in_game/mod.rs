@@ -9,7 +9,7 @@ use bevy_vector_shapes::prelude::*;
 use protocol::{
     LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_START_ANGLE, LEFT_THROW_POS_X, LEFT_THROW_POS_Y,
     MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE, RIGHT_START_ANGLE, RIGHT_THROW_POS_X,
-    RIGHT_THROW_POS_Y, THROW_RANGE,
+    RIGHT_THROW_POS_Y, THROW_END_TIME,
 };
 
 use super::*;
@@ -38,6 +38,9 @@ impl Plugin for InnerPlugin {
                     update_wind_indicator,
                     draw_range_indicator,
                     draw_range_arrow_indicator,
+                    setup_projectile.run_if(resource_added::<ProjectileObject>),
+                    update_projectile.run_if(resource_exists::<ProjectileObject>),
+                    cleanup_projectile.run_if(resource_removed::<ProjectileObject>),
                 )
                     .run_if(in_state(LevelStates::InGame)),
             );
@@ -141,16 +144,24 @@ fn handle_received_packets(
                 } => {
                     *wind = Wind::new(wind_angle, wind_power);
                     commands.remove_resource::<MouseButtonPressed>();
+                    commands.remove_resource::<ProjectileObject>();
                 }
                 Packet::InGameProjectileThrown {
                     total_remaining_millis,
+                    remaining_millis,
                     left_health,
                     right_health,
-                    ..
+                    projectile_pos,
+                    projectile_vel,
                 } => {
                     *side = PlaySide::Thrown;
                     in_game_timer.miliis = total_remaining_millis;
                     *health = PlayerHealth::new(left_health, right_health);
+                    commands.insert_resource(ProjectileObject {
+                        alpha: remaining_millis as f32 / THROW_END_TIME as f32,
+                        position: projectile_pos.into(),
+                        velocity: projectile_vel.into(),
+                    })
                 }
                 _ => { /* empty */ }
             },
@@ -386,6 +397,7 @@ fn update_hud_player_timer(
 
 fn update_camera_position(
     mut query: Query<&mut Transform, With<Camera>>,
+    projectile: Option<Res<ProjectileObject>>,
     play_side: Res<PlaySide>,
 ) {
     let Ok(mut transform) = query.single_mut() else {
@@ -395,7 +407,10 @@ fn update_camera_position(
     transform.translation.x = match *play_side {
         PlaySide::Left { .. } => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
         PlaySide::Right { .. } => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
-        PlaySide::Thrown => transform.translation.x,
+        PlaySide::Thrown => match &projectile {
+            Some(data) => data.position.x.clamp(LEFT_CAM_POS_X, RIGHT_CAM_POS_X),
+            None => transform.translation.x,
+        },
     };
 }
 
@@ -413,24 +428,24 @@ fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
         PlaySide::Left(_) => {
             painter.cap = Cap::None;
             painter.hollow = true;
-            painter.thickness = THROW_RANGE;
+            painter.thickness = THROW_RANGE * 0.5;
             painter.set_color(Color::WHITE.with_alpha(0.5));
             painter.set_translation(Vec3::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y, 0.6));
 
             let start_angle = FRAC_PI_2 - LEFT_END_ANGLE;
             let end_angle = FRAC_PI_2 - LEFT_START_ANGLE;
-            painter.arc(2.0 * THROW_RANGE, start_angle, end_angle);
+            painter.arc(THROW_RANGE, start_angle, end_angle);
         }
         PlaySide::Right(_) => {
             painter.cap = Cap::None;
             painter.hollow = true;
-            painter.thickness = THROW_RANGE;
+            painter.thickness = THROW_RANGE * 0.5;
             painter.set_color(Color::WHITE.with_alpha(0.5));
             painter.set_translation(Vec3::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, 0.6));
 
             let start_angle = FRAC_PI_2 - RIGHT_END_ANGLE;
             let end_angle = FRAC_PI_2 - RIGHT_START_ANGLE;
-            painter.arc(2.0 * THROW_RANGE, start_angle, end_angle);
+            painter.arc(THROW_RANGE, start_angle, end_angle);
         }
         PlaySide::Thrown => { /* empty */ }
     }
@@ -467,11 +482,42 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
         let angle_rad = start_angle.lerp(end_angle, t);
 
         let p = power as f32 / 255.0;
-        let length = 2.0 * THROW_RANGE * p;
+        let length = THROW_RANGE * p;
 
         let end = Vec3::new(angle_rad.cos() * length, angle_rad.sin() * length, 0.0);
 
         painter.set_translation(start_pos);
         painter.line(Vec3::ZERO, end);
+    }
+}
+
+fn setup_projectile(
+    mut query: Query<(&mut Visibility, &mut Sprite, &mut Transform), With<Projectile>>,
+    data: Res<ProjectileObject>,
+) {
+    if let Ok((mut visibility, mut sprite, mut transform)) = query.single_mut() {
+        *visibility = Visibility::Visible;
+        sprite.color = sprite.color.with_alpha(1.0);
+        transform.translation.x = data.position.x;
+        transform.translation.y = data.position.y;
+        transform.translation.z = 0.8;
+    }
+}
+
+fn update_projectile(
+    mut query: Query<(&mut Sprite, &mut Transform), With<Projectile>>,
+    data: Res<ProjectileObject>,
+) {
+    if let Ok((mut sprite, mut transform)) = query.single_mut() {
+        sprite.color = sprite.color.with_alpha(data.alpha);
+        transform.translation.x = data.position.x;
+        transform.translation.y = data.position.y;
+        transform.translation.z = 0.8;
+    }
+}
+
+fn cleanup_projectile(mut query: Query<&mut Visibility, With<Projectile>>) {
+    if let Ok(mut visibility) = query.single_mut() {
+        *visibility = Visibility::Hidden;
     }
 }

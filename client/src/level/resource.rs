@@ -251,7 +251,7 @@ impl Wind {
     }
 
     pub fn get_rotation(&self) -> Rot2 {
-        Rot2::degrees(self.angle * 360.0)
+        Rot2::degrees(self.angle * -360.0)
     }
 
     pub fn get_scale(&self) -> Vec2 {
@@ -287,4 +287,11 @@ impl Default for PlayerHealth {
             right: MAX_HEALTH,
         }
     }
+}
+
+#[derive(Resource)]
+pub struct ProjectileObject {
+    pub alpha: f32,
+    pub position: Vec2,
+    pub velocity: Vec2,
 }

@@ -106,6 +106,7 @@ pub enum Packet {
     // Server -> Client
     InGameProjectileThrown {
         total_remaining_millis: u32,
+        remaining_millis: u16,
         left_health: u16,
         right_health: u16,
         projectile_pos: (f32, f32),
@@ -132,8 +133,8 @@ pub const RIGHT_CAM_POS_X: f32 = 480.0;
 pub const LEFT_PLAYER_POS_X : f32 = -960.0;
 pub const LEFT_PLAYER_POS_Y : f32 = 340.0;
 
-pub const RIGHT_PLAYER_POS_X: f32 = 960.0;
-pub const RIGHT_PLAYER_POS_Y: f32 = 340.0;
+pub const RIGHT_PLAYER_POS_X: f32 = -LEFT_PLAYER_POS_X;
+pub const RIGHT_PLAYER_POS_Y: f32 = LEFT_PLAYER_POS_Y;
 
 pub const LEFT_THROW_POS_X: f32 = LEFT_PLAYER_POS_X;
 pub const LEFT_THROW_POS_Y: f32 = LEFT_PLAYER_POS_Y + 96.0;
@@ -147,4 +148,9 @@ pub const RIGHT_THROW_POS_Y: f32 = RIGHT_PLAYER_POS_Y + 96.0;
 pub const RIGHT_START_ANGLE: f32 = 105f32.to_radians();
 pub const RIGHT_END_ANGLE: f32 = 165f32.to_radians();
 
-pub const THROW_RANGE: f32 = 280.0;
+pub const THROW_POWER: f32 = 1000.0;
+pub const THROW_END_TIME: u16 = 3_000; // 3 seconds
+
+pub const WIND_POWER: f32 = THROW_POWER * 0.2;
+
+pub const PROJECTILE_SIZE: f32 = 64.0;
