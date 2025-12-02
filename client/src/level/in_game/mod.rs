@@ -7,9 +7,9 @@ mod switch;
 use bevy::prelude::*;
 use bevy_vector_shapes::prelude::*;
 use protocol::{
-    LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_START_ANGLE, LEFT_THROW_POS_X, LEFT_THROW_POS_Y,
-    MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE, RIGHT_START_ANGLE, RIGHT_THROW_POS_X,
-    RIGHT_THROW_POS_Y, THROW_END_TIME,
+    GRAVITY, LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_PLAYER_POS_Y, LEFT_START_ANGLE, LEFT_THROW_POS_X,
+    LEFT_THROW_POS_Y, MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE, RIGHT_START_ANGLE,
+    RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y,
 };
 
 use super::*;
@@ -34,7 +34,6 @@ impl Plugin for InnerPlugin {
                 (
                     update_hud_ingame_timer,
                     update_hud_player_timer,
-                    update_camera_position,
                     update_wind_indicator,
                     draw_range_indicator,
                     draw_range_arrow_indicator,
@@ -43,6 +42,10 @@ impl Plugin for InnerPlugin {
                     cleanup_projectile.run_if(resource_removed::<ProjectileObject>),
                 )
                     .run_if(in_state(LevelStates::InGame)),
+            )
+            .add_systems(
+                PostUpdate,
+                update_camera_position.run_if(in_state(LevelStates::InGame)),
             );
 
         #[cfg(target_arch = "wasm32")]
@@ -82,6 +85,7 @@ fn setup_resource(mut commands: Commands) {
 // --- CLEANUP SYSTEMS ---
 
 fn cleanup_resource(mut commands: Commands) {
+    commands.remove_resource::<ProjectileObject>();
     commands.remove_resource::<InGameTimer>();
     commands.remove_resource::<PlayerTimer>();
     commands.remove_resource::<PlayerHealth>();
@@ -108,6 +112,7 @@ fn handle_received_packets(
     mut health: ResMut<PlayerHealth>,
     mut player_timer: ResMut<PlayerTimer>,
     mut in_game_timer: ResMut<InGameTimer>,
+    mut projectile: Option<ResMut<ProjectileObject>>,
     mut next_state: ResMut<NextState<LevelStates>>,
     network: Res<Network>,
 ) {
@@ -157,11 +162,24 @@ fn handle_received_packets(
                     *side = PlaySide::Thrown;
                     in_game_timer.miliis = total_remaining_millis;
                     *health = PlayerHealth::new(left_health, right_health);
-                    commands.insert_resource(ProjectileObject {
-                        alpha: remaining_millis as f32 / THROW_END_TIME as f32,
-                        position: projectile_pos.into(),
-                        velocity: projectile_vel.into(),
-                    })
+                    match projectile {
+                        Some(ref mut projectile) => {
+                            projectile.add_snapshot(
+                                total_remaining_millis,
+                                remaining_millis,
+                                projectile_pos.into(),
+                                projectile_vel.into(),
+                            );
+                        }
+                        None => {
+                            commands.insert_resource(ProjectileObject::new(
+                                total_remaining_millis,
+                                remaining_millis,
+                                projectile_pos.into(),
+                                projectile_vel.into(),
+                            ));
+                        }
+                    }
                 }
                 _ => { /* empty */ }
             },
@@ -271,8 +289,8 @@ fn handle_mouse_button_released(
             network
                 .send(&Packet::UpdateThrowParams { angle, power })
                 .unwrap();
-            network.send(&Packet::ThrowProjectile).unwrap();
         }
+        network.send(&Packet::ThrowProjectile).unwrap();
     }
 }
 
@@ -395,25 +413,6 @@ fn update_hud_player_timer(
     }
 }
 
-fn update_camera_position(
-    mut query: Query<&mut Transform, With<Camera>>,
-    projectile: Option<Res<ProjectileObject>>,
-    play_side: Res<PlaySide>,
-) {
-    let Ok(mut transform) = query.single_mut() else {
-        return;
-    };
-
-    transform.translation.x = match *play_side {
-        PlaySide::Left { .. } => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
-        PlaySide::Right { .. } => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
-        PlaySide::Thrown => match &projectile {
-            Some(data) => data.position.x.clamp(LEFT_CAM_POS_X, RIGHT_CAM_POS_X),
-            None => transform.translation.x,
-        },
-    };
-}
-
 fn update_wind_indicator(mut query: Query<&mut UiTransform, With<WindIndicator>>, wind: Res<Wind>) {
     let Ok(mut transform) = query.single_mut() else {
         return;
@@ -493,31 +492,98 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
 
 fn setup_projectile(
     mut query: Query<(&mut Visibility, &mut Sprite, &mut Transform), With<Projectile>>,
-    data: Res<ProjectileObject>,
+    projectile: Res<ProjectileObject>,
 ) {
-    if let Ok((mut visibility, mut sprite, mut transform)) = query.single_mut() {
-        *visibility = Visibility::Visible;
+    if let Some(snapshot) = projectile.front()
+        && let Ok((mut visibility, mut sprite, mut transform)) = query.single_mut()
+    {
+        *visibility = Visibility::Hidden;
         sprite.color = sprite.color.with_alpha(1.0);
-        transform.translation.x = data.position.x;
-        transform.translation.y = data.position.y;
+        transform.translation.x = snapshot.position.x;
+        transform.translation.y = snapshot.position.y;
         transform.translation.z = 0.8;
     }
 }
 
 fn update_projectile(
-    mut query: Query<(&mut Sprite, &mut Transform), With<Projectile>>,
-    data: Res<ProjectileObject>,
+    mut query: Query<(&mut Sprite, &mut Visibility, &mut Transform), With<Projectile>>,
+    mut projectile: ResMut<ProjectileObject>,
+    wind: Res<Wind>,
+    time: Res<Time>,
 ) {
-    if let Ok((mut sprite, mut transform)) = query.single_mut() {
-        sprite.color = sprite.color.with_alpha(data.alpha);
-        transform.translation.x = data.position.x;
-        transform.translation.y = data.position.y;
-        transform.translation.z = 0.8;
-    }
+    let elapsed_time = time.delta().as_millis().min(u32::MAX as u128) as u32;
+    let (timepoint, prev, next) = projectile.get(elapsed_time);
+    match (prev, next) {
+        (Some(prev), Some(next)) => {
+            let range = prev.timepoint - next.timepoint;
+            let t = (prev.timepoint - timepoint) as f32 / range as f32;
+            let position = prev.position.lerp(next.position, t);
+            let alpha = projectile.get_alpha();
+
+            if let Ok((mut sprite, mut visibility, mut transform)) = query.single_mut() {
+                sprite.color = sprite.color.with_alpha(alpha);
+                *visibility = Visibility::Visible;
+                transform.translation.x = position.x;
+                transform.translation.y = position.y;
+                transform.translation.z = 0.8;
+            }
+        }
+        (Some(prev), None) => {
+            let t = prev.timepoint - timepoint;
+            let delta_seconds = t as f32 / 1000.0;
+            let mut position = prev.position;
+            let mut velocity = prev.velocity;
+            let wind_vel = wind.velocity();
+            velocity += GRAVITY * delta_seconds;
+            position += (velocity + wind_vel) * delta_seconds;
+            let alpha = projectile.get_alpha();
+
+            if position.y < LEFT_PLAYER_POS_Y {
+                position.y = LEFT_PLAYER_POS_Y;
+            }
+
+            if let Ok((mut sprite, mut visibility, mut transform)) = query.single_mut() {
+                sprite.color = sprite.color.with_alpha(alpha);
+                *visibility = Visibility::Visible;
+                transform.translation.x = position.x;
+                transform.translation.y = position.y;
+                transform.translation.z = 0.8;
+            }
+        }
+        _ => {
+            if let Ok((_, mut visibility, _)) = query.single_mut() {
+                *visibility = Visibility::Hidden;
+            }
+        }
+    };
 }
 
 fn cleanup_projectile(mut query: Query<&mut Visibility, With<Projectile>>) {
     if let Ok(mut visibility) = query.single_mut() {
         *visibility = Visibility::Hidden;
     }
+}
+
+// POSTUPDATE SYSTEMS
+
+fn update_camera_position(
+    mut query: Query<&mut Transform, (With<Camera>, Without<Projectile>)>,
+    projectile: Query<&Transform, (With<Projectile>, Without<Camera>)>,
+    play_side: Res<PlaySide>,
+) {
+    let Ok(mut transform) = query.single_mut() else {
+        return;
+    };
+
+    transform.translation.x = match *play_side {
+        PlaySide::Left { .. } => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
+        PlaySide::Right { .. } => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
+        PlaySide::Thrown => match projectile.single() {
+            Ok(transform) => transform
+                .translation
+                .x
+                .clamp(LEFT_CAM_POS_X, RIGHT_CAM_POS_X),
+            Err(_) => transform.translation.x,
+        },
+    };
 }

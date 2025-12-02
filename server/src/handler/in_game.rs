@@ -3,7 +3,6 @@ use glam::FloatExt;
 use super::*;
 
 const MAX_LOOP: usize = 100;
-const GRAVITY: f32 = -9.80665 * 50.0;
 
 struct Broadcaster {
     left: Session,
@@ -32,7 +31,7 @@ enum GameState {
 pub async fn play(left: Session, right: Session) {
     let mut broadcaster = Broadcaster::new(left, right);
 
-    const TICK: u64 = 1_000 / 60;
+    const TICK: u64 = 1_000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH;
@@ -46,6 +45,11 @@ pub async fn play(left: Session, right: Session) {
     let mut total_remaining_millis = MAX_PLAY_TIME;
     let mut interval = time::interval(PERIOD);
     let mut previous_instant = Instant::now();
+    broadcaster.broadcast(&Packet::InGameTurnSetup {
+        wind_angle,
+        wind_power,
+    });
+
     while total_remaining_millis > 0 {
         let instant = interval.tick().await;
         let elapsed = instant
@@ -199,8 +203,8 @@ pub async fn play(left: Session, right: Session) {
             }
             GameState::ProjectileThrown => {
                 let delta_time = elapsed_u16 as f32 / 1000.0;
-                projectile_pos += (projectile_vel + wind_vel) * delta_time;
                 projectile_vel.y += GRAVITY * delta_time;
+                projectile_pos += (projectile_vel + wind_vel) * delta_time;
 
                 if projectile_pos.y < LEFT_PLAYER_POS_Y {
                     wind_vel = Vec2::ZERO;

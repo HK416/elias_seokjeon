@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
+
 // Import necessary Bevy modules.
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
-use protocol::{Hero, MAX_HEALTH, uuid::Uuid};
+use protocol::{Hero, MAX_HEALTH, THROW_END_TIME, uuid::Uuid};
 
 use super::*;
 
@@ -245,17 +247,21 @@ pub struct Wind {
 impl Wind {
     pub fn new(angle: u8, power: u8) -> Self {
         Self {
-            angle: angle as f32 / 255.0,
+            angle: angle as f32 / 255.0 * TAU,
             power: power as f32 / 255.0,
         }
     }
 
     pub fn get_rotation(&self) -> Rot2 {
-        Rot2::degrees(self.angle * -360.0)
+        Rot2::degrees(-self.angle.to_degrees())
     }
 
     pub fn get_scale(&self) -> Vec2 {
         Vec2::splat(self.power)
+    }
+
+    pub fn velocity(&self) -> Vec2 {
+        Vec2::new(self.angle.cos(), self.angle.sin()) * self.power
     }
 }
 
@@ -289,9 +295,85 @@ impl Default for PlayerHealth {
     }
 }
 
-#[derive(Resource)]
-pub struct ProjectileObject {
-    pub alpha: f32,
+pub struct Snapshot {
+    pub timepoint: u32,
     pub position: Vec2,
     pub velocity: Vec2,
+}
+
+#[derive(Resource)]
+pub struct ProjectileObject {
+    total_remaining_millis: u32,
+    remaining_millis: u16,
+    snapshots: VecDeque<Snapshot>,
+}
+
+impl ProjectileObject {
+    const MAX_SNAPSHOTS: usize = 15;
+    const BUFFER_SIZE: usize = Self::MAX_SNAPSHOTS + 1;
+    const DELAY: u32 = 100;
+
+    pub fn new(
+        total_remaining_millis: u32,
+        remaining_millis: u16,
+        position: Vec2,
+        velocity: Vec2,
+    ) -> Self {
+        let mut snapshots = VecDeque::with_capacity(Self::BUFFER_SIZE);
+        snapshots.push_back(Snapshot {
+            timepoint: total_remaining_millis,
+            position,
+            velocity,
+        });
+
+        Self {
+            total_remaining_millis,
+            remaining_millis,
+            snapshots,
+        }
+    }
+
+    pub fn add_snapshot(
+        &mut self,
+        total_remaining_millis: u32,
+        remaining_millis: u16,
+        position: Vec2,
+        velocity: Vec2,
+    ) {
+        self.remaining_millis = remaining_millis;
+        self.snapshots.push_back(Snapshot {
+            timepoint: total_remaining_millis,
+            position,
+            velocity,
+        });
+        if self.snapshots.len() > Self::MAX_SNAPSHOTS {
+            self.snapshots.pop_front();
+        }
+    }
+
+    pub fn front(&self) -> Option<&Snapshot> {
+        self.snapshots.front()
+    }
+
+    pub fn get(&mut self, elapsed_time: u32) -> (u32, Option<&Snapshot>, Option<&Snapshot>) {
+        self.total_remaining_millis = self.total_remaining_millis.saturating_sub(elapsed_time);
+        let timepoint = self.total_remaining_millis + Self::DELAY;
+        let mut iter = self.snapshots.iter();
+        let mut prev = None;
+        let mut next = None;
+        while let Some(snapshot) = iter.next() {
+            if snapshot.timepoint > timepoint {
+                prev = next;
+                next = Some(snapshot);
+            } else {
+                break;
+            }
+        }
+
+        (timepoint, prev, next)
+    }
+
+    pub fn get_alpha(&self) -> f32 {
+        self.remaining_millis as f32 / THROW_END_TIME as f32
+    }
 }

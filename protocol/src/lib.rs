@@ -154,3 +154,4 @@ pub const THROW_END_TIME: u16 = 3_000; // 3 seconds
 pub const WIND_POWER: f32 = THROW_POWER * 0.2;
 
 pub const PROJECTILE_SIZE: f32 = 64.0;
+pub const GRAVITY: f32 = -9.80665 * 50.0;
