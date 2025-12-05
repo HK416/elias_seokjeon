@@ -1,3 +1,4 @@
+use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent};
 use protocol::{
     COLLIDER_DATA, LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, PROJECTILE_SIZE, RIGHT_PLAYER_POS_X,
@@ -277,6 +278,7 @@ fn setup_in_game_interface(
     player_info: &PlayerInfo,
     other_info: &OtherInfo,
 ) {
+    // --- Spawn Health Bar ---
     let entity = commands
         .spawn((
             Node {
@@ -292,74 +294,101 @@ fn setup_in_game_interface(
             UI::Root,
         ))
         .with_children(|parent| {
+            // --- Padding ---
+            let entity = parent
+                .spawn((
+                    Node {
+                        height: Val::Percent(5.0),
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+
+            // --- Health Bar ---
             let entity = parent
                 .spawn((
                     Node {
                         width: Val::Percent(100.0),
-                        height: Val::Percent(15.0),
-                        flex_direction: FlexDirection::Row,
+                        height: Val::Percent(12.5),
                         justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..Default::default()
                     },
                     Visibility::Inherited,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
+                    let texture = asset_server.load(IMG_PATH_HEALTH_HEART);
+                    let image = image_assets.get(texture.id()).unwrap();
+                    let ratio = image.aspect_ratio().ratio();
+
+                    // --- Spawn Left Health Bar ---
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                flex_direction: FlexDirection::Row,
+                                height: Val::Percent(70.0),
+                                border: UiRect::all(Val::VMin(1.0)),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
                             },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_3),
                             Visibility::Inherited,
+                            UiAnimationTarget,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
-                            let entity = parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(35.0),
-                                        border: UiRect::all(Val::VMin(1.0)),
-                                        justify_content: JustifyContent::End,
-                                        align_items: AlignItems::Center,
-                                        ..Default::default()
-                                    },
-                                    BorderRadius::all(Val::Percent(50.0)),
-                                    BorderColor::all(BORDER_GREEN_COLOR_0),
-                                    BackgroundColor(BG_GREEN_COLOR_1),
-                                    Visibility::Inherited,
-                                    SpawnRequest,
-                                ))
-                                .with_children(|parent| {
-                                    let entity = parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Percent(100.0),
-                                                height: Val::Percent(100.0),
-                                                ..Default::default()
-                                            },
-                                            BorderRadius::all(Val::Percent(50.0)),
-                                            BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
-                                            Visibility::Inherited,
-                                            RightHealthBar,
-                                            SpawnRequest,
-                                        ))
-                                        .id();
-                                    loading_entities.insert(entity);
-                                })
-                                .id();
-                            loading_entities.insert(entity);
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                LeftHealth5,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                LeftHealth4,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                LeftHealth3,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                LeftHealth2,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                LeftHealth1,
+                                parent,
+                                loading_entities,
+                            );
                         })
                         .id();
                     loading_entities.insert(entity);
 
-                    add_horizontal_space(loading_entities, parent, Val::Percent(1.0));
-
+                    // --- Spawn Timer ---
+                    add_horizontal_space(loading_entities, parent, Val::Percent(3.0));
                     let entity = parent
                         .spawn((
                             Node {
@@ -367,173 +396,91 @@ fn setup_in_game_interface(
                                 height: Val::Percent(100.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
+                                border: UiRect::all(Val::VMin(1.0)),
                                 ..Default::default()
                             },
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BorderRadius::all(Val::Percent(30.0)),
+                            BackgroundColor(BG_GREEN_COLOR_3),
                             Visibility::Inherited,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
                             let entity = parent
                                 .spawn((
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(70.0),
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::VMin(1.0)),
-                                        ..Default::default()
-                                    },
-                                    BorderColor::all(BORDER_GREEN_COLOR_0),
-                                    BorderRadius::all(Val::Percent(30.0)),
-                                    BackgroundColor(BG_GREEN_COLOR_3),
+                                    Text::new("000"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    ResizableFont::vertical(1280.0, 64.0),
+                                    TextColor::BLACK,
                                     Visibility::Inherited,
+                                    RemainingTimer,
                                     SpawnRequest,
                                 ))
-                                .with_children(|parent| {
-                                    let entity = parent
-                                        .spawn((
-                                            Text::new("000"),
-                                            TextFont::from(asset_server.load(FONT_PATH)),
-                                            ResizableFont::vertical(1280.0, 64.0),
-                                            TextColor::BLACK,
-                                            Visibility::Inherited,
-                                            HUDInGameTimer,
-                                            SpawnRequest,
-                                        ))
-                                        .id();
-                                    loading_entities.insert(entity);
-                                })
                                 .id();
                             loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);
+                    add_horizontal_space(loading_entities, parent, Val::Percent(3.0));
 
-                    add_horizontal_space(loading_entities, parent, Val::Percent(1.0));
+                    // --- Spawn Right Health Bar ---
                     let entity = parent
                         .spawn((
                             Node {
                                 width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                flex_direction: FlexDirection::Row,
+                                height: Val::Percent(70.0),
+                                border: UiRect::all(Val::VMin(1.0)),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
                                 ..Default::default()
                             },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_3),
                             Visibility::Inherited,
+                            UiAnimationTarget,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
-                            let entity = parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(35.0),
-                                        border: UiRect::all(Val::VMin(1.0)),
-                                        justify_content: JustifyContent::Start,
-                                        align_items: AlignItems::Center,
-                                        ..Default::default()
-                                    },
-                                    BorderRadius::all(Val::Percent(50.0)),
-                                    BorderColor::all(BORDER_GREEN_COLOR_0),
-                                    BackgroundColor(BG_GREEN_COLOR_1),
-                                    Visibility::Inherited,
-                                    SpawnRequest,
-                                ))
-                                .with_children(|parent| {
-                                    let entity = parent
-                                        .spawn((
-                                            Node {
-                                                width: Val::Percent(100.0),
-                                                height: Val::Percent(100.0),
-                                                ..Default::default()
-                                            },
-                                            BorderRadius::all(Val::Percent(50.0)),
-                                            BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
-                                            Visibility::Inherited,
-                                            RightHealthBar,
-                                            SpawnRequest,
-                                        ))
-                                        .id();
-                                    loading_entities.insert(entity);
-                                })
-                                .id();
-                            loading_entities.insert(entity);
-                        })
-                        .id();
-                    loading_entities.insert(entity);
-                })
-                .id();
-            loading_entities.insert(entity);
-
-            add_vertical_space(loading_entities, parent, Val::Percent(1.0));
-
-            let entity = parent
-                .spawn((
-                    Node {
-                        width: Val::Percent(40.0),
-                        height: Val::Percent(6.0),
-                        border: UiRect::all(Val::VMin(0.7)),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..Default::default()
-                    },
-                    BorderRadius::all(Val::Percent(50.0)),
-                    BorderColor::all(BORDER_GREEN_COLOR_0),
-                    BackgroundColor(BG_GREEN_COLOR_1),
-                    Visibility::Hidden,
-                    HUDPlayerTimer,
-                    SpawnRequest,
-                ))
-                .with_children(|parent| {
-                    let texture = asset_server.load(IMG_PATH_INGAME_TIME_ICON);
-                    let image = image_assets.get(&texture).unwrap();
-                    let ratio = image.aspect_ratio().ratio();
-                    let entity = parent
-                        .spawn((
-                            ImageNode::new(texture),
-                            Node {
-                                width: Val::Auto,
-                                height: Val::Percent(80.0),
-                                aspect_ratio: Some(ratio),
-                                ..Default::default()
-                            },
-                            Visibility::Inherited,
-                            SpawnRequest,
-                        ))
-                        .id();
-                    loading_entities.insert(entity);
-
-                    add_horizontal_space(loading_entities, parent, Val::Percent(5.0));
-
-                    let entity = parent
-                        .spawn((
-                            Node {
-                                width: Val::Percent(80.0),
-                                height: Val::Percent(50.0),
-                                justify_content: JustifyContent::Start,
-                                align_items: AlignItems::Center,
-                                ..Default::default()
-                            },
-                            Visibility::Inherited,
-                            SpawnRequest,
-                        ))
-                        .with_children(|parent| {
-                            let entity = parent
-                                .spawn((
-                                    Node {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(100.0),
-                                        ..Default::default()
-                                    },
-                                    BorderRadius::all(Val::Percent(50.0)),
-                                    BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
-                                    Visibility::Inherited,
-                                    PlayerTimerBar,
-                                    SpawnRequest,
-                                ))
-                                .id();
-                            loading_entities.insert(entity);
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth5,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth4,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth3,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth2,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth1,
+                                parent,
+                                loading_entities,
+                            );
                         })
                         .id();
                     loading_entities.insert(entity);
@@ -544,6 +491,7 @@ fn setup_in_game_interface(
         .id();
     loading_entities.insert(entity);
 
+    // --- Spawn Wind Indicator ---
     let entity = commands
         .spawn((
             Node {
@@ -554,6 +502,7 @@ fn setup_in_game_interface(
                 ..Default::default()
             },
             Visibility::Hidden,
+            UiAnimationTarget,
             SpawnRequest,
             UI::Root,
         ))
@@ -580,6 +529,7 @@ fn setup_in_game_interface(
         .id();
     loading_entities.insert(entity);
 
+    // --- Spawn Wind Indicator Arrow ---
     let entity = commands
         .spawn((
             Node {
@@ -590,6 +540,7 @@ fn setup_in_game_interface(
                 ..Default::default()
             },
             Visibility::Hidden,
+            UiAnimationTarget,
             SpawnRequest,
             UI::Root,
         ))
@@ -637,6 +588,7 @@ fn setup_in_game_interface(
         .id();
     loading_entities.insert(entity);
 
+    // --- Spawn ID Panel ---
     let entity = commands
         .spawn((
             Node {
@@ -647,6 +599,7 @@ fn setup_in_game_interface(
                 ..Default::default()
             },
             Visibility::Hidden,
+            UiAnimationTarget,
             SpawnRequest,
             UI::Root,
         ))
@@ -862,6 +815,31 @@ fn setup_in_game_interface(
                 .id();
             loading_entities.insert(entity);
         })
+        .id();
+    loading_entities.insert(entity);
+}
+
+fn add_health_heart<T: Component>(
+    texture: &Handle<Image>,
+    ratio: f32,
+    tag: T,
+    parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
+    loading_entities: &mut LoadingEntities,
+) {
+    let entity = parent
+        .spawn((
+            Node {
+                width: Val::Auto,
+                height: Val::Percent(80.0),
+                aspect_ratio: Some(ratio),
+                ..Default::default()
+            },
+            ImageNode::new(texture.clone()),
+            Visibility::Inherited,
+            UiAnimationTarget,
+            SpawnRequest,
+            tag,
+        ))
         .id();
     loading_entities.insert(entity);
 }

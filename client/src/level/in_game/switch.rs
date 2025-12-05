@@ -20,6 +20,7 @@ impl Plugin for InnerPlugin {
                 setup_background_patterns,
                 setup_prepare_entities,
                 setup_prepare_interface,
+                show_ingame_interface,
                 setup_ingame_interface,
             ),
         )
@@ -92,25 +93,22 @@ fn setup_prepare_interface(
 }
 
 #[allow(clippy::type_complexity)]
+fn show_ingame_interface(
+    mut query: Query<&mut Visibility, (With<InGameLevelRoot>, With<InGameLevelEntity>)>,
+) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Visible;
+    }
+}
+
 fn setup_ingame_interface(
     mut commands: Commands,
-    mut query: Query<
-        (Entity, &UI, &mut Visibility),
-        (With<InGameLevelRoot>, With<InGameLevelEntity>),
-    >,
+    query: Query<Entity, (With<InGameLevelEntity>, With<UiAnimationTarget>)>,
 ) {
-    for (entity, &ui, mut visibility) in query.iter_mut() {
-        match ui {
-            UI::Root => {
-                *visibility = Visibility::Visible;
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    SCENE_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert(UiBackOutScale::new(SCENE_DURATION, Vec2::ZERO, Vec2::ONE));
     }
 }
 

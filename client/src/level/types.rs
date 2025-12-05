@@ -434,22 +434,49 @@ impl AnimationTimer {
 }
 
 #[derive(Component)]
-pub struct HUDInGameTimer;
+pub struct UiAnimationTarget;
+
+#[derive(Component)]
+pub struct LeftHealth1;
+
+#[derive(Component)]
+pub struct LeftHealth2;
+
+#[derive(Component)]
+pub struct LeftHealth3;
+
+#[derive(Component)]
+pub struct LeftHealth4;
+
+#[derive(Component)]
+pub struct LeftHealth5;
+
+#[derive(Component)]
+pub struct RightHealth1;
+
+#[derive(Component)]
+pub struct RightHealth2;
+
+#[derive(Component)]
+pub struct RightHealth3;
+
+#[derive(Component)]
+pub struct RightHealth4;
+
+#[derive(Component)]
+pub struct RightHealth5;
+
+#[derive(Component)]
+pub struct RemainingTimer;
+
+#[derive(Component)]
+pub struct UiTurnTimer;
+
+#[derive(Component)]
+pub struct TurnTimer;
 
 #[derive(Component)]
 pub struct WindIndicator;
-
-#[derive(Component)]
-pub struct LeftHealthBar;
-
-#[derive(Component)]
-pub struct RightHealthBar;
-
-#[derive(Component)]
-pub struct HUDPlayerTimer;
-
-#[derive(Component)]
-pub struct PlayerTimerBar;
 
 #[derive(Component)]
 pub struct LeftPlayerTrigger;

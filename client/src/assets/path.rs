@@ -31,6 +31,7 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
     IMG_PATH_BG_FAIRY_4,
 ];
 
+#[rustfmt::skip] pub const IMG_PATH_HEALTH_HEART: &str = concatcp!("textures/Health_Heart.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_INGAME_TIME_ICON: &str = concatcp!("textures/Ingame_Time_Icon.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_0: &str = concatcp!("textures/Label_Deco_0.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_1: &str = concatcp!("textures/Label_Deco_1.texture", QUERY, VERSION);

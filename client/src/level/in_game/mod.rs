@@ -370,7 +370,7 @@ fn handle_cursor_movement(
 
 fn update_hud_ingame_timer(
     timer: Res<InGameTimer>,
-    mut query: Query<&mut Text, With<HUDInGameTimer>>,
+    mut query: Query<&mut Text, With<RemainingTimer>>,
 ) {
     for mut text in query.iter_mut() {
         let seconds = (timer.miliis as f32 / 1000.0).ceil() as u32;
@@ -382,8 +382,8 @@ fn update_hud_player_timer(
     timer: Res<PlayerTimer>,
     side: Res<PlaySide>,
     other_info: Res<OtherInfo>,
-    mut hud: Query<&mut Visibility, With<HUDPlayerTimer>>,
-    mut timer_bar: Query<(&mut Node, &mut BackgroundColor), With<PlayerTimerBar>>,
+    mut hud: Query<&mut Visibility, With<UiTurnTimer>>,
+    mut timer_bar: Query<(&mut Node, &mut BackgroundColor), With<TurnTimer>>,
 ) {
     let Ok(mut visibility) = hud.single_mut() else {
         return;
