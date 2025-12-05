@@ -139,6 +139,8 @@ fn handle_spine_animation_completed(
                 | CharacterAnimState::TouchEnd
                 | CharacterAnimState::SmashEnd2 => CharacterAnimState::Idle,
                 CharacterAnimState::SmashEnd1 => CharacterAnimState::SmashEnd2,
+                CharacterAnimState::InGameHit1 => CharacterAnimState::InGameHit2,
+                CharacterAnimState::InGameHit2 => CharacterAnimState::InGame,
                 _ => continue,
             };
             play_character_animation(&mut spine, *character, *anim_state);

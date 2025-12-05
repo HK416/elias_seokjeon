@@ -1,7 +1,7 @@
 use super::*;
 
 pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
-    #[cfg(not(feature = "no-debuging-log"))]
+    #[cfg(not(feature = "no-debugging-log"))]
     println!("Addr:{addr} - Current State: Init");
 
     let uuid = Uuid::new_v4();

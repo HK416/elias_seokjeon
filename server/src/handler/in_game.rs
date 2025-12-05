@@ -34,8 +34,8 @@ pub async fn play(left: Session, right: Session) {
     const TICK: u64 = 1_000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut turn_counter = 0;
-    let mut left_health = MAX_HEALTH;
-    let mut right_health = MAX_HEALTH;
+    let mut left_health = MAX_HEALTH_COUNT;
+    let mut right_health = MAX_HEALTH_COUNT;
     let mut control = None;
     let (mut wind_angle, mut wind_power, mut wind_vel) = update_wind_parameter();
     let mut projectile_vel = Vec2::ZERO;
@@ -155,13 +155,13 @@ pub async fn play(left: Session, right: Session) {
                 broadcaster.broadcast(&Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt: left_health as u8,
+                    right_health_cnt: right_health as u8,
                     control,
                 });
 
                 if remaining_millis == 0 {
-                    #[cfg(not(feature = "no-debuging-log"))]
+                    #[cfg(not(feature = "no-debugging-log"))]
                     println!("Left turn ended.");
 
                     turn_counter += 1;
@@ -180,13 +180,13 @@ pub async fn play(left: Session, right: Session) {
                 broadcaster.broadcast(&Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt: left_health as u8,
+                    right_health_cnt: right_health as u8,
                     control,
                 });
 
                 if remaining_millis == 0 {
-                    #[cfg(not(feature = "no-debuging-log"))]
+                    #[cfg(not(feature = "no-debugging-log"))]
                     println!("Right turn ended.");
 
                     turn_counter += 1;
@@ -222,14 +222,14 @@ pub async fn play(left: Session, right: Session) {
                 broadcaster.broadcast(&Packet::InGameProjectileThrown {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt: left_health as u8,
+                    right_health_cnt: right_health as u8,
                     projectile_pos: projectile_pos.into(),
                     projectile_vel: projectile_vel.into(),
                 });
 
                 if remaining_millis == 0 {
-                    #[cfg(not(feature = "no-debuging-log"))]
+                    #[cfg(not(feature = "no-debugging-log"))]
                     println!("Projectile thrown.");
 
                     turn_counter += 1;
@@ -250,7 +250,7 @@ pub async fn play(left: Session, right: Session) {
         }
     }
 
-    #[cfg(not(feature = "no-debuging-log"))]
+    #[cfg(not(feature = "no-debugging-log"))]
     println!("Game ended.");
 }
 

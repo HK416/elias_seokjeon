@@ -39,7 +39,7 @@ async fn update_internal() {
 
         // 1. Move new sessions from the global queue to the local queue.
         while let Some(n) = NEW.pop() {
-            #[cfg(not(feature = "no-debuging-log"))]
+            #[cfg(not(feature = "no-debugging-log"))]
             println!(
                 "Added Matching Queue ({:?}) - Queue Size: {}",
                 n.session,
@@ -71,13 +71,13 @@ async fn update_internal() {
                     }
                     StreamPollResult::Error(e) => {
                         println!("WebSocket disconnected ({:?}): {e}", node.session);
-                        #[cfg(not(feature = "no-debuging-log"))]
+                        #[cfg(not(feature = "no-debugging-log"))]
                         println!("Queue Size: {}", nodes.len());
                         continue 'update; // Session is removed due to error.
                     }
                     StreamPollResult::Closed => {
                         println!("WebSocket disconnected ({:?})", node.session);
-                        #[cfg(not(feature = "no-debuging-log"))]
+                        #[cfg(not(feature = "no-debugging-log"))]
                         println!("Queue Size: {}", nodes.len());
                         continue 'update; // Session is removed due to closure.
                     }
@@ -93,7 +93,7 @@ async fn update_internal() {
             let left = nodes.pop_front().unwrap().session;
             let right = nodes.pop_front().unwrap().session;
 
-            #[cfg(not(feature = "no-debuging-log"))]
+            #[cfg(not(feature = "no-debugging-log"))]
             println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
 
             tokio::spawn(sync::wait(left, right));
@@ -109,7 +109,7 @@ async fn update_internal() {
 
             if node.millis == 0 {
                 // --- Temp code ---
-                #[cfg(not(feature = "no-debuging-log"))]
+                #[cfg(not(feature = "no-debugging-log"))]
                 println!(
                     "FIXME: Single player mode is not implemented yet. ({}/{})",
                     file!(),
@@ -136,7 +136,7 @@ async fn update_internal() {
 }
 
 pub async fn regist(session: Session) {
-    #[cfg(not(feature = "no-debuging-log"))]
+    #[cfg(not(feature = "no-debugging-log"))]
     println!("{:?} - Current State: Matching", session);
     NEW.push(Node::new(session));
 }

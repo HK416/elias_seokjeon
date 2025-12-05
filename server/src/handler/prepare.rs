@@ -61,7 +61,7 @@ pub async fn wait(left: Session, right: Session) {
     }
 
     if wait_sessions.len() == 2 {
-        #[cfg(not(feature = "no-debuging-log"))]
+        #[cfg(not(feature = "no-debugging-log"))]
         println!(
             "[{:?} VS {:?}] - Both players are ready",
             wait_sessions[0].session, wait_sessions[1].session,

@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 // Import necessary Bevy modules.
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
-use protocol::{Hero, MAX_HEALTH, THROW_END_TIME, uuid::Uuid};
+use protocol::{Hero, MAX_HEALTH_COUNT, THROW_END_TIME, uuid::Uuid};
 
 use super::*;
 
@@ -235,7 +235,8 @@ pub enum PlaySide {
     Left(Option<(u8, u8)>),
     Right(Option<(u8, u8)>),
     #[default]
-    Thrown,
+    LeftThrown,
+    RightThrown,
 }
 
 #[derive(Resource)]
@@ -252,12 +253,13 @@ impl Wind {
         }
     }
 
-    pub fn get_rotation(&self) -> Rot2 {
-        Rot2::degrees(-self.angle.to_degrees())
+    pub fn get_rotation(&self, offset: f32) -> Rot2 {
+        let angle = -(self.angle + offset).to_degrees();
+        Rot2::degrees(angle)
     }
 
-    pub fn get_scale(&self) -> Vec2 {
-        Vec2::splat(self.power)
+    pub fn get_power(&self) -> f32 {
+        self.power
     }
 
     pub fn velocity(&self) -> Vec2 {
@@ -275,22 +277,25 @@ impl Default for Wind {
 }
 
 #[derive(Resource)]
-pub struct PlayerHealth {
-    pub left: u16,
-    pub right: u16,
+pub struct PlayerHealthCount {
+    pub left: usize,
+    pub right: usize,
 }
 
-impl PlayerHealth {
-    pub fn new(left: u16, right: u16) -> Self {
-        Self { left, right }
+impl PlayerHealthCount {
+    pub fn new(left: u8, right: u8) -> Self {
+        Self {
+            left: left as usize,
+            right: right as usize,
+        }
     }
 }
 
-impl Default for PlayerHealth {
+impl Default for PlayerHealthCount {
     fn default() -> Self {
         Self {
-            left: MAX_HEALTH,
-            right: MAX_HEALTH,
+            left: MAX_HEALTH_COUNT,
+            right: MAX_HEALTH_COUNT,
         }
     }
 }

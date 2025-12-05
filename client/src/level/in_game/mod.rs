@@ -45,7 +45,7 @@ impl Plugin for InnerPlugin {
             )
             .add_systems(
                 PostUpdate,
-                update_camera_position.run_if(in_state(LevelStates::InGame)),
+                (update_camera_position, check_collisions).run_if(in_state(LevelStates::InGame)),
             );
 
         #[cfg(target_arch = "wasm32")]
@@ -77,7 +77,7 @@ fn debug_label() {
 fn setup_resource(mut commands: Commands) {
     commands.insert_resource(InGameTimer::default());
     commands.insert_resource(PlayerTimer::default());
-    commands.insert_resource(PlayerHealth::default());
+    commands.insert_resource(PlayerHealthCount::default());
     commands.insert_resource(PlaySide::default());
     commands.insert_resource(Wind::default());
 }
@@ -88,7 +88,7 @@ fn cleanup_resource(mut commands: Commands) {
     commands.remove_resource::<ProjectileObject>();
     commands.remove_resource::<InGameTimer>();
     commands.remove_resource::<PlayerTimer>();
-    commands.remove_resource::<PlayerHealth>();
+    commands.remove_resource::<PlayerHealthCount>();
     commands.remove_resource::<PlaySide>();
     commands.remove_resource::<Wind>();
 }
@@ -109,7 +109,7 @@ fn handle_received_packets(
     mut commands: Commands,
     mut wind: ResMut<Wind>,
     mut side: ResMut<PlaySide>,
-    mut health: ResMut<PlayerHealth>,
+    mut health: ResMut<PlayerHealthCount>,
     mut player_timer: ResMut<PlayerTimer>,
     mut in_game_timer: ResMut<InGameTimer>,
     mut projectile: Option<ResMut<ProjectileObject>>,
@@ -122,26 +122,26 @@ fn handle_received_packets(
                 Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt,
+                    right_health_cnt,
                     control,
                 } => {
                     *side = PlaySide::Left(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *health = PlayerHealth::new(left_health, right_health);
+                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
                 }
                 Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt,
+                    right_health_cnt,
                     control,
                 } => {
                     *side = PlaySide::Right(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *health = PlayerHealth::new(left_health, right_health);
+                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
                 }
                 Packet::InGameTurnSetup {
                     wind_angle,
@@ -154,14 +154,18 @@ fn handle_received_packets(
                 Packet::InGameProjectileThrown {
                     total_remaining_millis,
                     remaining_millis,
-                    left_health,
-                    right_health,
+                    left_health_cnt,
+                    right_health_cnt,
                     projectile_pos,
                     projectile_vel,
                 } => {
-                    *side = PlaySide::Thrown;
+                    *side = match *side {
+                        PlaySide::Left(_) => PlaySide::LeftThrown,
+                        PlaySide::Right(_) => PlaySide::RightThrown,
+                        _ => *side,
+                    };
                     in_game_timer.miliis = total_remaining_millis;
-                    *health = PlayerHealth::new(left_health, right_health);
+                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
                     match projectile {
                         Some(ref mut projectile) => {
                             projectile.add_snapshot(
@@ -413,13 +417,21 @@ fn update_hud_player_timer(
     }
 }
 
-fn update_wind_indicator(mut query: Query<&mut UiTransform, With<WindIndicator>>, wind: Res<Wind>) {
+fn update_wind_indicator(
+    mut query: Query<&mut UiTransform, With<WindIndicator>>,
+    wind: Res<Wind>,
+    time: Res<Time>,
+) {
     let Ok(mut transform) = query.single_mut() else {
         return;
     };
 
-    transform.scale = wind.get_scale();
-    transform.rotation = wind.get_rotation();
+    let t = wind.get_power();
+    let cycle = time.elapsed_secs() * 20.0 * t;
+    let offset = PI * 0.025 * t * cycle.sin();
+
+    transform.scale = Vec2::splat(t);
+    transform.rotation = wind.get_rotation(offset);
 }
 
 fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
@@ -446,7 +458,7 @@ fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {
             let end_angle = FRAC_PI_2 - RIGHT_START_ANGLE;
             painter.arc(THROW_RANGE, start_angle, end_angle);
         }
-        PlaySide::Thrown => { /* empty */ }
+        _ => { /* empty */ }
     }
 }
 
@@ -454,7 +466,7 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
     let control = match *play_side {
         PlaySide::Left(control) => control,
         PlaySide::Right(control) => control,
-        PlaySide::Thrown => return,
+        _ => return,
     };
 
     if let Some((angle, power)) = control {
@@ -490,24 +502,33 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_projectile(
-    mut query: Query<(&mut Visibility, &mut Sprite, &mut Transform), With<Projectile>>,
+    mut query: Query<(
+        &mut Visibility,
+        &mut Sprite,
+        &mut Transform,
+        &mut Projectile,
+    )>,
     projectile: Res<ProjectileObject>,
 ) {
     if let Some(snapshot) = projectile.front()
-        && let Ok((mut visibility, mut sprite, mut transform)) = query.single_mut()
+        && let Ok((mut visibility, mut sprite, mut transform, mut projectile)) = query.single_mut()
     {
         *visibility = Visibility::Hidden;
         sprite.color = sprite.color.with_alpha(1.0);
+        transform.rotation = Quat::IDENTITY;
         transform.translation.x = snapshot.position.x;
         transform.translation.y = snapshot.position.y;
         transform.translation.z = 0.8;
+        projectile.hit = false;
     }
 }
 
 fn update_projectile(
     mut query: Query<(&mut Sprite, &mut Visibility, &mut Transform), With<Projectile>>,
     mut projectile: ResMut<ProjectileObject>,
+    play_side: Res<PlaySide>,
     wind: Res<Wind>,
     time: Res<Time>,
 ) {
@@ -526,6 +547,16 @@ fn update_projectile(
                 transform.translation.x = position.x;
                 transform.translation.y = position.y;
                 transform.translation.z = 0.8;
+
+                if position.y > LEFT_PLAYER_POS_Y {
+                    let angle = match *play_side {
+                        PlaySide::LeftThrown => -time.delta_secs(),
+                        PlaySide::RightThrown => time.delta_secs(),
+                        _ => 0.0,
+                    };
+
+                    transform.rotate_z(angle);
+                }
             }
         }
         (Some(prev), None) => {
@@ -538,7 +569,7 @@ fn update_projectile(
             position += (velocity + wind_vel) * delta_seconds;
             let alpha = projectile.get_alpha();
 
-            if position.y < LEFT_PLAYER_POS_Y {
+            if position.y <= LEFT_PLAYER_POS_Y {
                 position.y = LEFT_PLAYER_POS_Y;
             }
 
@@ -548,6 +579,16 @@ fn update_projectile(
                 transform.translation.x = position.x;
                 transform.translation.y = position.y;
                 transform.translation.z = 0.8;
+
+                if position.y > LEFT_PLAYER_POS_Y {
+                    let angle = match *play_side {
+                        PlaySide::LeftThrown => -time.delta_secs(),
+                        PlaySide::RightThrown => time.delta_secs(),
+                        _ => 0.0,
+                    };
+
+                    transform.rotate_z(angle);
+                }
             }
         }
         _ => {
@@ -578,7 +619,7 @@ fn update_camera_position(
     transform.translation.x = match *play_side {
         PlaySide::Left { .. } => LEFT_CAM_POS_X.lerp(transform.translation.x, 0.8),
         PlaySide::Right { .. } => RIGHT_CAM_POS_X.lerp(transform.translation.x, 0.8),
-        PlaySide::Thrown => match projectile.single() {
+        _ => match projectile.single() {
             Ok(transform) => transform
                 .translation
                 .x
@@ -586,4 +627,48 @@ fn update_camera_position(
             Err(_) => transform.translation.x,
         },
     };
+}
+
+fn check_collisions(
+    play_side: Res<PlaySide>,
+    mut spines: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    left_collider: Query<(&Collider2d, &GlobalTransform, &LeftPlayerHead)>,
+    right_collider: Query<(&Collider2d, &GlobalTransform, &RightPlayerHead)>,
+    mut projectile: Query<(&Collider2d, &GlobalTransform, &mut Projectile)>,
+) {
+    match *play_side {
+        PlaySide::LeftThrown => {
+            if let Ok((projectile_collider, projectile_transform, mut projectile)) =
+                projectile.single_mut()
+                && !projectile.hit
+                && let Ok((hero_collider, hero_transform, parent)) = right_collider.single()
+                && Collider2d::intersects(
+                    (hero_collider, hero_transform),
+                    (projectile_collider, projectile_transform),
+                )
+                && let Ok((mut spine, character, mut anim_state)) = spines.get_mut(parent.0)
+            {
+                projectile.hit = true;
+                *anim_state = CharacterAnimState::InGameHit1;
+                play_character_animation(&mut spine, *character, *anim_state);
+            }
+        }
+        PlaySide::RightThrown => {
+            if let Ok((projectile_collider, projectile_transform, mut projectile)) =
+                projectile.single_mut()
+                && !projectile.hit
+                && let Ok((hero_collider, hero_transform, parent)) = left_collider.single()
+                && Collider2d::intersects(
+                    (hero_collider, hero_transform),
+                    (projectile_collider, projectile_transform),
+                )
+                && let Ok((mut spine, character, mut anim_state)) = spines.get_mut(parent.0)
+            {
+                projectile.hit = true;
+                *anim_state = CharacterAnimState::InGameHit1;
+                play_character_animation(&mut spine, *character, *anim_state);
+            }
+        }
+        _ => { /* empty */ }
+    }
 }

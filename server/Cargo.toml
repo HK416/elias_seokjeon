@@ -20,5 +20,5 @@ protocol = { path = "../protocol" }
 
 [features]
 default = []
-no-debuging-log = []
-product = ["no-debuging-log"]
+no-debugging-log = []
+product = ["no-debugging-log"]

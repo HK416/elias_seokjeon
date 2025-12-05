@@ -9,7 +9,7 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     #[allow(unused_variables)]
     fn build(&self, app: &mut App) {
-        #[cfg(not(feature = "no-debuging-gizmo"))]
+        #[cfg(not(feature = "no-debugging-gizmo"))]
         app.add_systems(PostUpdate, (handle_collider_gizmo, draw_collider_gizmo));
     }
 }
@@ -107,7 +107,7 @@ impl Collider2d {
 
 // --- POSTUPDATE SYSTEMS ---
 
-#[cfg(not(feature = "no-debuging-gizmo"))]
+#[cfg(not(feature = "no-debugging-gizmo"))]
 fn handle_collider_gizmo(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut config_store: ResMut<GizmoConfigStore>,
@@ -119,7 +119,7 @@ fn handle_collider_gizmo(
     }
 }
 
-#[cfg(not(feature = "no-debuging-gizmo"))]
+#[cfg(not(feature = "no-debugging-gizmo"))]
 fn draw_collider_gizmo(
     mut gizmos: Gizmos,
     query: Query<(&Collider2d, &Visibility, &GlobalTransform)>,

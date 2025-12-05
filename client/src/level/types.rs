@@ -150,6 +150,9 @@ pub enum CharacterAnimState {
     TouchEnd,
     SmashEnd1,
     SmashEnd2,
+    InGame,
+    InGameHit1,
+    InGameHit2,
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq)]
@@ -455,4 +458,18 @@ pub struct LeftPlayerTrigger;
 pub struct RightPlayerTrigger;
 
 #[derive(Component)]
-pub struct Projectile;
+pub struct LeftPlayerHead(pub Entity);
+
+#[derive(Component)]
+pub struct RightPlayerHead(pub Entity);
+
+#[derive(Component)]
+pub struct Projectile {
+    pub hit: bool,
+}
+
+impl Default for Projectile {
+    fn default() -> Self {
+        Self { hit: false }
+    }
+}

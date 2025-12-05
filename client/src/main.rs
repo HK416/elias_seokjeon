@@ -40,7 +40,7 @@ fn main() {
                     ..Default::default()
                 })
                 .set(LogPlugin {
-                    level: if cfg!(feature = "no-debuging-log") {
+                    level: if cfg!(feature = "no-debugging-log") {
                         Level::WARN
                     } else {
                         Level::INFO

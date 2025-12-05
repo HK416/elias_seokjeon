@@ -105,7 +105,7 @@ pub async fn wait(left: Session, right: Session) {
         mem::swap(&mut loaded_sessions, &mut temp);
 
         if loaded_sessions.len() == 2 {
-            #[cfg(not(feature = "no-debuging-log"))]
+            #[cfg(not(feature = "no-debugging-log"))]
             println!("All players loaded!");
 
             let n0 = loaded_sessions.pop().unwrap();
@@ -128,7 +128,7 @@ pub async fn wait(left: Session, right: Session) {
 
     while let Some(n) = loaded_sessions.pop() {
         // --- Temp Code ---
-        #[cfg(not(feature = "no-debuging-log"))]
+        #[cfg(not(feature = "no-debugging-log"))]
         println!(
             "FIXME: Single player mode is not implemented yet. ({}/{})",
             file!(),

@@ -1,7 +1,7 @@
 use super::*;
 
 pub async fn update(mut session: Session) {
-    #[cfg(not(feature = "no-debuging-log"))]
+    #[cfg(not(feature = "no-debugging-log"))]
     println!("{:?} - Current State: Title", session);
 
     while let Some(result) = session.read.next().await {

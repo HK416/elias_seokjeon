@@ -1,6 +1,7 @@
 use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent};
 use protocol::{
-    LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, PROJECTILE_SIZE, RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y,
+    COLLIDER_DATA, LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, PROJECTILE_SIZE, RIGHT_PLAYER_POS_X,
+    RIGHT_PLAYER_POS_Y,
 };
 
 use super::*;
@@ -158,7 +159,7 @@ fn setup_in_game_entities(
     };
 
     let path = MODEL_PATH_HEROS.get(&left).copied().unwrap();
-    let entity = commands
+    let left_entity = commands
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
@@ -167,13 +168,14 @@ fn setup_in_game_entities(
                 visibility: Visibility::Visible,
                 ..Default::default()
             },
+            CharacterAnimState::Idle,
             Character::new(left),
         ))
         .id();
-    loading_entities.insert(entity);
+    loading_entities.insert(left_entity);
 
     let path = MODEL_PATH_HEROS.get(&right).copied().unwrap();
-    let entity = commands
+    let right_entity = commands
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
@@ -185,7 +187,7 @@ fn setup_in_game_entities(
             Character::new(right),
         ))
         .id();
-    loading_entities.insert(entity);
+    loading_entities.insert(right_entity);
 
     let entity = commands
         .spawn((
@@ -215,6 +217,37 @@ fn setup_in_game_entities(
         .id();
     loading_entities.insert(entity);
 
+    let circle = COLLIDER_DATA.get(&left).unwrap();
+    let entity = commands
+        .spawn((
+            Collider2d::Circle {
+                offset: circle.center.into(),
+                radius: circle.radius,
+            },
+            Transform::from_xyz(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y, 0.5),
+            LeftPlayerHead(left_entity),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    let circle = COLLIDER_DATA.get(&right).unwrap();
+    let entity = commands
+        .spawn((
+            Collider2d::Circle {
+                offset: circle.center.into(),
+                radius: circle.radius,
+            },
+            Transform::from_xyz(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y, 0.5),
+            RightPlayerHead(right_entity),
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    // --- Spawn Projectile ---
     let entity = commands
         .spawn((
             Sprite {
@@ -223,10 +256,14 @@ fn setup_in_game_entities(
                 color: Color::WHITE,
                 ..Default::default()
             },
+            Collider2d::Circle {
+                offset: Vec2::ZERO,
+                radius: PROJECTILE_SIZE * 0.5,
+            },
             Transform::from_xyz(0.0, 0.0, 0.0),
+            Projectile::default(),
             Visibility::Hidden,
             SpawnRequest,
-            Projectile,
         ))
         .id();
     loading_entities.insert(entity);
@@ -988,7 +1025,7 @@ fn play_animation(
 
         commands
             .entity(event.entity)
-            .insert((CharacterAnimState::Idle, SpawnRequest));
+            .insert((CharacterAnimState::InGame, SpawnRequest));
     }
 }
 

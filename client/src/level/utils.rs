@@ -94,6 +94,12 @@ pub fn play_character_animation(
         CharacterAnimState::TouchEnd => (TOUCH_END, false),
         CharacterAnimState::SmashEnd1 => (SMASH_END_1, false),
         CharacterAnimState::SmashEnd2 => (SMASH_END_2, false),
+        CharacterAnimState::InGame => match character {
+            Character::Butter => (BUTTER_IDLE, true),
+            Character::Kommy => (KOMMY_IDLE, true),
+        },
+        CharacterAnimState::InGameHit1 => (SMASH_END_1, false),
+        CharacterAnimState::InGameHit2 => (SMASH_END_2, false),
     };
 
     spine
