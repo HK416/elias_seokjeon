@@ -174,11 +174,4 @@ impl Circle {
     pub fn new(radius: f32, center: (f32, f32)) -> Self {
         Self { radius, center }
     }
-
-    pub fn intersects(&self, other: &Circle) -> bool {
-        let dx = self.center.0 - other.center.0;
-        let dy = self.center.1 - other.center.1;
-        let distance = (dx * dx + dy * dy).sqrt();
-        distance <= self.radius + other.radius
-    }
 }

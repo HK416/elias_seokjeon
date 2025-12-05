@@ -37,6 +37,10 @@ impl Plugin for InnerPlugin {
                     update_wind_indicator,
                     draw_range_indicator,
                     draw_range_arrow_indicator,
+                    update_left_health_heart
+                        .run_if(resource_exists_and_changed::<LeftPlayerHealth>),
+                    update_right_health_heart
+                        .run_if(resource_exists_and_changed::<RightPlayerHealth>),
                     setup_projectile.run_if(resource_added::<ProjectileObject>),
                     update_projectile.run_if(resource_exists::<ProjectileObject>),
                     cleanup_projectile.run_if(resource_removed::<ProjectileObject>),
@@ -77,7 +81,8 @@ fn debug_label() {
 fn setup_resource(mut commands: Commands) {
     commands.insert_resource(InGameTimer::default());
     commands.insert_resource(PlayerTimer::default());
-    commands.insert_resource(PlayerHealthCount::default());
+    commands.insert_resource(LeftPlayerHealth::default());
+    commands.insert_resource(RightPlayerHealth::default());
     commands.insert_resource(PlaySide::default());
     commands.insert_resource(Wind::default());
 }
@@ -88,7 +93,8 @@ fn cleanup_resource(mut commands: Commands) {
     commands.remove_resource::<ProjectileObject>();
     commands.remove_resource::<InGameTimer>();
     commands.remove_resource::<PlayerTimer>();
-    commands.remove_resource::<PlayerHealthCount>();
+    commands.remove_resource::<LeftPlayerHealth>();
+    commands.remove_resource::<RightPlayerHealth>();
     commands.remove_resource::<PlaySide>();
     commands.remove_resource::<Wind>();
 }
@@ -109,7 +115,8 @@ fn handle_received_packets(
     mut commands: Commands,
     mut wind: ResMut<Wind>,
     mut side: ResMut<PlaySide>,
-    mut health: ResMut<PlayerHealthCount>,
+    mut left_health: ResMut<LeftPlayerHealth>,
+    mut right_health: ResMut<RightPlayerHealth>,
     mut player_timer: ResMut<PlayerTimer>,
     mut in_game_timer: ResMut<InGameTimer>,
     mut projectile: Option<ResMut<ProjectileObject>>,
@@ -126,10 +133,17 @@ fn handle_received_packets(
                     right_health_cnt,
                     control,
                 } => {
+                    use aes_gcm::aead::rand_core::le;
+
                     *side = PlaySide::Left(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
+                    if left_health.0 != left_health_cnt as usize {
+                        left_health.0 = left_health_cnt as usize;
+                    }
+                    if right_health.0 != right_health_cnt as usize {
+                        right_health.0 = right_health_cnt as usize;
+                    }
                 }
                 Packet::InGameRightTurn {
                     total_remaining_millis,
@@ -141,7 +155,12 @@ fn handle_received_packets(
                     *side = PlaySide::Right(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;
-                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
+                    if left_health.0 != left_health_cnt as usize {
+                        left_health.0 = left_health_cnt as usize;
+                    }
+                    if right_health.0 != right_health_cnt as usize {
+                        right_health.0 = right_health_cnt as usize;
+                    }
                 }
                 Packet::InGameTurnSetup {
                     wind_angle,
@@ -165,7 +184,13 @@ fn handle_received_packets(
                         _ => *side,
                     };
                     in_game_timer.miliis = total_remaining_millis;
-                    *health = PlayerHealthCount::new(left_health_cnt, right_health_cnt);
+                    if left_health.0 != left_health_cnt as usize {
+                        left_health.0 = left_health_cnt as usize;
+                    }
+                    if right_health.0 != right_health_cnt as usize {
+                        right_health.0 = right_health_cnt as usize;
+                    }
+
                     match projectile {
                         Some(ref mut projectile) => {
                             projectile.add_snapshot(
@@ -432,6 +457,126 @@ fn update_wind_indicator(
 
     transform.scale = Vec2::splat(t);
     transform.rotation = wind.get_rotation(offset);
+}
+
+#[allow(clippy::too_many_arguments)]
+fn update_left_health_heart(
+    mut commands: Commands,
+    health_cnt: Res<LeftPlayerHealth>,
+    left_health_1: Query<Entity, With<LeftHealth1>>,
+    left_health_2: Query<Entity, With<LeftHealth2>>,
+    left_health_3: Query<Entity, With<LeftHealth3>>,
+    left_health_4: Query<Entity, With<LeftHealth4>>,
+    left_health_5: Query<Entity, With<LeftHealth5>>,
+) {
+    match health_cnt.0 {
+        4 => {
+            if let Ok(entity) = left_health_5.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        3 => {
+            if let Ok(entity) = left_health_4.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        2 => {
+            if let Ok(entity) = left_health_3.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        1 => {
+            if let Ok(entity) = left_health_2.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        0 => {
+            if let Ok(entity) = left_health_1.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        _ => { /* empty */ }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn update_right_health_heart(
+    mut commands: Commands,
+    health_cnt: Res<RightPlayerHealth>,
+    right_health_1: Query<Entity, With<RightHealth1>>,
+    right_health_2: Query<Entity, With<RightHealth2>>,
+    right_health_3: Query<Entity, With<RightHealth3>>,
+    right_health_4: Query<Entity, With<RightHealth4>>,
+    right_health_5: Query<Entity, With<RightHealth5>>,
+) {
+    match health_cnt.0 {
+        4 => {
+            if let Ok(entity) = right_health_5.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        3 => {
+            if let Ok(entity) = right_health_4.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        2 => {
+            if let Ok(entity) = right_health_3.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        1 => {
+            if let Ok(entity) = right_health_2.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        0 => {
+            if let Ok(entity) = right_health_1.single() {
+                commands.entity(entity).insert(UiSmoothScale::new(
+                    UI_POPUP_DURATION,
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                ));
+            }
+        }
+        _ => { /* empty */ }
+    }
 }
 
 fn draw_range_indicator(play_side: Res<PlaySide>, mut painter: ShapePainter) {

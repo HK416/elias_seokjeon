@@ -1,4 +1,5 @@
 use glam::FloatExt;
+use protocol::PROJECTILE_SIZE;
 
 use super::*;
 
@@ -25,7 +26,21 @@ enum GameState {
     #[default]
     LeftTurn,
     RightTurn,
-    ProjectileThrown,
+    LeftProjectileThrown {
+        hit: bool,
+    },
+    RightProjectileThrown {
+        hit: bool,
+    },
+}
+
+impl GameState {
+    pub fn is_projectile_thrown(&self) -> bool {
+        matches!(
+            self,
+            GameState::LeftProjectileThrown { .. } | GameState::RightProjectileThrown { .. }
+        )
+    }
 }
 
 pub async fn play(left: Session, right: Session) {
@@ -36,6 +51,8 @@ pub async fn play(left: Session, right: Session) {
     let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
+    let left_collider = COLLIDER_DATA.get(&broadcaster.left.hero).unwrap();
+    let right_collider = COLLIDER_DATA.get(&broadcaster.right.hero).unwrap();
     let mut control = None;
     let (mut wind_angle, mut wind_power, mut wind_vel) = update_wind_parameter();
     let mut projectile_vel = Vec2::ZERO;
@@ -60,9 +77,6 @@ pub async fn play(left: Session, right: Session) {
         previous_instant = instant;
 
         total_remaining_millis = total_remaining_millis.saturating_sub(elapsed_u32);
-        if !matches!(game_state, GameState::ProjectileThrown) {
-            remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
-        }
 
         let mut cnt = MAX_LOOP;
         'update: while cnt > 0 {
@@ -88,7 +102,7 @@ pub async fn play(left: Session, right: Session) {
                                         direction * power
                                     })
                                     .unwrap_or_default();
-                                game_state = GameState::ProjectileThrown;
+                                game_state = GameState::LeftProjectileThrown { hit: false };
                                 remaining_millis = THROW_END_TIME;
                             }
                             _ => { /* empty */ }
@@ -131,7 +145,7 @@ pub async fn play(left: Session, right: Session) {
                                         direction * power
                                     })
                                     .unwrap_or_default();
-                                game_state = GameState::ProjectileThrown;
+                                game_state = GameState::RightProjectileThrown { hit: false };
                                 remaining_millis = THROW_END_TIME;
                             }
                             _ => { /* empty */ }
@@ -152,6 +166,8 @@ pub async fn play(left: Session, right: Session) {
 
         match game_state {
             GameState::LeftTurn => {
+                remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+
                 broadcaster.broadcast(&Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
@@ -177,6 +193,8 @@ pub async fn play(left: Session, right: Session) {
                 }
             }
             GameState::RightTurn => {
+                remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+
                 broadcaster.broadcast(&Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
@@ -201,7 +219,7 @@ pub async fn play(left: Session, right: Session) {
                     control = None;
                 }
             }
-            GameState::ProjectileThrown => {
+            GameState::LeftProjectileThrown { hit } => {
                 let delta_time = elapsed_u16 as f32 / 1000.0;
                 projectile_vel.y += GRAVITY * delta_time;
                 projectile_pos += (projectile_vel + wind_vel) * delta_time;
@@ -210,6 +228,72 @@ pub async fn play(left: Session, right: Session) {
                     wind_vel = Vec2::ZERO;
                     projectile_vel.x = projectile_vel.x.lerp(0.0, 0.25);
                     projectile_pos.y = LEFT_PLAYER_POS_Y;
+                }
+
+                let mut collider_pos: Vec2 = right_collider.center.into();
+                collider_pos += Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y);
+                if !hit
+                    && projectile_pos.distance(collider_pos)
+                        <= PROJECTILE_SIZE * 0.5 + right_collider.radius
+                {
+                    game_state = GameState::LeftProjectileThrown { hit: true };
+                    right_health -= 1;
+                }
+
+                if projectile_pos.y <= LEFT_PLAYER_POS_Y
+                    || projectile_pos.x <= WORLD_MIN_X
+                    || projectile_pos.x >= WORLD_MAX_X
+                {
+                    remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
+                }
+
+                broadcaster.broadcast(&Packet::InGameProjectileThrown {
+                    total_remaining_millis,
+                    remaining_millis,
+                    left_health_cnt: left_health as u8,
+                    right_health_cnt: right_health as u8,
+                    projectile_pos: projectile_pos.into(),
+                    projectile_vel: projectile_vel.into(),
+                });
+
+                if remaining_millis == 0 {
+                    #[cfg(not(feature = "no-debugging-log"))]
+                    println!("Projectile thrown.");
+
+                    turn_counter += 1;
+                    (wind_angle, wind_power, wind_vel) = update_wind_parameter();
+                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                        wind_angle,
+                        wind_power,
+                    });
+
+                    game_state = match turn_counter % 2 == 0 {
+                        true => GameState::LeftTurn,
+                        false => GameState::RightTurn,
+                    };
+                    remaining_millis = MAX_CTRL_TIME;
+                    control = None;
+                }
+            }
+            GameState::RightProjectileThrown { hit } => {
+                let delta_time = elapsed_u16 as f32 / 1000.0;
+                projectile_vel.y += GRAVITY * delta_time;
+                projectile_pos += (projectile_vel + wind_vel) * delta_time;
+
+                if projectile_pos.y < LEFT_PLAYER_POS_Y {
+                    wind_vel = Vec2::ZERO;
+                    projectile_vel.x = projectile_vel.x.lerp(0.0, 0.25);
+                    projectile_pos.y = LEFT_PLAYER_POS_Y;
+                }
+
+                let mut collider_pos: Vec2 = left_collider.center.into();
+                collider_pos += Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y);
+                if !hit
+                    && projectile_pos.distance(collider_pos)
+                        <= PROJECTILE_SIZE * 0.5 + left_collider.radius
+                {
+                    game_state = GameState::LeftProjectileThrown { hit: true };
+                    left_health -= 1;
                 }
 
                 if projectile_pos.y <= LEFT_PLAYER_POS_Y

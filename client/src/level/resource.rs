@@ -277,26 +277,20 @@ impl Default for Wind {
 }
 
 #[derive(Resource)]
-pub struct PlayerHealthCount {
-    pub left: usize,
-    pub right: usize,
-}
+pub struct LeftPlayerHealth(pub usize);
 
-impl PlayerHealthCount {
-    pub fn new(left: u8, right: u8) -> Self {
-        Self {
-            left: left as usize,
-            right: right as usize,
-        }
+impl Default for LeftPlayerHealth {
+    fn default() -> Self {
+        Self(MAX_HEALTH_COUNT)
     }
 }
 
-impl Default for PlayerHealthCount {
+#[derive(Resource)]
+pub struct RightPlayerHealth(pub usize);
+
+impl Default for RightPlayerHealth {
     fn default() -> Self {
-        Self {
-            left: MAX_HEALTH_COUNT,
-            right: MAX_HEALTH_COUNT,
-        }
+        Self(MAX_HEALTH_COUNT)
     }
 }
 

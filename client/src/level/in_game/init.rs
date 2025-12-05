@@ -445,23 +445,7 @@ fn setup_in_game_interface(
                             add_health_heart(
                                 &texture,
                                 ratio,
-                                RightHealth5,
-                                parent,
-                                loading_entities,
-                            );
-                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
-                            add_health_heart(
-                                &texture,
-                                ratio,
-                                RightHealth4,
-                                parent,
-                                loading_entities,
-                            );
-                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
-                            add_health_heart(
-                                &texture,
-                                ratio,
-                                RightHealth3,
+                                RightHealth1,
                                 parent,
                                 loading_entities,
                             );
@@ -477,10 +461,100 @@ fn setup_in_game_interface(
                             add_health_heart(
                                 &texture,
                                 ratio,
-                                RightHealth1,
+                                RightHealth3,
                                 parent,
                                 loading_entities,
                             );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth4,
+                                parent,
+                                loading_entities,
+                            );
+                            add_horizontal_space(loading_entities, parent, Val::Percent(1.25));
+                            add_health_heart(
+                                &texture,
+                                ratio,
+                                RightHealth5,
+                                parent,
+                                loading_entities,
+                            );
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            // --- Turn Timer ---
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(40.0),
+                        height: Val::Percent(6.0),
+                        border: UiRect::all(Val::VMin(0.7)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    BorderRadius::all(Val::Percent(50.0)),
+                    BorderColor::all(BORDER_GREEN_COLOR_0),
+                    BackgroundColor(BG_GREEN_COLOR_1),
+                    Visibility::Hidden,
+                    SpawnRequest,
+                    UiTurnTimer,
+                ))
+                .with_children(|parent| {
+                    let texture = asset_server.load(IMG_PATH_INGAME_TIME_ICON);
+                    let image = image_assets.get(&texture).unwrap();
+                    let ratio = image.aspect_ratio().ratio();
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(texture),
+                            Node {
+                                width: Val::Auto,
+                                height: Val::Percent(80.0),
+                                aspect_ratio: Some(ratio),
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_horizontal_space(loading_entities, parent, Val::Percent(5.0));
+
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(80.0),
+                                height: Val::Percent(50.0),
+                                justify_content: JustifyContent::Start,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        height: Val::Percent(100.0),
+                                        ..Default::default()
+                                    },
+                                    BorderRadius::all(Val::Percent(50.0)),
+                                    BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                    TurnTimer,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
                         })
                         .id();
                     loading_entities.insert(entity);
