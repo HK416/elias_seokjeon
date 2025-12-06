@@ -67,7 +67,7 @@ pub async fn play(left: Session, right: Session) {
         wind_power,
     });
 
-    while total_remaining_millis > 0 {
+    while total_remaining_millis > 0 || game_state.is_projectile_thrown() {
         let instant = interval.tick().await;
         let elapsed = instant
             .saturating_duration_since(previous_instant)
@@ -259,6 +259,10 @@ pub async fn play(left: Session, right: Session) {
                     #[cfg(not(feature = "no-debugging-log"))]
                     println!("Projectile thrown.");
 
+                    if right_health == 0 {
+                        break;
+                    }
+
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     broadcaster.broadcast(&Packet::InGameTurnSetup {
@@ -314,6 +318,10 @@ pub async fn play(left: Session, right: Session) {
                     #[cfg(not(feature = "no-debugging-log"))]
                     println!("Projectile thrown.");
 
+                    if left_health == 0 {
+                        break;
+                    }
+
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     broadcaster.broadcast(&Packet::InGameTurnSetup {
@@ -334,6 +342,66 @@ pub async fn play(left: Session, right: Session) {
 
     #[cfg(not(feature = "no-debugging-log"))]
     println!("Game ended.");
+
+    match left_health.cmp(&right_health) {
+        std::cmp::Ordering::Less => {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Right player won!");
+
+            broadcaster.left.lose = (broadcaster.left.lose + 1).min(MAX_POINT);
+            broadcaster.right.win = (broadcaster.right.win + 1).min(MAX_POINT);
+            broadcaster.broadcast(&Packet::GameResult {
+                winner: Player {
+                    uuid: broadcaster.right.uuid,
+                    name: broadcaster.right.name.clone(),
+                    hero: broadcaster.right.hero,
+                    win: broadcaster.right.win,
+                    lose: broadcaster.right.lose,
+                },
+                loser: Player {
+                    uuid: broadcaster.left.uuid,
+                    name: broadcaster.left.name.clone(),
+                    hero: broadcaster.left.hero,
+                    win: broadcaster.left.win,
+                    lose: broadcaster.left.lose,
+                },
+            });
+        }
+        std::cmp::Ordering::Equal => {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Draw!");
+
+            broadcaster.broadcast(&Packet::GameResultDraw);
+        }
+        std::cmp::Ordering::Greater => {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Left player won!");
+
+            broadcaster.left.win = (broadcaster.left.win + 1).min(MAX_POINT);
+            broadcaster.right.lose = (broadcaster.right.lose + 1).min(MAX_POINT);
+            broadcaster.broadcast(&Packet::GameResult {
+                winner: Player {
+                    uuid: broadcaster.left.uuid,
+                    name: broadcaster.left.name.clone(),
+                    hero: broadcaster.left.hero,
+                    win: broadcaster.left.win,
+                    lose: broadcaster.left.lose,
+                },
+                loser: Player {
+                    uuid: broadcaster.right.uuid,
+                    name: broadcaster.right.name.clone(),
+                    hero: broadcaster.right.hero,
+                    win: broadcaster.right.win,
+                    lose: broadcaster.right.lose,
+                },
+            });
+        }
+    }
+
+    let session = broadcaster.left;
+    next_state(State::Title, session);
+    let session = broadcaster.right;
+    next_state(State::Title, session);
 }
 
 fn update_wind_parameter() -> (u8, u8, Vec2) {

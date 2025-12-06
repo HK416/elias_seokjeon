@@ -134,7 +134,8 @@ pub struct PlayerInfo {
     pub uuid: Uuid,
     pub name: String,
     pub hero: Hero,
-    pub score: u16,
+    pub win: u16,
+    pub lose: u16,
 }
 
 #[derive(Resource)]
@@ -142,7 +143,8 @@ pub struct OtherInfo {
     pub left_side: bool,
     pub name: String,
     pub hero: Hero,
-    pub score: u16,
+    pub win: u16,
+    pub lose: u16,
 }
 
 #[derive(Default, Resource)]
@@ -341,7 +343,9 @@ impl ProjectileObject {
         velocity: Vec2,
     ) {
         self.remaining_millis = remaining_millis;
-        let diff_t = self.total_remaining_millis.saturating_sub(total_remaining_millis);
+        let diff_t = self
+            .total_remaining_millis
+            .saturating_sub(total_remaining_millis);
         if diff_t > Self::MAX_DELAY {
             self.total_remaining_millis = total_remaining_millis;
         }

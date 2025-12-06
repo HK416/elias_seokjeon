@@ -217,10 +217,13 @@ fn setup_in_prepare_interface(
                                     let entity = parent
                                         .spawn((
                                             Node::default(),
-                                            Text::new(format!("{}pt", player_info.score)),
+                                            Text::new(format!(
+                                                "Win:{} Lose:{}",
+                                                player_info.win, player_info.lose
+                                            )),
                                             TextFont::from(asset_server.load(FONT_PATH)),
                                             TextLayout::new_with_justify(Justify::Center),
-                                            ResizableFont::vertical(1280.0, 64.0),
+                                            ResizableFont::vertical(1280.0, 48.0),
                                             TextColor::BLACK,
                                             Visibility::Inherited,
                                             SpawnRequest,
@@ -371,10 +374,13 @@ fn setup_in_prepare_interface(
                                     let entity = parent
                                         .spawn((
                                             Node::default(),
-                                            Text::new(format!("{}pt", other_info.score)),
+                                            Text::new(format!(
+                                                "Win:{} Lose:{}",
+                                                other_info.win, other_info.lose
+                                            )),
                                             TextFont::from(asset_server.load(FONT_PATH)),
                                             TextLayout::new_with_justify(Justify::Center),
-                                            ResizableFont::vertical(1280.0, 64.0),
+                                            ResizableFont::vertical(1280.0, 48.0),
                                             TextColor::BLACK,
                                             Visibility::Inherited,
                                             SpawnRequest,

@@ -137,7 +137,8 @@ fn handle_received_packets(
                         left_side,
                         name: other.name.clone(),
                         hero: other.hero,
-                        score: other.score,
+                        win: other.win,
+                        lose: other.lose,
                     });
                     next_state.set(LevelStates::SwitchToLoadGame);
                 }

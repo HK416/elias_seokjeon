@@ -133,8 +133,6 @@ fn handle_received_packets(
                     right_health_cnt,
                     control,
                 } => {
-                    use aes_gcm::aead::rand_core::le;
-
                     *side = PlaySide::Left(control);
                     in_game_timer.miliis = total_remaining_millis;
                     player_timer.miliis = remaining_millis;

@@ -40,8 +40,7 @@ impl Distribution<Hero> for StandardUniform {
     }
 }
 
-pub const DEF_SCORE: u16 = 100;
-pub const MAX_SCORE: u16 = 9_999;
+pub const MAX_POINT: u16 = 9_999;
 pub const MAX_PLAY_TIME: u32 = 180_000; // 180 seconds
 pub const MAX_CTRL_TIME: u16 = 10_000; // 10 seconds
 pub const MAX_HEALTH_COUNT: usize = 5;
@@ -49,12 +48,7 @@ pub const MAX_HEALTH_COUNT: usize = 5;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Packet {
     // Server -> Client
-    Connection {
-        uuid: Uuid,
-        name: String,
-        hero: Hero,
-        score: u16,
-    },
+    Connection(Player),
     // Client -> Server
     EnterGame,
     // Client -> Server
@@ -113,6 +107,13 @@ pub enum Packet {
         projectile_pos: (f32, f32),
         projectile_vel: (f32, f32),
     },
+    // Server -> Client
+    GameResult {
+        winner: Player,
+        loser: Player,
+    },
+    // Server -> Client
+    GameResultDraw,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -120,7 +121,8 @@ pub struct Player {
     pub uuid: Uuid,
     pub name: String,
     pub hero: Hero,
-    pub score: u16,
+    pub win: u16,
+    pub lose: u16,
 }
 
 pub const WORLD_MIN_X: f32 = -1440.0;

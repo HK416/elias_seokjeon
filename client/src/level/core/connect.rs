@@ -78,17 +78,13 @@ fn packet_receive_loop(mut commands: Commands, network: Option<Res<Network>>) {
         for result in network.receiver.try_iter() {
             match result {
                 Ok(packet) => match packet {
-                    Packet::Connection {
-                        uuid,
-                        name,
-                        hero,
-                        score,
-                    } => {
+                    Packet::Connection(p) => {
                         commands.insert_resource(PlayerInfo {
-                            uuid,
-                            name,
-                            hero,
-                            score,
+                            uuid: p.uuid,
+                            name: p.name,
+                            hero: p.hero,
+                            win: p.win,
+                            lose: p.lose,
                         });
                     }
                     _ => { /* empty */ }

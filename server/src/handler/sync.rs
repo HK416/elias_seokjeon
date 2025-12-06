@@ -20,13 +20,15 @@ pub async fn wait(left: Session, right: Session) {
             uuid: left.uuid,
             name: left.name.clone(),
             hero: left.hero,
-            score: left.score,
+            win: left.win,
+            lose: left.lose,
         },
         right: Player {
             uuid: right.uuid,
             name: right.name.clone(),
             hero: right.hero,
-            score: right.score,
+            win: right.win,
+            lose: right.lose,
         },
     };
 
