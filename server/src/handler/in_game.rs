@@ -232,10 +232,9 @@ pub async fn play(left: Session, right: Session) {
 
                 let mut collider_pos: Vec2 = right_collider.center.into();
                 collider_pos += Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y);
-                if !hit
-                    && projectile_pos.distance(collider_pos)
-                        <= PROJECTILE_SIZE * 0.5 + right_collider.radius
-                {
+                let distance_squared = (projectile_pos - collider_pos).length_squared();
+                let radius_sum = PROJECTILE_SIZE * 0.5 + right_collider.radius;
+                if !hit && distance_squared <= radius_sum * radius_sum {
                     game_state = GameState::LeftProjectileThrown { hit: true };
                     right_health -= 1;
                 }
@@ -288,10 +287,9 @@ pub async fn play(left: Session, right: Session) {
 
                 let mut collider_pos: Vec2 = left_collider.center.into();
                 collider_pos += Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y);
-                if !hit
-                    && projectile_pos.distance(collider_pos)
-                        <= PROJECTILE_SIZE * 0.5 + left_collider.radius
-                {
+                let distance_squared = (projectile_pos - collider_pos).length_squared();
+                let radius_sum = PROJECTILE_SIZE * 0.5 + left_collider.radius;
+                if !hit && distance_squared <= radius_sum * radius_sum {
                     game_state = GameState::LeftProjectileThrown { hit: true };
                     left_health -= 1;
                 }

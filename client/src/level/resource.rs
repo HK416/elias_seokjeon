@@ -311,6 +311,7 @@ impl ProjectileObject {
     const MAX_SNAPSHOTS: usize = 15;
     const BUFFER_SIZE: usize = Self::MAX_SNAPSHOTS + 1;
     const DELAY: u32 = 100;
+    const MAX_DELAY: u32 = 250;
 
     pub fn new(
         total_remaining_millis: u32,
@@ -340,6 +341,11 @@ impl ProjectileObject {
         velocity: Vec2,
     ) {
         self.remaining_millis = remaining_millis;
+        let diff_t = self.total_remaining_millis.saturating_sub(total_remaining_millis);
+        if diff_t > Self::MAX_DELAY {
+            self.total_remaining_millis = total_remaining_millis;
+        }
+
         self.snapshots.push_back(Snapshot {
             timepoint: total_remaining_millis,
             position,
