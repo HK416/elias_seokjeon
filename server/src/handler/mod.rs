@@ -6,7 +6,7 @@ pub mod sync;
 pub mod title;
 
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::VecDeque,
     f32::consts::TAU,
     fmt, mem,
     net::SocketAddr,
@@ -48,6 +48,7 @@ pub struct Session {
     hero: Hero,
     win: u16,
     lose: u16,
+    draw: u16,
     addr: SocketAddr,
     read: SplitStream<WebSocketStream<TcpStream>>,
     tx: UnboundedSender<Packet>,

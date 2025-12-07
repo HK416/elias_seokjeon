@@ -348,60 +348,69 @@ pub async fn play(left: Session, right: Session) {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Right player won!");
 
-            broadcaster.left.lose = (broadcaster.left.lose + 1).min(MAX_POINT);
-            broadcaster.right.win = (broadcaster.right.win + 1).min(MAX_POINT);
-            broadcaster.broadcast(&Packet::GameResult {
-                winner: Player {
-                    uuid: broadcaster.right.uuid,
-                    name: broadcaster.right.name.clone(),
-                    hero: broadcaster.right.hero,
-                    win: broadcaster.right.win,
-                    lose: broadcaster.right.lose,
-                },
-                loser: Player {
-                    uuid: broadcaster.left.uuid,
-                    name: broadcaster.left.name.clone(),
-                    hero: broadcaster.left.hero,
-                    win: broadcaster.left.win,
-                    lose: broadcaster.left.lose,
-                },
-            });
+            let mut left = broadcaster.left;
+            left.lose = (left.lose + 1).min(MAX_POINT);
+            left.tx
+                .send(Packet::GameResult {
+                    win: left.win,
+                    lose: left.lose,
+                    victory: false,
+                })
+                .unwrap();
+            next_state(State::Title, left);
+
+            let mut right = broadcaster.right;
+            right.win = (right.win + 1).min(MAX_POINT);
+            right
+                .tx
+                .send(Packet::GameResult {
+                    win: right.win,
+                    lose: right.lose,
+                    victory: true,
+                })
+                .unwrap();
+            next_state(State::Title, right);
         }
         std::cmp::Ordering::Equal => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Draw!");
+            let mut left = broadcaster.left;
+            left.draw = (left.draw + 1).min(MAX_POINT);
+            left.tx.send(Packet::GameResultDraw).unwrap();
+            next_state(State::Title, left);
 
-            broadcaster.broadcast(&Packet::GameResultDraw);
+            let mut right = broadcaster.right;
+            right.draw = (right.draw + 1).min(MAX_POINT);
+            right.tx.send(Packet::GameResultDraw).unwrap();
+            next_state(State::Title, right);
         }
         std::cmp::Ordering::Greater => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Left player won!");
+            let mut left = broadcaster.left;
+            left.win = (left.win + 1).min(MAX_POINT);
+            left.tx
+                .send(Packet::GameResult {
+                    win: left.win,
+                    lose: left.lose,
+                    victory: false,
+                })
+                .unwrap();
+            next_state(State::Title, left);
 
-            broadcaster.left.win = (broadcaster.left.win + 1).min(MAX_POINT);
-            broadcaster.right.lose = (broadcaster.right.lose + 1).min(MAX_POINT);
-            broadcaster.broadcast(&Packet::GameResult {
-                winner: Player {
-                    uuid: broadcaster.left.uuid,
-                    name: broadcaster.left.name.clone(),
-                    hero: broadcaster.left.hero,
-                    win: broadcaster.left.win,
-                    lose: broadcaster.left.lose,
-                },
-                loser: Player {
-                    uuid: broadcaster.right.uuid,
-                    name: broadcaster.right.name.clone(),
-                    hero: broadcaster.right.hero,
-                    win: broadcaster.right.win,
-                    lose: broadcaster.right.lose,
-                },
-            });
+            let mut right = broadcaster.right;
+            right.lose = (right.lose + 1).min(MAX_POINT);
+            right
+                .tx
+                .send(Packet::GameResult {
+                    win: right.win,
+                    lose: right.lose,
+                    victory: true,
+                })
+                .unwrap();
+            next_state(State::Title, right);
         }
     }
-
-    let session = broadcaster.left;
-    next_state(State::Title, session);
-    let session = broadcaster.right;
-    next_state(State::Title, session);
 }
 
 fn update_wind_parameter() -> (u8, u8, Vec2) {

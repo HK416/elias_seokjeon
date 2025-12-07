@@ -84,6 +84,18 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_FX_FIRECARTOON);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GAME_RESULT_DEFEAT_ICON);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GAME_RESULT_DEFEAT_TEXT);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GAME_RESULT_VICTORY_ICON);
+    loading_assets.push(handle);
+
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GAME_RESULT_VICTORY_TEXT);
+    loading_assets.push(handle);
+
     let handle: Handle<Image> = asset_server.load(IMG_PATH_HEALTH_HEART);
     loading_assets.push(handle);
 

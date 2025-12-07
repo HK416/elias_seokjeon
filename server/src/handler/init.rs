@@ -9,6 +9,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
     let hero = rand::random();
     let win = 0;
     let lose = 0;
+    let draw = 0;
     let (tx, mut rx) = unbounded_channel::<Packet>();
     let (mut write, read) = ws_stream.split();
     let write_task = tokio::spawn(async move {
@@ -29,6 +30,7 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
         hero,
         win,
         lose,
+        draw,
         addr,
         read,
         tx,

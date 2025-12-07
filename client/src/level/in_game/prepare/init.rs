@@ -17,15 +17,11 @@ impl Plugin for InnerPlugin {
             (debug_label, setup_in_prepare, setup_loading_minimi),
         )
         .add_systems(
-            OnExit(LevelStates::InitPrepareGame),
-            (cleanup_loading_resource, cleanup_sync_flags),
-        )
-        .add_systems(
             Update,
             (
                 update_spawn_progress,
                 observe_entiey_creation,
-                check_loading_progress.run_if(not(resource_exists::<SyncFlags>)),
+                check_loading_progress,
                 play_animation,
                 update_loading_minimi,
             )
@@ -412,12 +408,6 @@ fn setup_loading_minimi(
     }
 }
 
-// --- CLEANUP SYSTEMS ---
-
-fn cleanup_sync_flags(mut commands: Commands) {
-    commands.remove_resource::<SyncFlags>();
-}
-
 // --- PREUPDATE SYSTEMS ---
 
 #[cfg(target_arch = "wasm32")]
@@ -435,9 +425,6 @@ fn handle_received_packets(
                         "Failed to enter the game due to a connection timeout.",
                     ));
                     next_state.set(LevelStates::SwitchToTitleMessage);
-                }
-                Packet::PrepareInGame => {
-                    next_state.set(LevelStates::SwitchToInPrepare);
                 }
                 _ => { /* empty */ }
             },
@@ -489,14 +476,11 @@ fn observe_entiey_creation(
 }
 
 fn check_loading_progress(
-    mut commands: Commands,
     loading_entities: Res<LoadingEntities>,
-    #[cfg(target_arch = "wasm32")] network: Res<Network>,
+    mut next_state: ResMut<NextState<LevelStates>>,
 ) {
     if loading_entities.is_empty() {
-        #[cfg(target_arch = "wasm32")]
-        network.send(&Packet::GameLoadSuccess).unwrap();
-        commands.insert_resource(SyncFlags);
+        next_state.set(LevelStates::InitGameResult);
     }
 }
 

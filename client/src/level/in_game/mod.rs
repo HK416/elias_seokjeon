@@ -1,6 +1,7 @@
 mod enter;
 mod init;
 mod prepare;
+mod result;
 mod switch;
 
 // Import necessary Bevy modules.
@@ -23,6 +24,7 @@ impl Plugin for InnerPlugin {
         app.add_plugins(enter::InnerPlugin)
             .add_plugins(init::InnerPlugin)
             .add_plugins(prepare::InnerPlugin)
+            .add_plugins(result::InnerPlugin)
             .add_plugins(switch::InnerPlugin)
             .add_systems(OnEnter(LevelStates::InGame), (debug_label, setup_resource))
             .add_systems(

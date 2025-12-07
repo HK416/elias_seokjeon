@@ -62,6 +62,9 @@ pub struct InGameLevelEntity;
 pub struct InGameLevelRoot;
 
 #[derive(Component)]
+pub struct InGameResultLevelEntity;
+
+#[derive(Component)]
 pub struct OriginColor<T> {
     pub none: Color,
     pub hovered: Color,

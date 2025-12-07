@@ -31,6 +31,10 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
     IMG_PATH_BG_FAIRY_4,
 ];
 
+#[rustfmt::skip] pub const IMG_PATH_GAME_RESULT_DEFEAT_ICON: &str = concatcp!("textures/Game_Result_Defeat_Icon.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_GAME_RESULT_DEFEAT_TEXT: &str = concatcp!("textures/Game_Result_Defeat_Text.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_GAME_RESULT_VICTORY_ICON: &str = concatcp!("textures/Game_Result_Victory_Icon.texture", QUERY, VERSION);
+#[rustfmt::skip] pub const IMG_PATH_GAME_RESULT_VICTORY_TEXT: &str = concatcp!("textures/Game_Result_Victory_Text.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_HEALTH_HEART: &str = concatcp!("textures/Health_Heart.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_INGAME_TIME_ICON: &str = concatcp!("textures/Ingame_Time_Icon.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const IMG_PATH_LABEL_DECO_0: &str = concatcp!("textures/Label_Deco_0.texture", QUERY, VERSION);

@@ -109,8 +109,9 @@ pub enum Packet {
     },
     // Server -> Client
     GameResult {
-        winner: Player,
-        loser: Player,
+        win: u16,
+        lose: u16,
+        victory: bool,
     },
     // Server -> Client
     GameResultDraw,

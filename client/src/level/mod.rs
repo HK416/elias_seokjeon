@@ -77,7 +77,7 @@ pub enum LevelStates {
     SwitchToInMatchingCancel, // -> InMatchingCancel
     InMatchingCancel,         // -> InTitle, SwitchToInMatching, Error
 
-    InitPrepareGame,   // -> SwitchToTitleMessage, SwitchToInPrepare, Error
+    InitPrepareGame,   // -> SwitchToTitleMessage, InitGameResult, Error
     SwitchToInPrepare, // -> InPrepareGame, Error
     InPrepareGame,     // -> SwitchToInGame, Error
 
@@ -87,6 +87,12 @@ pub enum LevelStates {
 
     SwitchToInGame, // -> InGame, Error
     InGame,         // -> Error
+
+    InitGameResult, // -> SwitchToTitleMessage, SwitchToInPrepare, Error
+    SwitchToGameVictory,
+    SwitchToGameDefeat,
+    SwitchToGameDraw,
+    InGameResult,
 }
 
 // --- UPDATE SYSTEMS ---
