@@ -119,6 +119,7 @@ fn handle_received_packets(
     mut side: ResMut<PlaySide>,
     mut left_health: ResMut<LeftPlayerHealth>,
     mut right_health: ResMut<RightPlayerHealth>,
+    mut player_info: ResMut<PlayerInfo>,
     mut player_timer: ResMut<PlayerTimer>,
     mut in_game_timer: ResMut<InGameTimer>,
     mut projectile: Option<ResMut<ProjectileObject>>,
@@ -209,6 +210,18 @@ fn handle_received_packets(
                             ));
                         }
                     }
+                }
+                Packet::GameResult { win, lose, victory } => {
+                    player_info.win = win;
+                    player_info.lose = lose;
+                    if victory {
+                        next_state.set(LevelStates::SwitchToGameVictory);
+                    } else {
+                        next_state.set(LevelStates::SwitchToGameDefeat);
+                    }
+                }
+                Packet::GameResultDraw => {
+                    next_state.set(LevelStates::SwitchToGameDraw);
                 }
                 _ => { /* empty */ }
             },
@@ -677,7 +690,7 @@ fn update_projectile(
     wind: Res<Wind>,
     time: Res<Time>,
 ) {
-    let elapsed_time = time.delta().as_millis().min(u32::MAX as u128) as u32;
+    let elapsed_time = time.delta().as_millis().min(i32::MAX as u128) as i32;
     let (timepoint, prev, next) = projectile.get(elapsed_time);
     match (prev, next) {
         (Some(prev), Some(next)) => {

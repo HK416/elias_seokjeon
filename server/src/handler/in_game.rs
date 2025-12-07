@@ -73,10 +73,10 @@ pub async fn play(left: Session, right: Session) {
             .saturating_duration_since(previous_instant)
             .as_millis();
         let elapsed_u16 = elapsed.min(u16::MAX as u128) as u16;
-        let elapsed_u32 = elapsed.min(u32::MAX as u128) as u32;
+        let elapsed_i32 = elapsed.min(i32::MAX as u128) as i32;
         previous_instant = instant;
 
-        total_remaining_millis = total_remaining_millis.saturating_sub(elapsed_u32);
+        total_remaining_millis = total_remaining_millis - elapsed_i32;
 
         let mut cnt = MAX_LOOP;
         'update: while cnt > 0 {
@@ -294,7 +294,7 @@ pub async fn play(left: Session, right: Session) {
                 let distance_squared = (projectile_pos - collider_pos).length_squared();
                 let radius_sum = PROJECTILE_SIZE * 0.5 + left_collider.radius;
                 if !hit && distance_squared <= radius_sum * radius_sum {
-                    game_state = GameState::LeftProjectileThrown { hit: true };
+                    game_state = GameState::RightProjectileThrown { hit: true };
                     left_health -= 1;
                 }
 

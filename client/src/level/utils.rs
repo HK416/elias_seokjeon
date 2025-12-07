@@ -100,6 +100,12 @@ pub fn play_character_animation(
         },
         CharacterAnimState::InGameHit1 => (SMASH_END_1, false),
         CharacterAnimState::InGameHit2 => (SMASH_END_2, false),
+        CharacterAnimState::Happy => (HAPPY_1, true),
+        CharacterAnimState::Sad => (SAD_1, true),
+        CharacterAnimState::Blank => match character {
+            Character::Butter => (BUTTER_BLANK, true),
+            Character::Kommy => (KOMMY_BLANK, true),
+        },
     };
 
     spine

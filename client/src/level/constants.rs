@@ -21,6 +21,9 @@ pub const LOADING_BAR_COLOR: Color = Color::srgb(0.2, 0.8, 0.2);
 // --- RED ---
 #[rustfmt::skip] pub const BG_RED_COLOR_0: Color = Color::srgb(227.0 / 255.0, 96.0 / 255.0, 115.0 / 255.0);
 #[rustfmt::skip] pub const BORDER_RED_COLOR_0: Color = Color::srgb(221.0 / 255.0, 81.0 / 255.0, 100.0 / 255.0);
+// --- PURPLE ---
+#[rustfmt::skip] pub const BG_PURPLE_COLOR_0: Color = Color::srgb(110.0 / 255.0, 77.0 / 255.0, 135.0 / 255.0);
+#[rustfmt::skip] pub const BORDER_PURPLE_COLOR_0: Color = Color::srgb(58.0 / 255.0, 39.0 / 255.0, 78.0 / 255.0);
 
 pub const BALL_BONE_NAME: &str = "Character_Ball_Move";
 pub const HEAD_BONE_NAME: &str = "Character_Pat";
@@ -31,12 +34,17 @@ pub const TOUCH_IDLE: &str = "Touch_Idle";
 pub const TOUCH_END: &str = "Touch_End";
 pub const SMASH_END_1: &str = "Smash_End_1";
 pub const SMASH_END_2: &str = "Smash_End_2";
+pub const HAPPY_1: &str = "Happy_1";
+pub const SAD_1: &str = "Sad_1";
 
 pub const BUTTER_TITLE: &str = "Idle_1";
 pub const KOMMY_TITLE: &str = "Taunt_1";
 
 pub const BUTTER_IDLE: &str = "Idle_1";
 pub const KOMMY_IDLE: &str = "Idle_1";
+
+pub const BUTTER_BLANK: &str = "Panic_1";
+pub const KOMMY_BLANK: &str = "Surprise_1";
 
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;

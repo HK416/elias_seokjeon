@@ -41,7 +41,7 @@ impl Distribution<Hero> for StandardUniform {
 }
 
 pub const MAX_POINT: u16 = 9_999;
-pub const MAX_PLAY_TIME: u32 = 180_000; // 180 seconds
+pub const MAX_PLAY_TIME: i32 = 180_000; // 180 seconds
 pub const MAX_CTRL_TIME: u16 = 10_000; // 10 seconds
 pub const MAX_HEALTH_COUNT: usize = 5;
 
@@ -79,7 +79,7 @@ pub enum Packet {
     ThrowProjectile,
     // Server -> Client
     InGameLeftTurn {
-        total_remaining_millis: u32,
+        total_remaining_millis: i32,
         remaining_millis: u16,
         left_health_cnt: u8,
         right_health_cnt: u8,
@@ -87,7 +87,7 @@ pub enum Packet {
     },
     // Server -> Client
     InGameRightTurn {
-        total_remaining_millis: u32,
+        total_remaining_millis: i32,
         remaining_millis: u16,
         left_health_cnt: u8,
         right_health_cnt: u8,
@@ -100,7 +100,7 @@ pub enum Packet {
     },
     // Server -> Client
     InGameProjectileThrown {
-        total_remaining_millis: u32,
+        total_remaining_millis: i32,
         remaining_millis: u16,
         left_health_cnt: u8,
         right_health_cnt: u8,

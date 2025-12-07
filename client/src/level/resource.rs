@@ -224,7 +224,7 @@ pub struct MouseButtonPressed;
 
 #[derive(Default, Resource)]
 pub struct InGameTimer {
-    pub miliis: u32,
+    pub miliis: i32,
 }
 
 #[derive(Default, Resource)]
@@ -297,14 +297,14 @@ impl Default for RightPlayerHealth {
 }
 
 pub struct Snapshot {
-    pub timepoint: u32,
+    pub timepoint: i32,
     pub position: Vec2,
     pub velocity: Vec2,
 }
 
 #[derive(Resource)]
 pub struct ProjectileObject {
-    total_remaining_millis: u32,
+    total_remaining_millis: i32,
     remaining_millis: u16,
     snapshots: VecDeque<Snapshot>,
 }
@@ -312,11 +312,11 @@ pub struct ProjectileObject {
 impl ProjectileObject {
     const MAX_SNAPSHOTS: usize = 15;
     const BUFFER_SIZE: usize = Self::MAX_SNAPSHOTS + 1;
-    const DELAY: u32 = 100;
-    const MAX_DELAY: u32 = 250;
+    const DELAY: i32 = 100;
+    const MAX_DELAY: i32 = 250;
 
     pub fn new(
-        total_remaining_millis: u32,
+        total_remaining_millis: i32,
         remaining_millis: u16,
         position: Vec2,
         velocity: Vec2,
@@ -337,7 +337,7 @@ impl ProjectileObject {
 
     pub fn add_snapshot(
         &mut self,
-        total_remaining_millis: u32,
+        total_remaining_millis: i32,
         remaining_millis: u16,
         position: Vec2,
         velocity: Vec2,
@@ -364,8 +364,8 @@ impl ProjectileObject {
         self.snapshots.front()
     }
 
-    pub fn get(&mut self, elapsed_time: u32) -> (u32, Option<&Snapshot>, Option<&Snapshot>) {
-        self.total_remaining_millis = self.total_remaining_millis.saturating_sub(elapsed_time);
+    pub fn get(&mut self, elapsed_time: i32) -> (i32, Option<&Snapshot>, Option<&Snapshot>) {
+        self.total_remaining_millis = self.total_remaining_millis - elapsed_time;
         let timepoint = self.total_remaining_millis + Self::DELAY;
         let mut iter = self.snapshots.iter();
         let mut prev = None;

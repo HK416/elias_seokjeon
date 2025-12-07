@@ -51,6 +51,7 @@ fn setup_game_result(
     player_info: Res<PlayerInfo>,
 ) {
     let mut loading_entities = LoadingEntities::default();
+    setup_game_result_screen(&mut commands, &asset_server, &mut loading_entities);
     setup_game_result_entities(
         &mut commands,
         &asset_server,
@@ -69,9 +70,50 @@ fn setup_game_result(
         &mut loading_entities,
         &image_assets,
     );
+    setup_game_draw_interface(
+        &mut commands,
+        &asset_server,
+        &mut loading_entities,
+        &image_assets,
+    );
 
     // --- Resource Insertion ---
     commands.insert_resource(loading_entities);
+}
+
+fn setup_game_result_screen(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    loading_entities: &mut LoadingEntities,
+) {
+    const SIZE: Vec2 = Vec2::splat(240.0);
+    const NUM_HORIZONTAL: usize = (WND_WIDTH as f32 / SIZE.x).ceil() as usize;
+    const NUM_VERTICAL: usize = (WND_HEIGHT as f32 / SIZE.y).ceil() as usize;
+
+    let handle = asset_server.load(IMG_PATH_PATTERN_0);
+    let base_x = -0.5 * NUM_HORIZONTAL as f32 * SIZE.x + 0.5 * SIZE.x;
+    let base_y = 0.5 * SIZE.y;
+    for r in 0..NUM_VERTICAL {
+        for c in 0..NUM_HORIZONTAL {
+            let x = base_x + c as f32 * SIZE.x;
+            let y = base_y + r as f32 * SIZE.y;
+            let entity = commands
+                .spawn((
+                    Sprite {
+                        image: handle.clone(),
+                        custom_size: Some(SIZE),
+                        image_mode: SpriteImageMode::Scale(ScalingMode::FillCenter),
+                        ..Default::default()
+                    },
+                    Transform::from_xyz(x, y, 1.0).with_scale(Vec3::ZERO),
+                    BackgroundPattern(r + c),
+                    Visibility::Hidden,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+        }
+    }
 }
 
 fn setup_game_result_entities(
@@ -113,6 +155,7 @@ fn setup_game_victory_interface(
                 ..Default::default()
             },
             Visibility::Hidden,
+            GameResultVictory,
             SpawnRequest,
         ))
         .with_children(|parent| {
@@ -139,7 +182,7 @@ fn setup_game_victory_interface(
                             ImageNode::new(texture),
                             Node {
                                 width: Val::Auto,
-                                height: Val::Percent(15.0),
+                                height: Val::Percent(12.5),
                                 aspect_ratio: Some(ratio),
                                 ..Default::default()
                             },
@@ -155,8 +198,8 @@ fn setup_game_victory_interface(
                         .spawn((
                             Node {
                                 width: Val::Percent(50.0),
-                                height: Val::Percent(5.0),
-                                border: UiRect::all(Val::VMin(1.0)),
+                                height: Val::Percent(3.0),
+                                border: UiRect::all(Val::VMin(0.75)),
                                 ..Default::default()
                             },
                             BorderRadius::all(Val::Percent(50.0)),
@@ -170,7 +213,7 @@ fn setup_game_victory_interface(
                     loading_entities.insert(entity);
 
                     // --- Padding ---
-                    add_vertical_space(loading_entities, parent, Val::Percent(40.0));
+                    add_vertical_space(loading_entities, parent, Val::Percent(60.0));
 
                     // --- Game Result ---
                     let texture = asset_server.load(IMG_PATH_GAME_RESULT_VICTORY_TEXT);
@@ -248,6 +291,7 @@ fn setup_game_defeat_interface(
                 ..Default::default()
             },
             Visibility::Hidden,
+            GameResultDefeat,
             SpawnRequest,
         ))
         .with_children(|parent| {
@@ -274,7 +318,7 @@ fn setup_game_defeat_interface(
                             ImageNode::new(texture),
                             Node {
                                 width: Val::Auto,
-                                height: Val::Percent(15.0),
+                                height: Val::Percent(12.5),
                                 aspect_ratio: Some(ratio),
                                 ..Default::default()
                             },
@@ -290,8 +334,8 @@ fn setup_game_defeat_interface(
                         .spawn((
                             Node {
                                 width: Val::Percent(50.0),
-                                height: Val::Percent(5.0),
-                                border: UiRect::all(Val::VMin(1.0)),
+                                height: Val::Percent(3.0),
+                                border: UiRect::all(Val::VMin(0.75)),
                                 ..Default::default()
                             },
                             BorderRadius::all(Val::Percent(50.0)),
@@ -305,10 +349,146 @@ fn setup_game_defeat_interface(
                     loading_entities.insert(entity);
 
                     // --- Padding ---
-                    add_vertical_space(loading_entities, parent, Val::Percent(40.0));
+                    add_vertical_space(loading_entities, parent, Val::Percent(60.0));
 
                     // --- Game Result ---
                     let texture = asset_server.load(IMG_PATH_GAME_RESULT_DEFEAT_TEXT);
+                    let image = image_assets.get(texture.id()).unwrap();
+                    let ratio = image.aspect_ratio().ratio();
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(texture),
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(ratio),
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            UiAnimationTarget,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    // --- Information Text ---
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(10.0),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::FlexStart,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            UiAnimationTarget,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Text::new("Press Any Key To Continue"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 48.0),
+                                    TranslatableText("continue".into()),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+        })
+        .id();
+    loading_entities.insert(entity);
+}
+
+fn setup_game_draw_interface(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    loading_entities: &mut LoadingEntities,
+    image_assets: &Assets<Image>,
+) {
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            GameResultDraw,
+            SpawnRequest,
+        ))
+        .with_children(|parent| {
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(40.0),
+                        height: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    // --- Icon ---
+                    let texture = asset_server.load(IMG_PATH_GAME_RESULT_VICTORY_ICON);
+                    let image = image_assets.get(texture.id()).unwrap();
+                    let ratio = image.aspect_ratio().ratio();
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(texture),
+                            Node {
+                                width: Val::Auto,
+                                height: Val::Percent(12.5),
+                                aspect_ratio: Some(ratio),
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            UiAnimationTarget,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    // --- Bar ---
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(50.0),
+                                height: Val::Percent(3.0),
+                                border: UiRect::all(Val::VMin(0.75)),
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(50.0)),
+                            BorderColor::all(BORDER_PURPLE_COLOR_0),
+                            BackgroundColor(BG_PURPLE_COLOR_0),
+                            Visibility::Inherited,
+                            UiAnimationTarget,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    // --- Padding ---
+                    add_vertical_space(loading_entities, parent, Val::Percent(60.0));
+
+                    // --- Game Result ---
+                    let texture = asset_server.load(IMG_PATH_GAME_RESULT_DRAW_TEXT);
                     let image = image_assets.get(texture.id()).unwrap();
                     let ratio = image.aspect_ratio().ratio();
                     let entity = parent

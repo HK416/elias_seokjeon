@@ -65,6 +65,15 @@ pub struct InGameLevelRoot;
 pub struct InGameResultLevelEntity;
 
 #[derive(Component)]
+pub struct GameResultVictory;
+
+#[derive(Component)]
+pub struct GameResultDefeat;
+
+#[derive(Component)]
+pub struct GameResultDraw;
+
+#[derive(Component)]
 pub struct OriginColor<T> {
     pub none: Color,
     pub hovered: Color,
@@ -156,6 +165,9 @@ pub enum CharacterAnimState {
     InGame,
     InGameHit1,
     InGameHit2,
+    Happy,
+    Sad,
+    Blank,
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq)]
