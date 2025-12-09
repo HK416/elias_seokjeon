@@ -17,23 +17,20 @@ impl Plugin for InnerPlugin {
             (
                 debug_label,
                 setup_scene_timer,
-                setup_background_patterns,
+                setup_enter_game_patterns,
                 setup_prepare_entities,
                 setup_prepare_interface,
-                show_ingame_interface,
+                show_ingame_entities,
                 setup_ingame_interface,
             ),
         )
-        .add_systems(
-            OnExit(LevelStates::SwitchToInGame),
-            (cleanup_scene_timer, cleanup_prepare_interface),
-        )
+        .add_systems(OnExit(LevelStates::SwitchToInGame), cleanup_scene_timer)
         .add_systems(
             Update,
             (
                 update_scene_timer,
-                update_background_patterns,
-                update_prepare_entity,
+                update_enter_game_patterns,
+                update_prepare_spines,
             )
                 .run_if(in_state(LevelStates::SwitchToInGame)),
         );
@@ -50,7 +47,7 @@ fn setup_scene_timer(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
 }
 
-fn setup_background_patterns(
+fn setup_enter_game_patterns(
     mut commands: Commands,
     query: Query<(Entity, &BackgroundPattern), With<EnterGameLevelEntity>>,
 ) {
@@ -64,9 +61,10 @@ fn setup_background_patterns(
 
 fn setup_prepare_entities(
     mut commands: Commands,
-    query: Query<Entity, (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
+    mut query: Query<(Entity, &mut Spine), With<InPrepareLevelEntity>>,
 ) {
-    for entity in query.iter() {
+    for (entity, mut spine) in query.iter_mut() {
+        spine.skeleton.color_mut().set_a(1.0);
         commands
             .entity(entity)
             .insert(FadeEffect::new(SCENE_DURATION));
@@ -76,24 +74,17 @@ fn setup_prepare_entities(
 #[allow(clippy::type_complexity)]
 fn setup_prepare_interface(
     mut commands: Commands,
-    query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
+    query: Query<Entity, (With<UiAnimationTarget>, With<InPrepareLevelEntity>)>,
 ) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::Root => {
-                commands.entity(entity).insert(UiSmoothScale::new(
-                    SCENE_DURATION,
-                    Vec2::ONE,
-                    Vec2::ZERO,
-                ));
-            }
-            _ => { /* empty */ }
-        }
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert(UiSmoothScale::new(SCENE_DURATION, Vec2::ONE, Vec2::ZERO));
     }
 }
 
 #[allow(clippy::type_complexity)]
-fn show_ingame_interface(
+fn show_ingame_entities(
     mut query: Query<&mut Visibility, (With<InGameLevelRoot>, With<InGameLevelEntity>)>,
 ) {
     for mut visibility in query.iter_mut() {
@@ -103,7 +94,7 @@ fn show_ingame_interface(
 
 fn setup_ingame_interface(
     mut commands: Commands,
-    query: Query<Entity, (With<InGameLevelEntity>, With<UiAnimationTarget>)>,
+    query: Query<Entity, (With<UiAnimationTarget>, With<InGameLevelEntity>)>,
 ) {
     for entity in query.iter() {
         commands
@@ -116,21 +107,6 @@ fn setup_ingame_interface(
 
 fn cleanup_scene_timer(mut commands: Commands) {
     commands.remove_resource::<SceneTimer>();
-}
-
-#[allow(clippy::type_complexity)]
-fn cleanup_prepare_interface(
-    mut commands: Commands,
-    query: Query<(Entity, &UI), (With<InGameLevelRoot>, With<InPrepareLevelEntity>)>,
-) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::Root => {
-                commands.entity(entity).despawn();
-            }
-            _ => { /* empty */ }
-        }
-    }
 }
 
 // --- UPDATE SYSTEMS ---
@@ -146,7 +122,7 @@ fn update_scene_timer(
     }
 }
 
-fn update_background_patterns(
+fn update_enter_game_patterns(
     mut commands: Commands,
     mut query: Query<(Entity, &mut SmoothScale, &mut Transform), With<EnterGameLevelEntity>>,
     time: Res<Time>,
@@ -160,14 +136,14 @@ fn update_background_patterns(
     }
 }
 
-fn update_prepare_entity(
+fn update_prepare_spines(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut FadeEffect, &mut Spine)>,
+    mut query: Query<(Entity, &mut FadeEffect, &mut Spine), With<InPrepareLevelEntity>>,
     time: Res<Time>,
 ) {
     for (entity, mut fade_in, mut spine) in query.iter_mut() {
         fade_in.tick(time.delta_secs());
-        spine.0.skeleton.color_mut().set_a(1.0 - fade_in.progress());
+        spine.skeleton.color_mut().set_a(1.0 - fade_in.progress());
         if fade_in.is_finished() {
             commands.entity(entity).despawn();
         }

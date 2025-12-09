@@ -23,7 +23,7 @@ impl Plugin for InnerPlugin {
             .add_systems(
                 OnExit(LevelStates::InOption),
                 (
-                    hide_interface,
+                    hide_option_interfaces,
                     cleanup_resource,
                     #[cfg(target_arch = "wasm32")]
                     save_volume_options,
@@ -31,21 +31,25 @@ impl Plugin for InnerPlugin {
             )
             .add_systems(
                 PreUpdate,
-                (handle_keyboard_inputs, handle_button_interaction)
+                (
+                    handle_keyboard_inputs,
+                    handle_pn_button_pressed,
+                    handle_locale_button_pressed,
+                    handle_volume_button_pressed,
+                    handle_volume_button_pressed_for_moblie,
+                    handle_volume_button_released,
+                    handle_volume_button_released_for_moblie,
+                )
                     .run_if(in_state(LevelStates::InOption)),
             )
             .add_systems(
                 Update,
                 (
-                    handle_slider_pressed,
-                    handle_slider_pressed_for_moblie,
-                    handle_slider_release,
-                    handle_slider_release_for_moblie,
                     handle_spine_animation_completed,
                     update_wave_animation,
-                    update_volume_value,
-                    update_slider_cursor,
-                    update_slider_cursor_for_moblie,
+                    update_volume_text,
+                    update_volume_slider,
+                    update_volume_slider_for_moblie,
                 )
                     .run_if(in_state(LevelStates::InOption)),
             );
@@ -70,9 +74,8 @@ fn init_selected_slider_flag(mut commands: Commands) {
 
 // --- CLEANUP SYSTEMS ---
 
-#[allow(clippy::type_complexity)]
-fn hide_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<OptionLevelEntity>)>,
+fn hide_option_interfaces(
+    mut query: Query<&mut Visibility, (With<OptionLevelEntity>, With<TitleLevelRoot>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
@@ -105,42 +108,62 @@ fn handle_keyboard_inputs(
 }
 
 #[allow(clippy::type_complexity)]
-fn handle_button_interaction(
-    mut locale: ResMut<Locale>,
+fn handle_pn_button_pressed(
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &PNButton, &Interaction),
         (With<OptionLevelEntity>, With<Button>),
     >,
 ) {
-    for (entity, &ui, interaction) in interaction_query.iter_mut() {
+    for (entity, &pn_button, interaction) in interaction_query.iter_mut() {
         update_button_visual(
             entity,
-            match (ui, *locale) {
-                (UI::LocaleButtonEn, Locale::En)
-                | (UI::LocaleButtonJa, Locale::Ja)
-                | (UI::LocaleButtonKo, Locale::Ko) => &Interaction::Pressed,
-                _ => interaction,
-            },
+            interaction,
             &children_query,
             &mut text_color_query,
             &mut button_color_query,
         );
 
-        match (ui, interaction) {
-            (UI::PositiveButton, Interaction::Pressed) => {
+        match (pn_button, interaction) {
+            (PNButton::Positive, Interaction::Pressed) => {
                 next_state.set(LevelStates::InTitle);
             }
-            (UI::LocaleButtonEn, Interaction::Pressed) => {
+            _ => { /* empty */ }
+        }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+fn handle_locale_button_pressed(
+    mut locale: ResMut<Locale>,
+    children_query: Query<&Children>,
+    mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
+    mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
+    mut interaction_query: Query<
+        (Entity, &LocaleButton, &Interaction),
+        (With<OptionLevelEntity>, With<Button>),
+    >,
+) {
+    for (entity, &locale_button, interaction) in interaction_query.iter_mut() {
+        update_button_visual(
+            entity,
+            interaction,
+            &children_query,
+            &mut text_color_query,
+            &mut button_color_query,
+        );
+
+        match (locale_button, interaction) {
+            (LocaleButton::En, Interaction::Pressed) => {
                 *locale = Locale::En;
             }
-            (UI::LocaleButtonJa, Interaction::Pressed) => {
+            (LocaleButton::Ja, Interaction::Pressed) => {
                 *locale = Locale::Ja;
             }
-            (UI::LocaleButtonKo, Interaction::Pressed) => {
+            (LocaleButton::Ko, Interaction::Pressed) => {
                 *locale = Locale::Ko;
             }
             _ => { /* empty */ }
@@ -149,19 +172,19 @@ fn handle_button_interaction(
 }
 
 #[allow(clippy::type_complexity)]
-fn handle_slider_pressed(
+fn handle_volume_button_pressed(
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &VolumeSlider, &Interaction),
         (With<OptionLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    for (entity, &ui, &interaction) in interaction_query.iter() {
-        match (ui, interaction) {
-            (UI::BackgroundVolumeSlider, Interaction::Pressed)
-            | (UI::EffectVolumeSlider, Interaction::Pressed)
-            | (UI::VoiceVolumeSlider, Interaction::Pressed) => {
-                selected.set(ui, entity, 0);
+    for (entity, &volume_slider, &interaction) in interaction_query.iter() {
+        match (volume_slider, interaction) {
+            (VolumeSlider::Background, Interaction::Pressed)
+            | (VolumeSlider::Effect, Interaction::Pressed)
+            | (VolumeSlider::Voice, Interaction::Pressed) => {
+                selected.set(volume_slider, entity, 0);
                 break;
             }
             _ => { /* empty */ }
@@ -170,22 +193,22 @@ fn handle_slider_pressed(
 }
 
 #[allow(clippy::type_complexity)]
-fn handle_slider_pressed_for_moblie(
+fn handle_volume_button_pressed_for_moblie(
     touches: Res<Touches>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &VolumeSlider, &Interaction),
         (With<OptionLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    for touch in touches.iter_just_pressed() {
-        for (entity, &ui, &interaction) in interaction_query.iter() {
-            match (ui, interaction) {
-                (UI::BackgroundVolumeSlider, Interaction::Pressed)
-                | (UI::EffectVolumeSlider, Interaction::Pressed)
-                | (UI::VoiceVolumeSlider, Interaction::Pressed) => {
-                    selected.set(ui, entity, touch.id());
-                    return;
+    if let Some(touch) = touches.iter_just_pressed().last() {
+        for (entity, &volume_slider, &interaction) in interaction_query.iter() {
+            match (volume_slider, interaction) {
+                (VolumeSlider::Background, Interaction::Pressed)
+                | (VolumeSlider::Effect, Interaction::Pressed)
+                | (VolumeSlider::Voice, Interaction::Pressed) => {
+                    selected.set(volume_slider, entity, touch.id());
+                    break;
                 }
                 _ => { /* empty */ }
             }
@@ -193,7 +216,7 @@ fn handle_slider_pressed_for_moblie(
     }
 }
 
-fn handle_slider_release(
+fn handle_volume_button_released(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut selected: ResMut<SelectedSliderCursor>,
 ) {
@@ -202,7 +225,7 @@ fn handle_slider_release(
     }
 }
 
-fn handle_slider_release_for_moblie(
+fn handle_volume_button_released_for_moblie(
     touches: Res<Touches>,
     mut selected: ResMut<SelectedSliderCursor>,
 ) {
@@ -215,30 +238,29 @@ fn handle_slider_release_for_moblie(
 
 // --- UPDATE SYSTEMS ---
 
-fn update_volume_value(
+fn update_volume_text(
     system_volume: Res<SystemVolume>,
-    mut query: Query<(&UI, &mut Text), With<OptionLevelEntity>>,
+    mut query: Query<(&VolumeLevelTextId, &mut Text), With<OptionLevelEntity>>,
 ) {
-    for (ui, mut text) in query.iter_mut() {
-        match ui {
-            UI::BackgroundVolume => {
+    for (volume, mut text) in query.iter_mut() {
+        match volume {
+            VolumeLevelTextId::Background => {
                 let percentage = system_volume.get_background().to_linear() * 100.0;
                 *text = Text::new(format!("{}", percentage as u8));
             }
-            UI::EffectVolume => {
+            VolumeLevelTextId::Effect => {
                 let percentage = system_volume.get_effect().to_linear() * 100.0;
                 *text = Text::new(format!("{}", percentage as u8));
             }
-            UI::VoiceVolume => {
+            VolumeLevelTextId::Voice => {
                 let percentage = system_volume.get_voice().to_linear() * 100.0;
                 *text = Text::new(format!("{}", percentage as u8));
             }
-            _ => { /* empty */ }
         }
     }
 }
 
-fn update_slider_cursor(
+fn update_volume_slider(
     windows: Query<&Window>,
     slider_query: Query<(&ComputedNode, &UiGlobalTransform), With<OptionLevelEntity>>,
     mut handler_query: Query<(&mut Node, &ChildOf), With<OptionLevelEntity>>,
@@ -248,7 +270,7 @@ fn update_slider_cursor(
 ) {
     let Ok(window) = windows.single() else { return };
 
-    if let Some((ui, entity, _)) = selected.get()
+    if let Some((slider, entity, _)) = selected.get()
         && let Some(point) = window.physical_cursor_position()
         && let Ok(child_of) = parent_query.get(entity)
         && let Ok((mut node, child_of)) = handler_query.get_mut(child_of.parent())
@@ -257,16 +279,15 @@ fn update_slider_cursor(
     {
         let p = (norm.x + 0.5).clamp(0.0, 1.0);
         node.left = Val::Percent(p * 100.0);
-        match ui {
-            UI::BackgroundVolumeSlider => system_volume.background = (p * 255.0) as u8,
-            UI::EffectVolumeSlider => system_volume.effect = (p * 255.0) as u8,
-            UI::VoiceVolumeSlider => system_volume.voice = (p * 255.0) as u8,
-            _ => { /* empty */ }
+        match slider {
+            VolumeSlider::Background => system_volume.background = (p * 255.0) as u8,
+            VolumeSlider::Effect => system_volume.effect = (p * 255.0) as u8,
+            VolumeSlider::Voice => system_volume.voice = (p * 255.0) as u8,
         }
     }
 }
 
-fn update_slider_cursor_for_moblie(
+fn update_volume_slider_for_moblie(
     windows: Query<&Window>,
     slider_query: Query<(&ComputedNode, &UiGlobalTransform), With<OptionLevelEntity>>,
     mut handler_query: Query<(&mut Node, &ChildOf), With<OptionLevelEntity>>,
@@ -277,7 +298,7 @@ fn update_slider_cursor_for_moblie(
 ) {
     let Ok(window) = windows.single() else { return };
 
-    if let Some((ui, entity, touch_id)) = selected.get()
+    if let Some((slider, entity, touch_id)) = selected.get()
         && let Some(touch) = touches.get_pressed(touch_id)
         && let Ok(child_of) = parent_query.get(entity)
         && let Ok((mut node, child_of)) = handler_query.get_mut(child_of.parent())
@@ -287,11 +308,10 @@ fn update_slider_cursor_for_moblie(
     {
         let p = (norm.x + 0.5).clamp(0.0, 1.0);
         node.left = Val::Percent(p * 100.0);
-        match ui {
-            UI::BackgroundVolumeSlider => system_volume.background = (p * 255.0) as u8,
-            UI::EffectVolumeSlider => system_volume.effect = (p * 255.0) as u8,
-            UI::VoiceVolumeSlider => system_volume.voice = (p * 255.0) as u8,
-            _ => { /* empty */ }
+        match slider {
+            VolumeSlider::Background => system_volume.background = (p * 255.0) as u8,
+            VolumeSlider::Effect => system_volume.effect = (p * 255.0) as u8,
+            VolumeSlider::Voice => system_volume.voice = (p * 255.0) as u8,
         }
     }
 }

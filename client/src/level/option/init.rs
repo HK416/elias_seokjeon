@@ -74,7 +74,6 @@ fn setup_option_interface(
             },
             BackgroundColor(Color::BLACK.with_alpha(0.5)),
             Visibility::Hidden,
-            UI::Root,
             SpawnRequest,
             ZIndex(3),
         ))
@@ -94,8 +93,8 @@ fn setup_option_interface(
                     BorderColor::all(BORDER_GREEN_COLOR_1),
                     BackgroundColor(BG_GREEN_COLOR_1),
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
-                    UI::Modal,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -138,7 +137,7 @@ fn setup_option_interface(
                         loading_entities,
                         parent,
                         percentage,
-                        UI::BackgroundVolumeSlider,
+                        VolumeSlider::Background,
                         Val::Percent(90.0),
                         Val::Percent(10.0),
                         |commands| {
@@ -161,8 +160,8 @@ fn setup_option_interface(
                                 TextLayout::new_with_justify(Justify::Center),
                                 TextColor::BLACK,
                                 ResizableFont::vertical(1280.0, 54.0),
+                                VolumeLevelTextId::Background,
                                 Visibility::Inherited,
-                                UI::BackgroundVolume,
                             ));
                         },
                     );
@@ -172,7 +171,7 @@ fn setup_option_interface(
                         loading_entities,
                         parent,
                         percentage,
-                        UI::EffectVolumeSlider,
+                        VolumeSlider::Effect,
                         Val::Percent(90.0),
                         Val::Percent(10.0),
                         |commands| {
@@ -195,8 +194,8 @@ fn setup_option_interface(
                                 TextLayout::new_with_justify(Justify::Center),
                                 TextColor::BLACK,
                                 ResizableFont::vertical(1280.0, 54.0),
+                                VolumeLevelTextId::Effect,
                                 Visibility::Inherited,
-                                UI::EffectVolume,
                             ));
                         },
                     );
@@ -206,7 +205,7 @@ fn setup_option_interface(
                         loading_entities,
                         parent,
                         percentage,
-                        UI::VoiceVolumeSlider,
+                        VolumeSlider::Voice,
                         Val::Percent(90.0),
                         Val::Percent(10.0),
                         |commands| {
@@ -229,8 +228,8 @@ fn setup_option_interface(
                                 TextLayout::new_with_justify(Justify::Center),
                                 TextColor::BLACK,
                                 ResizableFont::vertical(1280.0, 54.0),
+                                VolumeLevelTextId::Voice,
                                 Visibility::Inherited,
-                                UI::VoiceVolume,
                             ));
                         },
                     );
@@ -265,8 +264,8 @@ fn setup_option_interface(
                             OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
                             BorderColor::all(BORDER_YELLO_COLOR_0),
                             BackgroundColor(BG_YELLO_COLOR_0),
-                            UI::PositiveButton,
                             Visibility::Inherited,
+                            PNButton::Positive,
                             SpawnRequest,
                             Button,
                         ))
@@ -302,7 +301,7 @@ fn add_volume_controller<LabelFn, VolumeFn>(
     loading_entities: &mut LoadingEntities,
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
     percentage: f32,
-    slider_handle: UI,
+    slider_handle: VolumeSlider,
     width: Val,
     height: Val,
     label_func: LabelFn,
@@ -487,8 +486,8 @@ fn add_locale_buttons(
                         .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
                     BorderColor::all(border_color),
                     BackgroundColor(inner_color),
-                    UI::LocaleButtonEn,
                     Visibility::Inherited,
+                    LocaleButton::En,
                     SpawnRequest,
                     Button,
                 ))
@@ -528,8 +527,8 @@ fn add_locale_buttons(
                         .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
                     BorderColor::all(border_color),
                     BackgroundColor(inner_color),
-                    UI::LocaleButtonJa,
                     Visibility::Inherited,
+                    LocaleButton::Ja,
                     SpawnRequest,
                     Button,
                 ))
@@ -569,8 +568,8 @@ fn add_locale_buttons(
                         .with_pressed(pressed_color.unwrap_or(inner_color.darker(0.3))),
                     BorderColor::all(border_color),
                     BackgroundColor(inner_color),
-                    UI::LocaleButtonKo,
                     Visibility::Inherited,
+                    LocaleButton::Ko,
                     SpawnRequest,
                     Button,
                 ))

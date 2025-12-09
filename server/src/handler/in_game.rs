@@ -393,7 +393,7 @@ pub async fn play(left: Session, right: Session) {
                 .send(Packet::GameResult {
                     win: left.win,
                     lose: left.lose,
-                    victory: false,
+                    victory: true,
                 })
                 .unwrap();
             next_state(State::Title, left);
@@ -405,7 +405,7 @@ pub async fn play(left: Session, right: Session) {
                 .send(Packet::GameResult {
                     win: right.win,
                     lose: right.lose,
-                    victory: true,
+                    victory: false,
                 })
                 .unwrap();
             next_state(State::Title, right);

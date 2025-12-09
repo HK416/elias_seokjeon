@@ -16,9 +16,9 @@ impl Plugin for InnerPlugin {
             OnEnter(LevelStates::SwitchToInOption),
             (
                 debug_label,
-                show_interface,
+                show_option_entities,
                 setup_scene_timer,
-                setup_ui_animation,
+                setup_option_interfaces,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToInOption), cleanup_scene_timer)
@@ -35,9 +35,8 @@ fn debug_label() {
     info!("Current Level: SwitchToInOption");
 }
 
-#[allow(clippy::type_complexity)]
-fn show_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<OptionLevelEntity>)>,
+fn show_option_entities(
+    mut query: Query<&mut Visibility, (With<OptionLevelEntity>, With<TitleLevelRoot>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
@@ -48,21 +47,14 @@ fn setup_scene_timer(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
 }
 
-fn setup_ui_animation(
+fn setup_option_interfaces(
     mut commands: Commands,
-    query: Query<(Entity, &UI), With<OptionLevelEntity>>,
+    query: Query<Entity, (With<UiAnimationTarget>, With<OptionLevelEntity>)>,
 ) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::Modal => {
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    SCENE_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert(UiBackOutScale::new(SCENE_DURATION, Vec2::ZERO, Vec2::ONE));
     }
 }
 

@@ -291,7 +291,6 @@ fn setup_in_game_interface(
             },
             Visibility::Hidden,
             SpawnRequest,
-            UI::Root,
         ))
         .with_children(|parent| {
             // --- Padding ---
@@ -403,6 +402,7 @@ fn setup_in_game_interface(
                             BorderRadius::all(Val::Percent(30.0)),
                             BackgroundColor(BG_GREEN_COLOR_3),
                             Visibility::Inherited,
+                            UiAnimationTarget,
                             SpawnRequest,
                         ))
                         .with_children(|parent| {
@@ -578,7 +578,6 @@ fn setup_in_game_interface(
             Visibility::Hidden,
             UiAnimationTarget,
             SpawnRequest,
-            UI::Root,
         ))
         .with_children(|parent| {
             let texture = asset_server.load(IMG_PATH_WIND_INDICATOR_DECO);
@@ -616,7 +615,6 @@ fn setup_in_game_interface(
             Visibility::Hidden,
             UiAnimationTarget,
             SpawnRequest,
-            UI::Root,
         ))
         .with_children(|parent| {
             let entity = parent
@@ -675,7 +673,6 @@ fn setup_in_game_interface(
             Visibility::Hidden,
             UiAnimationTarget,
             SpawnRequest,
-            UI::Root,
         ))
         .with_children(|parent| {
             let handle = asset_server.load(IMG_PATH_ID_PANEL);
@@ -1002,57 +999,6 @@ fn play_animation(
 ) {
     for event in spine_ready_event.read() {
         let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
-
-        // let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
-        // let (bone, bone_index) = spine
-        //     .skeleton
-        //     .bones()
-        //     .enumerate()
-        //     .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
-        //     .unwrap();
-        // commands.spawn((
-        //     Collider2d::Circle {
-        //         offset: (0.0, 0.0).into(),
-        //         radius: 60.0,
-        //     },
-        //     ColliderType::Ball,
-        //     TargetSpine::new(event.entity),
-        //     TargetSpineBone::new(bone_entity, bone_index),
-        //     SpineBoneOriginPosition {
-        //         local: bone.position().into(),
-        //         world: bone.world_position().into(),
-        //     },
-        //     Transform::IDENTITY,
-        //     GlobalTransform::IDENTITY,
-        //     InGameLevelEntity,
-        //     InGameLevelRoot,
-        // ));
-
-        // let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
-        // let (bone, bone_index) = spine
-        //     .skeleton
-        //     .bones()
-        //     .enumerate()
-        //     .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
-        //     .unwrap();
-        // commands.entity(bone_entity).insert((
-        //     Collider2d::Circle {
-        //         offset: (0.0, 0.0).into(),
-        //         radius: 80.0,
-        //     },
-        //     ColliderType::Head,
-        //     TargetSpine::new(event.entity),
-        //     TargetSpineBone::new(bone_entity, bone_index),
-        //     SpineBoneOriginPosition {
-        //         local: bone.position().into(),
-        //         world: bone.world_position().into(),
-        //     },
-        //     Transform::IDENTITY,
-        //     GlobalTransform::IDENTITY,
-        //     InGameLevelEntity,
-        //     InGameLevelRoot,
-        // ));
-
         let Spine(SkeletonController {
             skeleton,
             animation_state,

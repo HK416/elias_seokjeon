@@ -63,7 +63,6 @@ fn setup_matching_cancel_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(4),
@@ -84,8 +83,8 @@ fn setup_matching_cancel_interface(
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(BG_GREEN_COLOR_3),
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
-                    UI::Modal,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -149,8 +148,8 @@ fn setup_matching_cancel_interface(
                                     OriginColor::<BackgroundColor>::new(BG_RED_COLOR_0),
                                     BorderColor::all(BORDER_RED_COLOR_0),
                                     BackgroundColor(BG_RED_COLOR_0),
-                                    UI::PositiveButton,
                                     Visibility::Inherited,
+                                    PNButton::Positive,
                                     SpawnRequest,
                                     Button,
                                 ))
@@ -190,8 +189,8 @@ fn setup_matching_cancel_interface(
                                     OriginColor::<BackgroundColor>::new(BG_YELLO_COLOR_0),
                                     BorderColor::all(BORDER_YELLO_COLOR_0),
                                     BackgroundColor(BG_YELLO_COLOR_0),
-                                    UI::NegativeButton,
                                     Visibility::Inherited,
+                                    PNButton::Negative,
                                     SpawnRequest,
                                     Button,
                                 ))

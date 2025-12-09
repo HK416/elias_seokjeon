@@ -22,17 +22,9 @@ impl Plugin for InnerPlugin {
             .add_plugins(message::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InTitle),
-                (
-                    debug_label,
-                    show_entities,
-                    show_interface,
-                    setup_title_screen,
-                ),
+                (debug_label, show_title_entities, setup_camera),
             )
-            .add_systems(
-                OnExit(LevelStates::InTitle),
-                (hide_entities, hide_interface),
-            )
+            .add_systems(OnExit(LevelStates::InTitle), hide_title_entities)
             .add_systems(
                 PreUpdate,
                 (handle_button_interaction, handle_mouse_input)
@@ -69,24 +61,15 @@ fn debug_label() {
 }
 
 #[allow(clippy::type_complexity)]
-fn show_entities(
-    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleLevelEntity>, Without<UI>)>,
+fn show_title_entities(
+    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleLevelEntity>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }
 }
 
-#[allow(clippy::type_complexity)]
-fn show_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<TitleLevelEntity>)>,
-) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
-}
-
-fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camera2d>>) {
+fn setup_camera(mut commands: Commands, camera_query: Query<(), With<Camera2d>>) {
     if camera_query.is_empty() {
         commands.spawn((
             Camera2d,
@@ -99,7 +82,6 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
                 },
                 ..OrthographicProjection::default_2d()
             }),
-            TitleLevelRoot,
         ));
     }
 }
@@ -107,25 +89,15 @@ fn setup_title_screen(mut commands: Commands, camera_query: Query<(), With<Camer
 // --- CLEANUP SYSTEMS ---
 
 #[allow(clippy::type_complexity)]
-fn hide_entities(
+fn hide_title_entities(
     mut query: Query<
         &mut Visibility,
         (
             With<TitleLevelRoot>,
             With<TitleLevelEntity>,
-            Without<UI>,
             Without<TitleBackground>,
         ),
     >,
-) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Hidden;
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn hide_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<TitleLevelEntity>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
@@ -143,11 +115,11 @@ fn handle_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &TitleButton, &Interaction),
         (Changed<Interaction>, With<TitleLevelEntity>, With<Button>),
     >,
 ) {
-    for (entity, ui, interaction) in interaction_query.iter_mut() {
+    for (entity, button, interaction) in interaction_query.iter_mut() {
         update_button_visual(
             entity,
             interaction,
@@ -156,16 +128,16 @@ fn handle_button_interaction(
             &mut button_color_query,
         );
 
-        match (ui, interaction) {
-            (UI::InTitleGameStartButton, Interaction::Pressed) => {
+        match (button, interaction) {
+            (TitleButton::GameStart, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network);
                 next_state.set(LevelStates::SwitchToInMatching);
             }
-            (UI::InTitleOptionButton, Interaction::Pressed) => {
+            (TitleButton::Option, Interaction::Pressed) => {
                 next_state.set(LevelStates::SwitchToInOption);
             }
-            (UI::InTitleHowToPlayButton, Interaction::Pressed) => {}
+            (TitleButton::HowToPlay, Interaction::Pressed) => {}
             _ => { /* empty */ }
         }
     }
@@ -362,7 +334,7 @@ fn update_spine_bone_position(
 
 fn update_collider_transform(
     transform_query: Query<&GlobalTransform>,
-    mut query: Query<(&mut Transform, &TargetSpineBone)>,
+    mut query: Query<(&mut Transform, &TargetSpineBone), With<TitleLevelEntity>>,
 ) {
     for (mut transform, target_spine_bone) in query.iter_mut() {
         let bone_transform = transform_query.get(target_spine_bone.entity).unwrap();

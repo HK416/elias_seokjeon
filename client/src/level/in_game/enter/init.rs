@@ -42,14 +42,14 @@ fn debug_label() {
 
 fn setup_enter_game(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut loading_entities = LoadingEntities::default();
-    setup_enter_game_screen(&mut commands, &asset_server, &mut loading_entities);
-    setup_enter_game_interface(&mut commands, &asset_server, &mut loading_entities);
+    setup_enter_game_patterns(&mut commands, &asset_server, &mut loading_entities);
+    setup_enter_game_interfaces(&mut commands, &asset_server, &mut loading_entities);
 
     // --- Resource Insertion ---
     commands.insert_resource(loading_entities);
 }
 
-fn setup_enter_game_screen(
+fn setup_enter_game_patterns(
     commands: &mut Commands,
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
@@ -83,7 +83,7 @@ fn setup_enter_game_screen(
     }
 }
 
-fn setup_enter_game_interface(
+fn setup_enter_game_interfaces(
     commands: &mut Commands,
     asset_server: &AssetServer,
     loading_entities: &mut LoadingEntities,
@@ -98,7 +98,6 @@ fn setup_enter_game_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(4),
@@ -123,8 +122,8 @@ fn setup_enter_game_interface(
                         border: UiRect::all(Val::VMin(2.0)),
                         ..Default::default()
                     },
-                    UI::EnterGameLoadingBar,
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
@@ -179,7 +178,6 @@ fn setup_enter_game_interface(
                 ..Default::default()
             },
             Transform::from_scale(Vec3::splat(0.01)),
-            UI::EnterGameLoadingBackground,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(3),
@@ -208,8 +206,8 @@ fn setup_enter_game_interface(
                     BorderRadius::all(Val::Percent(50.0)),
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(Color::BLACK),
-                    UI::EnterGameLoadingBar,
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {

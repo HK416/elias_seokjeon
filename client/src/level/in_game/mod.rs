@@ -26,7 +26,15 @@ impl Plugin for InnerPlugin {
             .add_plugins(prepare::InnerPlugin)
             .add_plugins(result::InnerPlugin)
             .add_plugins(switch::InnerPlugin)
-            .add_systems(OnEnter(LevelStates::InGame), (debug_label, setup_resource))
+            .add_systems(
+                OnEnter(LevelStates::InGame),
+                (
+                    debug_label,
+                    setup_resource,
+                    cleanup_title_assets,
+                    cleanup_title_entities,
+                ),
+            )
             .add_systems(
                 OnExit(LevelStates::InGame),
                 (cleanup_resource, reset_camera_position),
@@ -87,6 +95,16 @@ fn setup_resource(mut commands: Commands) {
     commands.insert_resource(RightPlayerHealth::default());
     commands.insert_resource(PlaySide::default());
     commands.insert_resource(Wind::default());
+}
+
+fn cleanup_title_assets(mut commands: Commands) {
+    commands.remove_resource::<TitleAssets>();
+}
+
+fn cleanup_title_entities(mut commands: Commands, query: Query<Entity, With<TitleLevelRoot>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
 }
 
 // --- CLEANUP SYSTEMS ---
@@ -766,8 +784,8 @@ fn cleanup_projectile(mut query: Query<&mut Visibility, With<Projectile>>) {
 // POSTUPDATE SYSTEMS
 
 fn update_camera_position(
-    mut query: Query<&mut Transform, (With<Camera>, Without<Projectile>)>,
-    projectile: Query<&Transform, (With<Projectile>, Without<Camera>)>,
+    mut query: Query<&mut Transform, (With<Camera2d>, Without<Projectile>)>,
+    projectile: Query<&Transform, (With<Projectile>, Without<Camera2d>)>,
     play_side: Res<PlaySide>,
 ) {
     let Ok(mut transform) = query.single_mut() else {

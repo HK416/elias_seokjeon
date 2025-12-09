@@ -43,8 +43,16 @@ fn debug_label() {
     info!("Current Level: InPrepareGame");
 }
 
+#[allow(clippy::type_complexity)]
 fn hide_loading_interfaces(
-    mut query: Query<&mut Visibility, (With<EnterGameLevelEntity>, With<UI>)>,
+    mut query: Query<
+        &mut Visibility,
+        (
+            Without<BackgroundPattern>,
+            With<EnterGameLevelEntity>,
+            With<TitleLevelRoot>,
+        ),
+    >,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;

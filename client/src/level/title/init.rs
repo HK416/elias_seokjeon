@@ -129,7 +129,6 @@ fn setup_title_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
         ))
@@ -261,7 +260,7 @@ fn setup_title_interface(
                             OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
                             BorderColor::all(BORDER_GREEN_COLOR_0),
                             BackgroundColor(BG_GREEN_COLOR_0),
-                            UI::InTitleGameStartButton,
+                            TitleButton::GameStart,
                             Visibility::Inherited,
                             BoxShadow::new(
                                 Color::BLACK.with_alpha(0.8),
@@ -309,7 +308,7 @@ fn setup_title_interface(
                             OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
                             BorderColor::all(BORDER_GREEN_COLOR_0),
                             BackgroundColor(BG_GREEN_COLOR_0),
-                            UI::InTitleOptionButton,
+                            TitleButton::Option,
                             Visibility::Inherited,
                             BoxShadow::new(
                                 Color::BLACK.with_alpha(0.8),
@@ -357,7 +356,7 @@ fn setup_title_interface(
                             OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
                             BorderColor::all(BORDER_GREEN_COLOR_0),
                             BackgroundColor(BG_GREEN_COLOR_0),
-                            UI::InTitleHowToPlayButton,
+                            TitleButton::HowToPlay,
                             Visibility::Inherited,
                             BoxShadow::new(
                                 Color::BLACK.with_alpha(0.8),

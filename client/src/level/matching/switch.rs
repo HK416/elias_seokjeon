@@ -16,9 +16,9 @@ impl Plugin for InnerPlugin {
             OnEnter(LevelStates::SwitchToInMatching),
             (
                 debug_label,
-                show_interface,
                 setup_scene_timer,
-                setup_ui_animation,
+                show_matching_entities,
+                setup_matching_interfaces,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToInMatching), cleanup_scene_timer)
@@ -40,34 +40,26 @@ fn debug_label() {
     info!("Current Level: SwitchToInMatching");
 }
 
-#[allow(clippy::type_complexity)]
-fn show_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<MatchingLevelEntity>)>,
+fn setup_scene_timer(mut commands: Commands) {
+    commands.insert_resource(SceneTimer::default());
+}
+
+fn show_matching_entities(
+    mut query: Query<&mut Visibility, (With<MatchingLevelEntity>, With<TitleLevelRoot>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Visible;
     }
 }
 
-fn setup_scene_timer(mut commands: Commands) {
-    commands.insert_resource(SceneTimer::default());
-}
-
-fn setup_ui_animation(
+fn setup_matching_interfaces(
     mut commands: Commands,
-    query: Query<(Entity, &UI), With<MatchingLevelEntity>>,
+    query: Query<Entity, (With<UiAnimationTarget>, With<MatchingLevelEntity>)>,
 ) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::Modal => {
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    SCENE_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert(UiBackOutScale::new(SCENE_DURATION, Vec2::ZERO, Vec2::ONE));
     }
 }
 

@@ -125,7 +125,6 @@ fn setup_in_prepare_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
         ))
@@ -140,6 +139,7 @@ fn setup_in_prepare_interface(
                         ..Default::default()
                     },
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
@@ -245,6 +245,7 @@ fn setup_in_prepare_interface(
                         ..Default::default()
                     },
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {
@@ -297,6 +298,7 @@ fn setup_in_prepare_interface(
                         ..Default::default()
                     },
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
                 ))
                 .with_children(|parent| {

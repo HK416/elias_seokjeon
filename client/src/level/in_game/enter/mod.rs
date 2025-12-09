@@ -22,7 +22,12 @@ impl Plugin for InnerPlugin {
             .add_plugins(switch::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::LoadGame),
-                (debug_label, setup_timeout_retry, load_necessary_assets),
+                (
+                    debug_label,
+                    setup_timeout_retry,
+                    load_necessary_assets,
+                    setup_loading_minimi,
+                ),
             )
             .add_systems(OnExit(LevelStates::LoadGame), cleanup_timeout_retry)
             .add_systems(
@@ -134,6 +139,17 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
 
     // --- Resource Insertion ---
     commands.insert_resource(loading_assets);
+}
+
+fn setup_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.reset();
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
+    }
 }
 
 // --- PREUPDATE SYSTEMS ---

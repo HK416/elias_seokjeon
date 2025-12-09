@@ -18,12 +18,11 @@ impl Plugin for InnerPlugin {
             OnEnter(LevelStates::SwitchToTitleMessage),
             (
                 debug_label,
-                cleanup_other_player_info,
-                hide_loading_screen,
-                show_title_entities,
-                show_message_interface,
                 setup_scene_timer,
-                setup_ui_animation,
+                hide_enter_game_entities,
+                show_in_title_entities,
+                show_message_entities,
+                setup_message_interfaces,
                 setup_message,
             ),
         )
@@ -44,71 +43,43 @@ fn debug_label() {
     info!("Current Level: SwitchToTitleMessage");
 }
 
-fn cleanup_other_player_info(mut commands: Commands) {
-    commands.remove_resource::<OtherInfo>();
-}
-
-#[allow(clippy::type_complexity)]
-fn hide_loading_screen(
-    mut interfaces: Query<
-        &mut Visibility,
-        (With<UI>, With<TitleLevelRoot>, With<EnterGameLevelEntity>),
-    >,
-    mut patterns: Query<&mut Transform, (With<BackgroundPattern>, With<EnterGameLevelEntity>)>,
-) {
-    for mut visibility in interfaces.iter_mut() {
-        *visibility = Visibility::Hidden;
-    }
-
-    for mut transform in patterns.iter_mut() {
-        *transform = transform.with_scale(Vec3::ZERO);
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn show_title_entities(
-    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleBackground>)>,
-) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn show_message_interface(
-    mut query: Query<
-        &mut Visibility,
-        (
-            With<UI>,
-            With<TitleLevelRoot>,
-            With<TitleMessageLevelEntity>,
-        ),
-    >,
-) {
-    for mut visibility in query.iter_mut() {
-        *visibility = Visibility::Visible;
-    }
-}
-
 fn setup_scene_timer(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
 }
 
-fn setup_ui_animation(
-    mut commands: Commands,
-    query: Query<(Entity, &UI), With<TitleMessageLevelEntity>>,
+fn hide_enter_game_entities(
+    mut query: Query<&mut Visibility, (With<EnterGameLevelEntity>, With<TitleLevelRoot>)>,
 ) {
-    for (entity, &ui) in query.iter() {
-        match ui {
-            UI::Modal => {
-                commands.entity(entity).insert(UiBackOutScale::new(
-                    SCENE_DURATION,
-                    Vec2::ZERO,
-                    Vec2::ONE,
-                ));
-            }
-            _ => { /* empty */ }
-        }
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Hidden;
+    }
+}
+
+#[allow(clippy::type_complexity)]
+fn show_in_title_entities(
+    mut query: Query<&mut Visibility, (With<TitleBackground>, With<TitleLevelRoot>)>,
+) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Visible;
+    }
+}
+
+fn show_message_entities(
+    mut query: Query<&mut Visibility, (With<TitleMessageLevelEntity>, With<TitleLevelRoot>)>,
+) {
+    for mut visibility in query.iter_mut() {
+        *visibility = Visibility::Visible;
+    }
+}
+
+fn setup_message_interfaces(
+    mut commands: Commands,
+    query: Query<Entity, (With<UiAnimationTarget>, With<TitleMessageLevelEntity>)>,
+) {
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert(UiBackOutScale::new(SCENE_DURATION, Vec2::ZERO, Vec2::ONE));
     }
 }
 

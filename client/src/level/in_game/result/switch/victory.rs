@@ -55,6 +55,7 @@ fn setup_scene_timer(mut commands: Commands) {
     commands.insert_resource(SceneTimer::default());
 }
 
+#[allow(clippy::type_complexity)]
 #[allow(clippy::too_many_arguments)]
 fn show_game_result_entities(
     mut query: Query<
@@ -73,6 +74,7 @@ fn show_game_result_entities(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn show_game_result_interfaces(
     mut query: Query<
         &mut Visibility,
@@ -132,6 +134,7 @@ fn setup_game_result_interfaces(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_in_game_sprite(
     mut commands: Commands,
     sprites: Query<

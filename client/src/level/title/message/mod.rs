@@ -20,9 +20,10 @@ impl Plugin for InnerPlugin {
                     debug_label,
                     cleanup_in_game_assets,
                     cleanup_in_game_entities,
+                    cleanup_other_player_info,
                 ),
             )
-            .add_systems(OnExit(LevelStates::InTitleMessage), hide_interface)
+            .add_systems(OnExit(LevelStates::InTitleMessage), hide_message_entities)
             .add_systems(
                 PreUpdate,
                 (handle_keyboard_input, handle_button_interaction)
@@ -58,18 +59,15 @@ fn cleanup_in_game_entities(mut commands: Commands, query: Query<Entity, With<In
     }
 }
 
+fn cleanup_other_player_info(mut commands: Commands) {
+    commands.remove_resource::<OtherInfo>();
+}
+
 // --- CLEANUP SYSTEMS ---
 
 #[allow(clippy::type_complexity)]
-fn hide_interface(
-    mut query: Query<
-        &mut Visibility,
-        (
-            With<UI>,
-            With<TitleLevelRoot>,
-            With<TitleMessageLevelEntity>,
-        ),
-    >,
+fn hide_message_entities(
+    mut query: Query<&mut Visibility, (With<TitleLevelRoot>, With<TitleMessageLevelEntity>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
@@ -94,7 +92,7 @@ fn handle_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &PNButton, &Interaction),
         (With<TitleMessageLevelEntity>, Changed<Interaction>),
     >,
 ) {
@@ -108,7 +106,7 @@ fn handle_button_interaction(
         );
 
         match (ui, interaction) {
-            (UI::PositiveButton, Interaction::Pressed) => {
+            (PNButton::Positive, Interaction::Pressed) => {
                 next_state.set(LevelStates::InTitle);
             }
             _ => { /* empty */ }

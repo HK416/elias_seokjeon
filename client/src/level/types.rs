@@ -111,31 +111,38 @@ impl<T> OriginColor<T> {
     }
 }
 
-#[derive(Component, Clone, Copy, PartialEq, Eq)]
-#[allow(clippy::enum_variant_names)]
-pub enum UI {
-    Root,
-    Modal,
-    PositiveButton,
-    NegativeButton,
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum PNButton {
+    Positive,
+    Negative,
+}
 
-    BackgroundVolumeSlider,
-    BackgroundVolume,
-    EffectVolumeSlider,
-    EffectVolume,
-    VoiceVolumeSlider,
-    VoiceVolume,
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum LocaleButton {
+    En,
+    Ja,
+    Ko,
+}
 
-    LocaleButtonEn,
-    LocaleButtonJa,
-    LocaleButtonKo,
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum VolumeSlider {
+    Background,
+    Effect,
+    Voice,
+}
 
-    InTitleGameStartButton,
-    InTitleOptionButton,
-    InTitleHowToPlayButton,
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum VolumeLevelTextId {
+    Background,
+    Effect,
+    Voice,
+}
 
-    EnterGameLoadingBackground,
-    EnterGameLoadingBar,
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
+pub enum TitleButton {
+    GameStart,
+    Option,
+    HowToPlay,
 }
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
@@ -340,6 +347,18 @@ impl BackoutScale {
     }
 }
 
+impl Default for BackoutScale {
+    fn default() -> Self {
+        Self {
+            delay: 0.0,
+            duration: 0.0,
+            elapsed: 0.0,
+            start: Vec3::ZERO,
+            end: Vec3::ZERO,
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct UiSmoothScale {
     duration: f32,
@@ -405,6 +424,17 @@ impl UiBackOutScale {
         let t = self.elapsed / self.duration;
         let t = 1.0 + 2.70158 * (t - 1.0).powi(3) - 1.70158 * (t - 1.0).powi(2);
         (self.start * (1.0 - t) + self.end * t).max(Vec2::ZERO)
+    }
+}
+
+impl Default for UiBackOutScale {
+    fn default() -> Self {
+        Self {
+            duration: 0.0,
+            elapsed: 0.0,
+            start: Vec2::ZERO,
+            end: Vec2::ZERO,
+        }
     }
 }
 
@@ -505,13 +535,7 @@ pub struct LeftPlayerHead(pub Entity);
 #[derive(Component)]
 pub struct RightPlayerHead(pub Entity);
 
-#[derive(Component)]
+#[derive(Default, Component)]
 pub struct Projectile {
     pub hit: bool,
-}
-
-impl Default for Projectile {
-    fn default() -> Self {
-        Self { hit: false }
-    }
 }

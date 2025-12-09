@@ -20,10 +20,10 @@ impl Plugin for InnerPlugin {
             .add_plugins(init::InnerPlugin)
             .add_plugins(switch::InnerPlugin)
             .add_systems(OnEnter(LevelStates::InMatching), debug_label)
-            .add_systems(OnExit(LevelStates::InMatching), hide_interface)
+            .add_systems(OnExit(LevelStates::InMatching), hide_matching_interface)
             .add_systems(
                 PreUpdate,
-                (handle_keyboard_input, handle_button_interaction)
+                (handle_keyboard_input, handle_pn_button_interaction)
                     .run_if(in_state(LevelStates::InMatching)),
             )
             .add_systems(
@@ -49,8 +49,8 @@ fn debug_label() {
 // --- CLEANUP SYSTEMS ---
 
 #[allow(clippy::type_complexity)]
-fn hide_interface(
-    mut query: Query<&mut Visibility, (With<UI>, With<TitleLevelRoot>, With<MatchingLevelEntity>)>,
+fn hide_matching_interface(
+    mut query: Query<&mut Visibility, (With<MatchingLevelEntity>, With<TitleLevelRoot>)>,
 ) {
     for mut visibility in query.iter_mut() {
         *visibility = Visibility::Hidden;
@@ -69,17 +69,17 @@ fn handle_keyboard_input(
 }
 
 #[allow(clippy::type_complexity)]
-fn handle_button_interaction(
+fn handle_pn_button_interaction(
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &UI, &Interaction),
+        (Entity, &PNButton, &Interaction),
         (With<MatchingLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    for (entity, &ui, interaction) in interaction_query.iter_mut() {
+    for (entity, &button, interaction) in interaction_query.iter_mut() {
         update_button_visual(
             entity,
             interaction,
@@ -88,8 +88,8 @@ fn handle_button_interaction(
             &mut button_color_query,
         );
 
-        match (ui, interaction) {
-            (UI::NegativeButton, Interaction::Pressed) => {
+        match (button, interaction) {
+            (PNButton::Negative, Interaction::Pressed) => {
                 next_state.set(LevelStates::SwitchToInMatchingCancel);
             }
             _ => { /* empty */ }

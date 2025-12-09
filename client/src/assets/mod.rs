@@ -1,5 +1,4 @@
 pub mod atlas;
-pub mod collider;
 pub mod config;
 pub mod locale;
 pub mod path;
@@ -21,11 +20,9 @@ pub struct InnerPlugin;
 
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<collider::Collider>()
-            .init_asset::<config::ConfigData>()
+        app.init_asset::<config::ConfigData>()
             .init_asset::<locale::LocalizationData>()
             .register_asset_loader(atlas::AtlasAssetLoader)
-            .register_asset_loader(collider::ColliderAssetLoader)
             .register_asset_loader(config::ConfigAssetLoader)
             .register_asset_loader(locale::LocalizationDataLoader)
             .register_asset_loader(skeleton::SkelAssetLoader)

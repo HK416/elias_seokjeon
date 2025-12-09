@@ -148,20 +148,20 @@ pub struct OtherInfo {
 }
 
 #[derive(Default, Resource)]
-pub struct SelectedSliderCursor(Option<(UI, Entity, u64)>);
+pub struct SelectedSliderCursor(Option<(VolumeSlider, Entity, u64)>);
 
 impl SelectedSliderCursor {
-    pub fn take(&mut self) -> Option<(UI, Entity, u64)> {
+    pub fn take(&mut self) -> Option<(VolumeSlider, Entity, u64)> {
         self.0.take()
     }
 
-    pub fn get(&self) -> Option<(UI, Entity, u64)> {
+    pub fn get(&self) -> Option<(VolumeSlider, Entity, u64)> {
         self.0
     }
 
-    pub fn set(&mut self, ui: UI, entity: Entity, id: u64) {
+    pub fn set(&mut self, slider: VolumeSlider, entity: Entity, id: u64) {
         if self.0.is_none() {
-            self.0 = Some((ui, entity, id))
+            self.0 = Some((slider, entity, id))
         }
     }
 }
@@ -365,12 +365,11 @@ impl ProjectileObject {
     }
 
     pub fn get(&mut self, elapsed_time: i32) -> (i32, Option<&Snapshot>, Option<&Snapshot>) {
-        self.total_remaining_millis = self.total_remaining_millis - elapsed_time;
+        self.total_remaining_millis -= elapsed_time;
         let timepoint = self.total_remaining_millis + Self::DELAY;
-        let mut iter = self.snapshots.iter();
         let mut prev = None;
         let mut next = None;
-        while let Some(snapshot) = iter.next() {
+        for snapshot in self.snapshots.iter() {
             if snapshot.timepoint > timepoint {
                 prev = next;
                 next = Some(snapshot);

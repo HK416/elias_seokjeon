@@ -63,7 +63,6 @@ fn setup_in_title_message_interface(
                 align_items: AlignItems::Center,
                 ..Default::default()
             },
-            UI::Root,
             Visibility::Hidden,
             SpawnRequest,
             ZIndex(3),
@@ -84,8 +83,8 @@ fn setup_in_title_message_interface(
                     BorderColor::all(BORDER_GREEN_COLOR_0),
                     BackgroundColor(BG_GREEN_COLOR_3),
                     Visibility::Inherited,
+                    UiAnimationTarget,
                     SpawnRequest,
-                    UI::Modal,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -135,7 +134,7 @@ fn setup_in_title_message_interface(
                             BorderColor::all(BORDER_YELLO_COLOR_0),
                             BackgroundColor(BG_YELLO_COLOR_0),
                             Visibility::Inherited,
-                            UI::PositiveButton,
+                            PNButton::Positive,
                             SpawnRequest,
                             Button,
                         ))
