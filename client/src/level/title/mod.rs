@@ -42,7 +42,8 @@ impl Plugin for InnerPlugin {
             )
             .add_systems(
                 PostUpdate,
-                (update_collider_transform.after(TransformSystems::Propagate),)
+                update_collider_transform
+                    .after(TransformSystems::Propagate)
                     .run_if(in_state(LevelStates::InTitle)),
             );
 

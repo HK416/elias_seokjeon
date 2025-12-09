@@ -24,6 +24,9 @@ pub const LOADING_BAR_COLOR: Color = Color::srgb(0.2, 0.8, 0.2);
 // --- PURPLE ---
 #[rustfmt::skip] pub const BG_PURPLE_COLOR_0: Color = Color::srgb(110.0 / 255.0, 77.0 / 255.0, 135.0 / 255.0);
 #[rustfmt::skip] pub const BORDER_PURPLE_COLOR_0: Color = Color::srgb(58.0 / 255.0, 39.0 / 255.0, 78.0 / 255.0);
+// --- BROWN ---
+#[rustfmt::skip] pub const BG_BROWN_COLOR_0: Color = Color::srgb(246.0 / 255.0, 229.0 / 255.0, 193.0 / 255.0);
+#[rustfmt::skip] pub const BORDER_BROWN_COLOR_0: Color = Color::srgb(122.0 / 255.0, 98.0 / 255.0, 96.0 / 255.0);
 
 pub const BALL_BONE_NAME: &str = "Character_Ball_Move";
 pub const HEAD_BONE_NAME: &str = "Character_Pat";

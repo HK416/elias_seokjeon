@@ -339,8 +339,8 @@ fn setup_game_defeat_interface(
                                 ..Default::default()
                             },
                             BorderRadius::all(Val::Percent(50.0)),
-                            BorderColor::all(BORDER_GREEN_COLOR_0),
-                            BackgroundColor(BG_GREEN_COLOR_0),
+                            BorderColor::all(BORDER_BROWN_COLOR_0),
+                            BackgroundColor(BG_BROWN_COLOR_0),
                             Visibility::Inherited,
                             UiAnimationTarget,
                             SpawnRequest,

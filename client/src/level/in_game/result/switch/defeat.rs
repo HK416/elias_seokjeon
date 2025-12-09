@@ -48,7 +48,7 @@ impl Plugin for InnerPlugin {
 // --- SETUP SYSTEMS ---
 
 fn debug_label() {
-    info!("Current Level: SwitchToGameVictory");
+    info!("Current Level: SwitchToGameDefeat");
 }
 
 fn setup_scene_timer(mut commands: Commands) {

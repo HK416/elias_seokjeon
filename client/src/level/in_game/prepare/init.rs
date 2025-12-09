@@ -516,7 +516,7 @@ fn play_animation(
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
-            EnterGameLevelEntity,
+            InPrepareLevelEntity,
             TitleLevelRoot,
         ));
 
@@ -541,7 +541,7 @@ fn play_animation(
             },
             Transform::IDENTITY,
             GlobalTransform::IDENTITY,
-            EnterGameLevelEntity,
+            InPrepareLevelEntity,
             TitleLevelRoot,
         ));
 
