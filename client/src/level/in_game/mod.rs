@@ -58,8 +58,12 @@ impl Plugin for InnerPlugin {
                     .run_if(in_state(LevelStates::InGame)),
             )
             .add_systems(
+                FixedUpdate,
+                check_collisions.run_if(in_state(LevelStates::InGame)),
+            )
+            .add_systems(
                 PostUpdate,
-                (update_camera_position, check_collisions).run_if(in_state(LevelStates::InGame)),
+                (update_camera_position).run_if(in_state(LevelStates::InGame)),
             );
 
         #[cfg(target_arch = "wasm32")]
