@@ -1,11 +1,49 @@
-use glam::FloatExt;
-use protocol::PROJECTILE_SIZE;
-
 use super::*;
 
 const MAX_LOOP: usize = 100;
 const TICK: u64 = 1_000 / 15;
 const PERIOD: Duration = Duration::from_millis(TICK);
+
+const BIAS: f32 = 50.0;
+const BOT_LERP_RANGE: RangeInclusive<f32> = 0.5..=0.9;
+const BOT_LERP_OFFSET: RangeInclusive<f32> = -0.05..=0.05;
+const BOT_TIME_RANGE: RangeInclusive<f32> = 1.5..=3.0;
+
+#[derive(Clone, Copy)]
+enum BotLevel {
+    Low,
+    Medium,
+    High,
+}
+
+impl BotLevel {
+    pub fn new() -> Self {
+        match rand::random_range(0..3) {
+            0 => BotLevel::Low,
+            1 => BotLevel::Medium,
+            2 => BotLevel::High,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn power_offset(&self) -> f32 {
+        let range = match self {
+            BotLevel::Low => -THROW_POWER * 0.15..=THROW_POWER * 0.15,
+            BotLevel::Medium => -THROW_POWER * 0.1..=THROW_POWER * 0.1,
+            BotLevel::High => -THROW_POWER * 0.03..=THROW_POWER * 0.03,
+        };
+        rand::random_range(range)
+    }
+
+    pub fn angle_offset(&self) -> f32 {
+        let range = match self {
+            BotLevel::Low => -PI / 15.0..=PI / 15.0,
+            BotLevel::Medium => -PI / 20.0..=PI / 20.0,
+            BotLevel::High => -PI / 30.0..=PI / 30.0,
+        };
+        rand::random_range(range)
+    }
+}
 
 #[derive(Default, Clone, Copy)]
 enum GameState {
@@ -30,7 +68,6 @@ impl GameState {
 }
 
 pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
-    let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
     let left_collider = COLLIDER_DATA.get(&left.hero()).unwrap();
@@ -44,6 +81,16 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
     let mut total_remaining_millis = MAX_PLAY_TIME;
     let mut interval = time::interval(PERIOD);
     let mut previous_instant = Instant::now();
+
+    let level = BotLevel::new();
+    let mut lerp_p = rand::random_range(BOT_LERP_RANGE);
+    let mut bot_src_vel = Vec2::new(LEFT_START_ANGLE.cos(), LEFT_START_ANGLE.sin()) * f32::EPSILON;
+    let mut bot_dst_vel = update_left_bot_parameter(
+        Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
+        Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y) + Vec2::from(right_collider.center),
+        wind_vel,
+        level,
+    );
 
     let message = Packet::InGameTurnSetup {
         wind_angle,
@@ -131,7 +178,42 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 }
             }
             None => {
-                // TODO!
+                match game_state {
+                    GameState::LeftTurn => {
+                        let delta_time = elapsed_i32 as f32 / 1000.0;
+                        let s = lerp_p + rand::random_range(BOT_LERP_OFFSET);
+                        bot_src_vel = bot_src_vel.lerp(bot_dst_vel, s * delta_time);
+
+                        let length = bot_src_vel.length().min(THROW_POWER);
+                        let power = (length / THROW_POWER * 255.0) as u8;
+
+                        let radian = bot_src_vel
+                            .to_angle()
+                            .clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                        let angle = ((radian - LEFT_START_ANGLE)
+                            / (LEFT_END_ANGLE - LEFT_START_ANGLE)
+                            * 255.0) as u8;
+
+                        control = Some((angle, power));
+
+                        if bot_src_vel.abs_diff_eq(bot_dst_vel, BIAS) {
+                            projectile_pos = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                            projectile_vel = control
+                                .map(|(angle, power)| {
+                                    let delta = angle as f32 / 255.0;
+                                    let radian = LEFT_START_ANGLE
+                                        + (LEFT_END_ANGLE - LEFT_START_ANGLE) * delta;
+                                    let direction = Vec2::new(radian.cos(), radian.sin());
+                                    let power = (power as f32 / 255.0) * THROW_POWER;
+                                    direction * power
+                                })
+                                .unwrap_or_default();
+                            game_state = GameState::LeftProjectileThrown { hit: false };
+                            remaining_millis = THROW_END_TIME;
+                        }
+                    }
+                    _ => { /* empty */ }
+                }
             }
         }
 
@@ -199,7 +281,42 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 }
             }
             None => {
-                // TODO!
+                match game_state {
+                    GameState::RightTurn => {
+                        let delta_time = elapsed_i32 as f32 / 1000.0;
+                        let s = lerp_p + rand::random_range(BOT_LERP_OFFSET);
+                        bot_src_vel = bot_src_vel.lerp(bot_dst_vel, s * delta_time);
+
+                        let length = bot_src_vel.length().min(THROW_POWER);
+                        let power = (length / THROW_POWER * 255.0) as u8;
+
+                        let radian = bot_src_vel
+                            .to_angle()
+                            .clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                        let angle = ((radian - RIGHT_START_ANGLE)
+                            / (RIGHT_END_ANGLE - RIGHT_START_ANGLE)
+                            * 255.0) as u8;
+
+                        control = Some((angle, power));
+
+                        if bot_src_vel.abs_diff_eq(bot_dst_vel, BIAS) {
+                            projectile_pos = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                            projectile_vel = control
+                                .map(|(angle, power)| {
+                                    let delta = angle as f32 / 255.0;
+                                    let radian = RIGHT_START_ANGLE
+                                        + (RIGHT_END_ANGLE - RIGHT_START_ANGLE) * delta;
+                                    let direction = Vec2::new(radian.cos(), radian.sin());
+                                    let power = (power as f32 / 255.0) * THROW_POWER;
+                                    direction * power
+                                })
+                                .unwrap_or_default();
+                            game_state = GameState::RightProjectileThrown { hit: false };
+                            remaining_millis = THROW_END_TIME;
+                        }
+                    }
+                    _ => { /* empty */ }
+                }
             }
         }
 
@@ -232,7 +349,6 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                     #[cfg(not(feature = "no-debugging-log"))]
                     println!("Left turn ended.");
 
-                    turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     let message = Packet::InGameTurnSetup {
                         wind_angle,
@@ -245,6 +361,17 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         println!("Stop play game");
                         return;
                     }
+
+                    lerp_p = rand::random_range(BOT_LERP_RANGE);
+                    bot_src_vel =
+                        Vec2::new(RIGHT_START_ANGLE.cos(), RIGHT_START_ANGLE.sin()) * f32::EPSILON;
+                    bot_dst_vel = update_right_bot_parameter(
+                        Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y),
+                        Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y)
+                            + Vec2::from(left_collider.center),
+                        wind_vel,
+                        level,
+                    );
 
                     game_state = GameState::RightTurn;
                     remaining_millis = MAX_CTRL_TIME;
@@ -273,7 +400,6 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                     #[cfg(not(feature = "no-debugging-log"))]
                     println!("Right turn ended.");
 
-                    turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     let message = Packet::InGameTurnSetup {
                         wind_angle,
@@ -286,6 +412,17 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         println!("Stop play game");
                         return;
                     }
+
+                    lerp_p = rand::random_range(BOT_LERP_RANGE);
+                    bot_src_vel =
+                        Vec2::new(LEFT_START_ANGLE.cos(), LEFT_START_ANGLE.sin()) * f32::EPSILON;
+                    bot_dst_vel = update_left_bot_parameter(
+                        Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
+                        Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y)
+                            + Vec2::from(right_collider.center),
+                        wind_vel,
+                        level,
+                    );
 
                     game_state = GameState::LeftTurn;
                     remaining_millis = MAX_CTRL_TIME;
@@ -343,7 +480,6 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         break;
                     }
 
-                    turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     let message = Packet::InGameTurnSetup {
                         wind_angle,
@@ -357,10 +493,18 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         return;
                     }
 
-                    game_state = match turn_counter % 2 == 0 {
-                        true => GameState::LeftTurn,
-                        false => GameState::RightTurn,
-                    };
+                    lerp_p = rand::random_range(BOT_LERP_RANGE);
+                    bot_src_vel =
+                        Vec2::new(RIGHT_START_ANGLE.cos(), RIGHT_START_ANGLE.sin()) * f32::EPSILON;
+                    bot_dst_vel = update_right_bot_parameter(
+                        Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y),
+                        Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y)
+                            + Vec2::from(left_collider.center),
+                        wind_vel,
+                        level,
+                    );
+
+                    game_state = GameState::RightTurn;
                     remaining_millis = MAX_CTRL_TIME;
                     control = None;
                 }
@@ -416,7 +560,6 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         break;
                     }
 
-                    turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
                     let message = Packet::InGameTurnSetup {
                         wind_angle,
@@ -430,10 +573,18 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                         return;
                     }
 
-                    game_state = match turn_counter % 2 == 0 {
-                        true => GameState::LeftTurn,
-                        false => GameState::RightTurn,
-                    };
+                    lerp_p = rand::random_range(BOT_LERP_RANGE);
+                    bot_src_vel =
+                        Vec2::new(LEFT_START_ANGLE.cos(), LEFT_START_ANGLE.sin()) * f32::EPSILON;
+                    bot_dst_vel = update_left_bot_parameter(
+                        Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
+                        Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y)
+                            + Vec2::from(right_collider.center),
+                        wind_vel,
+                        level,
+                    );
+
+                    game_state = GameState::LeftTurn;
                     remaining_millis = MAX_CTRL_TIME;
                     control = None;
                 }
@@ -533,4 +684,50 @@ fn update_wind_parameter() -> (u8, u8, Vec2) {
     let wind_vel = direction * power;
 
     (wind_angle, wind_power, wind_vel)
+}
+
+fn update_left_bot_parameter(
+    start_pos: Vec2,
+    target_pos: Vec2,
+    wind_vel: Vec2,
+    lv: BotLevel,
+) -> Vec2 {
+    let time_to_hit = rand::random_range(BOT_TIME_RANGE);
+    let dx = target_pos.x - start_pos.x;
+    let dy = target_pos.y - start_pos.y;
+
+    let vx = (dx / time_to_hit) - wind_vel.x;
+    let vy = (dy - (0.5 * GRAVITY * time_to_hit * time_to_hit)) / time_to_hit - wind_vel.y;
+    let vel = Vec2::new(vx, vy);
+
+    let length = vel.length();
+    let dir = vel / length; // Maybe safety...
+
+    let power = (length + lv.power_offset()).min(THROW_POWER);
+    let angle = (dir.to_angle() + lv.angle_offset()).clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+
+    Vec2::new(angle.cos(), angle.sin()) * power
+}
+
+fn update_right_bot_parameter(
+    start_pos: Vec2,
+    target_pos: Vec2,
+    wind_vel: Vec2,
+    lv: BotLevel,
+) -> Vec2 {
+    let time_to_hit = rand::random_range(BOT_TIME_RANGE);
+    let dx = target_pos.x - start_pos.x;
+    let dy = target_pos.y - start_pos.y;
+
+    let vx = (dx / time_to_hit) - wind_vel.x;
+    let vy = (dy - (0.5 * GRAVITY * time_to_hit * time_to_hit)) / time_to_hit - wind_vel.y;
+    let vel = Vec2::new(vx, vy);
+
+    let length = vel.length();
+    let dir = vel / length; // Maybe safety...
+
+    let power = (length + lv.power_offset()).min(THROW_POWER);
+    let angle = (dir.to_angle() + lv.angle_offset()).clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+
+    Vec2::new(angle.cos(), angle.sin()) * power
 }

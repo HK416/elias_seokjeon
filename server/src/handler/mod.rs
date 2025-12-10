@@ -8,9 +8,10 @@ pub mod title;
 use std::{
     any::Any,
     collections::VecDeque,
-    f32::consts::TAU,
+    f32::consts::{PI, TAU},
     fmt, mem,
     net::SocketAddr,
+    ops::RangeInclusive,
     sync::atomic::{AtomicUsize, Ordering as MemOrdering},
 };
 
@@ -19,13 +20,14 @@ use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use glam::Vec2;
+use glam::{FloatExt, Vec2};
 use protocol::{
     COLLIDER_DATA, GRAVITY, Hero, LEFT_END_ANGLE, LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y,
     LEFT_START_ANGLE, LEFT_THROW_POS_X, LEFT_THROW_POS_Y, MAX_CTRL_TIME, MAX_HEALTH_COUNT,
-    MAX_PLAY_TIME, MAX_POINT, Packet, PlayData, RIGHT_END_ANGLE, RIGHT_PLAYER_POS_X,
-    RIGHT_PLAYER_POS_Y, RIGHT_START_ANGLE, RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, THROW_END_TIME,
-    THROW_POWER, WIND_POWER, WORLD_MAX_X, WORLD_MIN_X, rand, serde_json, uuid::Uuid,
+    MAX_PLAY_TIME, MAX_POINT, PROJECTILE_SIZE, Packet, PlayData, RIGHT_END_ANGLE,
+    RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y, RIGHT_START_ANGLE, RIGHT_THROW_POS_X,
+    RIGHT_THROW_POS_Y, THROW_END_TIME, THROW_POWER, WIND_POWER, WORLD_MAX_X, WORLD_MIN_X, rand,
+    serde_json, uuid::Uuid,
 };
 use tokio::{
     net::TcpStream,
