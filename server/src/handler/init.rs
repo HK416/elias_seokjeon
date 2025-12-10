@@ -5,48 +5,19 @@ pub async fn setup(addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) {
     println!("Addr:{addr} - Current State: Init");
 
     let uuid = Uuid::new_v4();
-    let name = "Text".to_string();
-    let hero = rand::random();
-    let win = 0;
-    let lose = 0;
-    let draw = 0;
-    let (tx, mut rx) = unbounded_channel::<Packet>();
-    let (mut write, read) = ws_stream.split();
-    let write_task = tokio::spawn(async move {
-        while let Some(s) = rx.recv().await {
-            let s = serde_json::to_string(&s).unwrap();
-            let result = write.send(Message::text(s)).await;
-            if let Err(e) = result {
-                eprintln!("Failed to send message to WebSocket (Address:{addr}): {e}");
-                return write;
-            }
-        }
-        write
-    });
+    let player = Player::new(uuid, addr, ws_stream);
+    let result = player.tx.send(Packet::Connection(PlayData {
+        uuid: player.uuid(),
+        name: player.name().to_string(),
+        hero: player.hero(),
+        win: player.win(),
+        lose: player.lose(),
+    }));
+    if let Err(e) = result {
+        println!("WebSocket disconnected ({:?}): {}", player, e);
+        drop(player);
+        return;
+    }
 
-    let session = Session {
-        uuid,
-        name,
-        hero,
-        win,
-        lose,
-        draw,
-        addr,
-        read,
-        tx,
-        _write_task: write_task,
-    };
-
-    session
-        .tx
-        .send(Packet::Connection(Player {
-            uuid,
-            name: session.name.clone(),
-            hero,
-            win,
-            lose,
-        }))
-        .unwrap();
-
-    next_state(State::Title, session);
+    next_state(State::Title, Box::new(player));
 }

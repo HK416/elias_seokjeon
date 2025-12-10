@@ -127,11 +127,12 @@ fn handle_received_packets(
                     }
                 }
                 Packet::MatchingSuccess { left, right } => {
-                    let (other, left_side) = if left.uuid == player_info.uuid {
-                        (right, false)
-                    } else {
-                        (left, true)
-                    };
+                    let (other, left_side) =
+                        if left.uuid.is_some_and(|uuid| uuid == player_info.uuid) {
+                            (right, false)
+                        } else {
+                            (left, true)
+                        };
 
                     commands.insert_resource(OtherInfo {
                         left_side,

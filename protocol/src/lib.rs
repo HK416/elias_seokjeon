@@ -49,7 +49,7 @@ pub const MAX_HEALTH_COUNT: usize = 5;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Packet {
     // Server -> Client
-    Connection(Player),
+    Connection(PlayData),
     // Client -> Server
     EnterGame,
     // Client -> Server
@@ -62,8 +62,8 @@ pub enum Packet {
     },
     // Server -> Client
     MatchingSuccess {
-        left: Player,
-        right: Player,
+        left: PlayData,
+        right: PlayData,
     },
     // Client -> Server
     GameLoadSuccess,
@@ -119,8 +119,8 @@ pub enum Packet {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Player {
-    pub uuid: Uuid,
+pub struct PlayData {
+    pub uuid: Option<Uuid>,
     pub name: String,
     pub hero: Hero,
     pub win: u16,

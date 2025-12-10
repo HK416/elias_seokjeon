@@ -1,14 +1,14 @@
 use super::*;
 
-pub async fn update(mut session: Session) {
+pub async fn update(mut player: Box<Player>) {
     #[cfg(not(feature = "no-debugging-log"))]
-    println!("{:?} - Current State: Title", session);
+    println!("{:?} - Current State: Title", player);
 
-    while let Some(result) = session.read.next().await {
+    while let Some(result) = player.read.next().await {
         let message = match result {
             Ok(message) => message,
             Err(e) => {
-                println!("WebSocket disconnected ({:?}): {}", session, e);
+                println!("WebSocket disconnected ({:?}): {}", &player, e);
                 return;
             }
         };
@@ -18,7 +18,7 @@ pub async fn update(mut session: Session) {
         {
             match packet {
                 Packet::EnterGame => {
-                    return next_state(State::Matching, session);
+                    return next_state(State::Matching, player);
                 }
                 _ => { /* empty */ }
             }

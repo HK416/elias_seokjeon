@@ -4,22 +4,8 @@ use protocol::PROJECTILE_SIZE;
 use super::*;
 
 const MAX_LOOP: usize = 100;
-
-struct Broadcaster {
-    left: Session,
-    right: Session,
-}
-
-impl Broadcaster {
-    fn new(left: Session, right: Session) -> Self {
-        Self { left, right }
-    }
-
-    fn broadcast(&self, packet: &Packet) {
-        self.left.tx.send(packet.clone()).unwrap();
-        self.right.tx.send(packet.clone()).unwrap();
-    }
-}
+const TICK: u64 = 1_000 / 15;
+const PERIOD: Duration = Duration::from_millis(TICK);
 
 #[derive(Default, Clone, Copy)]
 enum GameState {
@@ -43,16 +29,12 @@ impl GameState {
     }
 }
 
-pub async fn play(left: Session, right: Session) {
-    let mut broadcaster = Broadcaster::new(left, right);
-
-    const TICK: u64 = 1_000 / 15;
-    const PERIOD: Duration = Duration::from_millis(TICK);
+pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
     let mut turn_counter = 0;
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
-    let left_collider = COLLIDER_DATA.get(&broadcaster.left.hero).unwrap();
-    let right_collider = COLLIDER_DATA.get(&broadcaster.right.hero).unwrap();
+    let left_collider = COLLIDER_DATA.get(&left.hero()).unwrap();
+    let right_collider = COLLIDER_DATA.get(&right.hero()).unwrap();
     let mut control = None;
     let (mut wind_angle, mut wind_power, mut wind_vel) = update_wind_parameter();
     let mut projectile_vel = Vec2::ZERO;
@@ -62,10 +44,18 @@ pub async fn play(left: Session, right: Session) {
     let mut total_remaining_millis = MAX_PLAY_TIME;
     let mut interval = time::interval(PERIOD);
     let mut previous_instant = Instant::now();
-    broadcaster.broadcast(&Packet::InGameTurnSetup {
+
+    let message = Packet::InGameTurnSetup {
         wind_angle,
         wind_power,
-    });
+    };
+    left = send_message(left, &message, &mut num_player);
+    right = send_message(right, &message, &mut num_player);
+    if num_player == 0 {
+        #[cfg(not(feature = "no-debugging-log"))]
+        println!("Stop play game");
+        return;
+    }
 
     while total_remaining_millis > 0 || game_state.is_projectile_thrown() {
         let instant = interval.tick().await;
@@ -76,105 +66,167 @@ pub async fn play(left: Session, right: Session) {
         let elapsed_i32 = elapsed.min(i32::MAX as u128) as i32;
         previous_instant = instant;
 
-        total_remaining_millis = total_remaining_millis - elapsed_i32;
+        total_remaining_millis -= elapsed_i32;
 
-        let mut cnt = MAX_LOOP;
-        'update: while cnt > 0 {
-            match poll_stream_nonblocking(&mut broadcaster.left.read) {
-                StreamPollResult::Pending => break,
-                StreamPollResult::Item(message) => {
-                    if let Message::Text(s) = message
-                        && let Ok(packet) = serde_json::from_str::<Packet>(&s)
-                    {
-                        match (game_state, packet) {
-                            (GameState::LeftTurn, Packet::UpdateThrowParams { angle, power }) => {
-                                control = Some((angle, power));
+        match left.reader() {
+            Some(stream) => {
+                let mut cnt = MAX_LOOP;
+                'update: while cnt > 0 {
+                    match poll_stream_nonblocking(stream) {
+                        StreamPollResult::Pending => break,
+                        StreamPollResult::Item(message) => {
+                            if let Message::Text(s) = message
+                                && let Ok(packet) = serde_json::from_str::<Packet>(&s)
+                            {
+                                match (game_state, packet) {
+                                    (
+                                        GameState::LeftTurn,
+                                        Packet::UpdateThrowParams { angle, power },
+                                    ) => {
+                                        control = Some((angle, power));
+                                    }
+                                    (GameState::LeftTurn, Packet::ThrowProjectile) => {
+                                        projectile_pos =
+                                            Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                                        projectile_vel = control
+                                            .map(|(angle, power)| {
+                                                let delta = angle as f32 / 255.0;
+                                                let radian = LEFT_START_ANGLE
+                                                    + (LEFT_END_ANGLE - LEFT_START_ANGLE) * delta;
+                                                let direction =
+                                                    Vec2::new(radian.cos(), radian.sin());
+                                                let power = (power as f32 / 255.0) * THROW_POWER;
+                                                direction * power
+                                            })
+                                            .unwrap_or_default();
+                                        game_state = GameState::LeftProjectileThrown { hit: false };
+                                        remaining_millis = THROW_END_TIME;
+                                    }
+                                    _ => { /* empty */ }
+                                }
                             }
-                            (GameState::LeftTurn, Packet::ThrowProjectile) => {
-                                projectile_pos = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
-                                projectile_vel = control
-                                    .map(|(angle, power)| {
-                                        let delta = angle as f32 / 255.0;
-                                        let radian = LEFT_START_ANGLE
-                                            + (LEFT_END_ANGLE - LEFT_START_ANGLE) * delta;
-                                        let direction = Vec2::new(radian.cos(), radian.sin());
-                                        let power = (power as f32 / 255.0) * THROW_POWER;
-                                        direction * power
-                                    })
-                                    .unwrap_or_default();
-                                game_state = GameState::LeftProjectileThrown { hit: false };
-                                remaining_millis = THROW_END_TIME;
-                            }
-                            _ => { /* empty */ }
+                        }
+                        StreamPollResult::Error(e) => {
+                            println!("WebSocket disconnected ({:?}): {e}", left);
+
+                            #[cfg(not(feature = "no-debugging-log"))]
+                            println!("Left player({:?}) replaced by Bot", left);
+
+                            left = Box::new(Bot::from(left));
+                            num_player -= 1;
+                            break 'update; // Handle disconnection.
+                        }
+                        StreamPollResult::Closed => {
+                            println!("WebSocket disconnected ({:?})", left);
+
+                            #[cfg(not(feature = "no-debugging-log"))]
+                            println!("Left player({:?}) replaced by Bot", left);
+
+                            left = Box::new(Bot::from(left));
+                            num_player -= 1;
+                            break 'update; // Handle closure.
                         }
                     }
-                }
-                StreamPollResult::Error(e) => {
-                    println!("WebSocket disconnected ({:?}): {e}", broadcaster.left);
-                    break 'update; // Handle disconnection.
-                }
-                StreamPollResult::Closed => {
-                    println!("WebSocket disconnected ({:?})", broadcaster.left);
-                    break 'update; // Handle closure.
+                    cnt -= 1;
                 }
             }
-            cnt -= 1;
+            None => {
+                // TODO!
+            }
         }
 
-        let mut cnt = MAX_LOOP;
-        'update: while cnt > 0 {
-            match poll_stream_nonblocking(&mut broadcaster.right.read) {
-                StreamPollResult::Pending => break,
-                StreamPollResult::Item(message) => {
-                    if let Message::Text(s) = message
-                        && let Ok(packet) = serde_json::from_str::<Packet>(&s)
-                    {
-                        match (game_state, packet) {
-                            (GameState::RightTurn, Packet::UpdateThrowParams { angle, power }) => {
-                                control = Some((angle, power));
+        match right.reader() {
+            Some(stream) => {
+                let mut cnt = MAX_LOOP;
+                'update: while cnt > 0 {
+                    match poll_stream_nonblocking(stream) {
+                        StreamPollResult::Pending => break,
+                        StreamPollResult::Item(message) => {
+                            if let Message::Text(s) = message
+                                && let Ok(packet) = serde_json::from_str::<Packet>(&s)
+                            {
+                                match (game_state, packet) {
+                                    (
+                                        GameState::RightTurn,
+                                        Packet::UpdateThrowParams { angle, power },
+                                    ) => {
+                                        control = Some((angle, power));
+                                    }
+                                    (GameState::RightTurn, Packet::ThrowProjectile) => {
+                                        projectile_pos =
+                                            Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                                        projectile_vel = control
+                                            .map(|(angle, power)| {
+                                                let delta = angle as f32 / 255.0;
+                                                let radian = RIGHT_START_ANGLE
+                                                    + (RIGHT_END_ANGLE - RIGHT_START_ANGLE) * delta;
+                                                let direction =
+                                                    Vec2::new(radian.cos(), radian.sin());
+                                                let power = (power as f32 / 255.0) * THROW_POWER;
+                                                direction * power
+                                            })
+                                            .unwrap_or_default();
+                                        game_state =
+                                            GameState::RightProjectileThrown { hit: false };
+                                        remaining_millis = THROW_END_TIME;
+                                    }
+                                    _ => { /* empty */ }
+                                }
                             }
-                            (GameState::RightTurn, Packet::ThrowProjectile) => {
-                                projectile_pos = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
-                                projectile_vel = control
-                                    .map(|(angle, power)| {
-                                        let delta = angle as f32 / 255.0;
-                                        let radian = RIGHT_START_ANGLE
-                                            + (RIGHT_END_ANGLE - RIGHT_START_ANGLE) * delta;
-                                        let direction = Vec2::new(radian.cos(), radian.sin());
-                                        let power = (power as f32 / 255.0) * THROW_POWER;
-                                        direction * power
-                                    })
-                                    .unwrap_or_default();
-                                game_state = GameState::RightProjectileThrown { hit: false };
-                                remaining_millis = THROW_END_TIME;
-                            }
-                            _ => { /* empty */ }
+                        }
+                        StreamPollResult::Error(e) => {
+                            println!("WebSocket disconnected ({:?}): {e}", right);
+
+                            #[cfg(not(feature = "no-debugging-log"))]
+                            println!("Right player({:?}) replaced by Bot", left);
+
+                            right = Box::new(Bot::from(right));
+                            num_player -= 1;
+                            break 'update; // Handle disconnection.
+                        }
+                        StreamPollResult::Closed => {
+                            println!("WebSocket disconnected ({:?})", right);
+
+                            #[cfg(not(feature = "no-debugging-log"))]
+                            println!("Right player({:?}) replaced by Bot", left);
+
+                            right = Box::new(Bot::from(right));
+                            num_player -= 1;
+                            break 'update; // Handle closure.
                         }
                     }
-                }
-                StreamPollResult::Error(e) => {
-                    println!("WebSocket disconnected ({:?}): {e}", broadcaster.right);
-                    break 'update; // Handle disconnection.
-                }
-                StreamPollResult::Closed => {
-                    println!("WebSocket disconnected ({:?})", broadcaster.right);
-                    break 'update; // Handle closure.
+                    cnt -= 1;
                 }
             }
-            cnt -= 1;
+            None => {
+                // TODO!
+            }
+        }
+
+        if num_player == 0 {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Stop play game");
+            return;
         }
 
         match game_state {
             GameState::LeftTurn => {
                 remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
 
-                broadcaster.broadcast(&Packet::InGameLeftTurn {
+                let message = Packet::InGameLeftTurn {
                     total_remaining_millis,
                     remaining_millis,
                     left_health_cnt: left_health as u8,
                     right_health_cnt: right_health as u8,
                     control,
-                });
+                };
+                left = send_message(left, &message, &mut num_player);
+                right = send_message(right, &message, &mut num_player);
+                if num_player == 0 {
+                    #[cfg(not(feature = "no-debugging-log"))]
+                    println!("Stop play game");
+                    return;
+                }
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debugging-log"))]
@@ -182,10 +234,17 @@ pub async fn play(left: Session, right: Session) {
 
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
-                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                    let message = Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
-                    });
+                    };
+                    left = send_message(left, &message, &mut num_player);
+                    right = send_message(right, &message, &mut num_player);
+                    if num_player == 0 {
+                        #[cfg(not(feature = "no-debugging-log"))]
+                        println!("Stop play game");
+                        return;
+                    }
 
                     game_state = GameState::RightTurn;
                     remaining_millis = MAX_CTRL_TIME;
@@ -195,13 +254,20 @@ pub async fn play(left: Session, right: Session) {
             GameState::RightTurn => {
                 remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
 
-                broadcaster.broadcast(&Packet::InGameRightTurn {
+                let message = Packet::InGameRightTurn {
                     total_remaining_millis,
                     remaining_millis,
                     left_health_cnt: left_health as u8,
                     right_health_cnt: right_health as u8,
                     control,
-                });
+                };
+                left = send_message(left, &message, &mut num_player);
+                right = send_message(right, &message, &mut num_player);
+                if num_player == 0 {
+                    #[cfg(not(feature = "no-debugging-log"))]
+                    println!("Stop play game");
+                    return;
+                }
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debugging-log"))]
@@ -209,10 +275,17 @@ pub async fn play(left: Session, right: Session) {
 
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
-                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                    let message = Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
-                    });
+                    };
+                    left = send_message(left, &message, &mut num_player);
+                    right = send_message(right, &message, &mut num_player);
+                    if num_player == 0 {
+                        #[cfg(not(feature = "no-debugging-log"))]
+                        println!("Stop play game");
+                        return;
+                    }
 
                     game_state = GameState::LeftTurn;
                     remaining_millis = MAX_CTRL_TIME;
@@ -246,14 +319,21 @@ pub async fn play(left: Session, right: Session) {
                     remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
                 }
 
-                broadcaster.broadcast(&Packet::InGameProjectileThrown {
+                let message = Packet::InGameProjectileThrown {
                     total_remaining_millis,
                     remaining_millis,
                     left_health_cnt: left_health as u8,
                     right_health_cnt: right_health as u8,
                     projectile_pos: projectile_pos.into(),
                     projectile_vel: projectile_vel.into(),
-                });
+                };
+                left = send_message(left, &message, &mut num_player);
+                right = send_message(right, &message, &mut num_player);
+                if num_player == 0 {
+                    #[cfg(not(feature = "no-debugging-log"))]
+                    println!("Stop play game");
+                    return;
+                }
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debugging-log"))]
@@ -265,10 +345,17 @@ pub async fn play(left: Session, right: Session) {
 
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
-                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                    let message = Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
-                    });
+                    };
+                    left = send_message(left, &message, &mut num_player);
+                    right = send_message(right, &message, &mut num_player);
+                    if num_player == 0 {
+                        #[cfg(not(feature = "no-debugging-log"))]
+                        println!("Stop play game");
+                        return;
+                    }
 
                     game_state = match turn_counter % 2 == 0 {
                         true => GameState::LeftTurn,
@@ -305,14 +392,21 @@ pub async fn play(left: Session, right: Session) {
                     remaining_millis = remaining_millis.saturating_sub(elapsed_u16);
                 }
 
-                broadcaster.broadcast(&Packet::InGameProjectileThrown {
+                let message = Packet::InGameProjectileThrown {
                     total_remaining_millis,
                     remaining_millis,
                     left_health_cnt: left_health as u8,
                     right_health_cnt: right_health as u8,
                     projectile_pos: projectile_pos.into(),
                     projectile_vel: projectile_vel.into(),
-                });
+                };
+                left = send_message(left, &message, &mut num_player);
+                right = send_message(right, &message, &mut num_player);
+                if num_player == 0 {
+                    #[cfg(not(feature = "no-debugging-log"))]
+                    println!("Stop play game");
+                    return;
+                }
 
                 if remaining_millis == 0 {
                     #[cfg(not(feature = "no-debugging-log"))]
@@ -324,10 +418,17 @@ pub async fn play(left: Session, right: Session) {
 
                     turn_counter += 1;
                     (wind_angle, wind_power, wind_vel) = update_wind_parameter();
-                    broadcaster.broadcast(&Packet::InGameTurnSetup {
+                    let message = Packet::InGameTurnSetup {
                         wind_angle,
                         wind_power,
-                    });
+                    };
+                    left = send_message(left, &message, &mut num_player);
+                    right = send_message(right, &message, &mut num_player);
+                    if num_player == 0 {
+                        #[cfg(not(feature = "no-debugging-log"))]
+                        println!("Stop play game");
+                        return;
+                    }
 
                     game_state = match turn_counter % 2 == 0 {
                         true => GameState::LeftTurn,
@@ -348,67 +449,76 @@ pub async fn play(left: Session, right: Session) {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Right player won!");
 
-            let mut left = broadcaster.left;
-            left.lose = (left.lose + 1).min(MAX_POINT);
-            left.tx
-                .send(Packet::GameResult {
-                    win: left.win,
-                    lose: left.lose,
-                    victory: false,
-                })
-                .unwrap();
-            next_state(State::Title, left);
+            left.increase_lose();
+            let message = Packet::GameResult {
+                win: left.win(),
+                lose: left.lose(),
+                victory: false,
+            };
+            left = send_message(left, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
 
-            let mut right = broadcaster.right;
-            right.win = (right.win + 1).min(MAX_POINT);
-            right
-                .tx
-                .send(Packet::GameResult {
-                    win: right.win,
-                    lose: right.lose,
-                    victory: true,
-                })
-                .unwrap();
-            next_state(State::Title, right);
+            right.increase_win();
+            let message = Packet::GameResult {
+                win: right.win(),
+                lose: right.lose(),
+                victory: true,
+            };
+            right = send_message(right, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
         }
         std::cmp::Ordering::Equal => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Draw!");
-            let mut left = broadcaster.left;
-            left.draw = (left.draw + 1).min(MAX_POINT);
-            left.tx.send(Packet::GameResultDraw).unwrap();
-            next_state(State::Title, left);
 
-            let mut right = broadcaster.right;
-            right.draw = (right.draw + 1).min(MAX_POINT);
-            right.tx.send(Packet::GameResultDraw).unwrap();
-            next_state(State::Title, right);
+            let message = Packet::GameResultDraw;
+            left.increase_draw();
+            left = send_message(left, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
+
+            right.increase_draw();
+            right = send_message(right, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
         }
         std::cmp::Ordering::Greater => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Left player won!");
-            let mut left = broadcaster.left;
-            left.win = (left.win + 1).min(MAX_POINT);
-            left.tx
-                .send(Packet::GameResult {
-                    win: left.win,
-                    lose: left.lose,
-                    victory: true,
-                })
-                .unwrap();
-            next_state(State::Title, left);
 
-            let mut right = broadcaster.right;
-            right.lose = (right.lose + 1).min(MAX_POINT);
-            right
-                .tx
-                .send(Packet::GameResult {
-                    win: right.win,
-                    lose: right.lose,
-                    victory: false,
-                })
-                .unwrap();
-            next_state(State::Title, right);
+            left.increase_win();
+            let message = Packet::GameResult {
+                win: left.win(),
+                lose: left.lose(),
+                victory: true,
+            };
+            left = send_message(left, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
+
+            right.increase_lose();
+            let message = Packet::GameResult {
+                win: right.win(),
+                lose: right.lose(),
+                victory: false,
+            };
+            right = send_message(right, &message, &mut num_player);
+            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            if let Ok(player) = result {
+                next_state(State::Title, player);
+            }
         }
     }
 }

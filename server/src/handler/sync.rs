@@ -4,36 +4,40 @@ const MAX_WAIT_TIME: u32 = 15_000;
 const MAX_LOOP: usize = 100;
 
 struct Node {
-    session: Session,
+    session: Box<dyn Session>,
     left_side: bool,
 }
 
 impl Node {
-    pub fn new(session: Session, left_side: bool) -> Self {
+    pub fn new(session: Box<dyn Session>, left_side: bool) -> Self {
         Self { session, left_side }
     }
 }
 
-pub async fn wait(left: Session, right: Session) {
+pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
     let message = Packet::MatchingSuccess {
-        left: Player {
-            uuid: left.uuid,
-            name: left.name.clone(),
-            hero: left.hero,
-            win: left.win,
-            lose: left.lose,
+        left: PlayData {
+            uuid: left.uuid(),
+            name: left.name().to_string(),
+            hero: left.hero(),
+            win: left.win(),
+            lose: left.lose(),
         },
-        right: Player {
-            uuid: right.uuid,
-            name: right.name.clone(),
-            hero: right.hero,
-            win: right.win,
-            lose: right.lose,
+        right: PlayData {
+            uuid: right.uuid(),
+            name: right.name().to_string(),
+            hero: right.hero(),
+            win: right.win(),
+            lose: right.lose(),
         },
     };
-
-    left.tx.send(message.clone()).unwrap();
-    right.tx.send(message.clone()).unwrap();
+    left = send_message(left, &message, &mut num_player);
+    right = send_message(right, &message, &mut num_player);
+    if num_player == 0 {
+        #[cfg(not(feature = "no-debugging-log"))]
+        println!("Stop waiting.");
+        return;
+    }
 
     let mut wait_sessions = vec![Node::new(left, true), Node::new(right, false)];
     let mut loaded_sessions: Vec<Node> = Vec::new();
@@ -53,58 +57,111 @@ pub async fn wait(left: Session, right: Session) {
         previous_instant = instant;
 
         'update: while let Some(mut n) = wait_sessions.pop() {
-            let mut cnt = MAX_LOOP;
-            while cnt > 0 {
-                match poll_stream_nonblocking(&mut n.session.read) {
-                    StreamPollResult::Pending => break,
-                    StreamPollResult::Item(message) => {
-                        if let Message::Text(s) = message
-                            && let Ok(packet) = serde_json::from_str::<Packet>(&s)
-                        {
-                            match packet {
-                                Packet::GameLoadSuccess => {
-                                    loaded_sessions.push(n);
-                                    continue 'update; // Session is removed from waiting.
+            match n.session.reader() {
+                Some(stream) => {
+                    let mut cnt = MAX_LOOP;
+                    while cnt > 0 {
+                        match poll_stream_nonblocking(stream) {
+                            StreamPollResult::Pending => break,
+                            StreamPollResult::Item(message) => {
+                                if let Message::Text(s) = message
+                                    && let Ok(packet) = serde_json::from_str::<Packet>(&s)
+                                {
+                                    match packet {
+                                        Packet::GameLoadSuccess => {
+                                            loaded_sessions.push(n);
+                                            continue 'update; // Session is removed from waiting.
+                                        }
+                                        _ => { /* empty */ }
+                                    }
                                 }
-                                _ => { /* empty */ }
+                            }
+                            StreamPollResult::Error(e) => {
+                                println!("WebSocket disconnected ({:?}): {e}", n.session);
+
+                                #[cfg(not(feature = "no-debugging-log"))]
+                                println!("{:?} replaced by Bot", n.session);
+
+                                let bot = Box::new(Bot::from(n.session));
+                                wait_sessions.push(Node::new(bot, n.left_side));
+                                num_player -= 1;
+                                continue 'update; // Session is removed due to error.
+                            }
+                            StreamPollResult::Closed => {
+                                println!("WebSocket disconnected ({:?})", n.session);
+
+                                #[cfg(not(feature = "no-debugging-log"))]
+                                println!("{:?} replaced by Bot", n.session);
+
+                                let bot = Box::new(Bot::from(n.session));
+                                wait_sessions.push(Node::new(bot, n.left_side));
+                                num_player -= 1;
+                                continue 'update; // Session is removed due to closure.
                             }
                         }
-                    }
-                    StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", n.session);
-                        continue 'update; // Session is removed due to error.
-                    }
-                    StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", n.session);
-                        continue 'update; // Session is removed due to closure.
+                        cnt -= 1;
                     }
                 }
-                cnt -= 1;
+                None => {
+                    loaded_sessions.push(n);
+                    continue 'update; // Session is removed from waiting.
+                }
             }
             temp.push(n);
         }
         mem::swap(&mut wait_sessions, &mut temp);
 
+        if num_player == 0 {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Stop waiting.");
+            return;
+        }
+
         'update: while let Some(mut n) = loaded_sessions.pop() {
-            let mut cnt = MAX_LOOP;
-            while cnt > 0 {
-                match poll_stream_nonblocking(&mut n.session.read) {
-                    StreamPollResult::Pending => break,
-                    StreamPollResult::Item(_) => { /* empty */ }
-                    StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", n.session);
-                        continue 'update; // Session is removed due to error.
-                    }
-                    StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", n.session);
-                        continue 'update; // Session is removed due to closure.
+            match n.session.reader() {
+                Some(stream) => {
+                    let mut cnt = MAX_LOOP;
+                    while cnt > 0 {
+                        match poll_stream_nonblocking(stream) {
+                            StreamPollResult::Pending => break,
+                            StreamPollResult::Item(_) => { /* empty */ }
+                            StreamPollResult::Error(e) => {
+                                println!("WebSocket disconnected ({:?}): {e}", n.session);
+
+                                #[cfg(not(feature = "no-debugging-log"))]
+                                println!("{:?} replaced by Bot", n.session);
+
+                                let bot = Box::new(Bot::from(n.session));
+                                loaded_sessions.push(Node::new(bot, n.left_side));
+                                num_player -= 1;
+                                continue 'update; // Session is removed due to error.
+                            }
+                            StreamPollResult::Closed => {
+                                println!("WebSocket disconnected ({:?})", n.session);
+
+                                #[cfg(not(feature = "no-debugging-log"))]
+                                println!("{:?} replaced by Bot", n.session);
+
+                                let bot = Box::new(Bot::from(n.session));
+                                loaded_sessions.push(Node::new(bot, n.left_side));
+                                num_player -= 1;
+                                continue 'update; // Session is removed due to closure.
+                            }
+                        }
+                        cnt -= 1;
                     }
                 }
-                cnt -= 1;
+                None => { /* empty */ }
             }
             temp.push(n);
         }
         mem::swap(&mut loaded_sessions, &mut temp);
+
+        if num_player == 0 {
+            #[cfg(not(feature = "no-debugging-log"))]
+            println!("Stop waiting.");
+            return;
+        }
 
         if loaded_sessions.len() == 2 {
             #[cfg(not(feature = "no-debugging-log"))]
@@ -118,27 +175,36 @@ pub async fn wait(left: Session, right: Session) {
                 (n1.session, n0.session)
             };
 
-            tokio::spawn(prepare::wait(left, right));
+            tokio::spawn(prepare::wait(left, right, num_player));
             return;
         }
     }
 
     while let Some(n) = wait_sessions.pop() {
-        n.session.tx.send(Packet::GameLoadTimeout).unwrap();
-        next_state(State::Title, n.session);
+        let mut session = n.session;
+        let bot = Box::new(Bot::from(session.as_ref()));
+        loaded_sessions.push(Node::new(bot, n.left_side));
+
+        #[cfg(not(feature = "no-debugging-log"))]
+        println!("{:?} replaced by Bot", session);
+
+        let message = Packet::GameLoadTimeout;
+        session = send_message(session, &message, &mut num_player);
+        let result: Result<Box<Player>, Box<dyn Any>> = session.into_any().downcast();
+        if let Ok(player) = result {
+            next_state(State::Title, player);
+        }
     }
 
-    while let Some(n) = loaded_sessions.pop() {
-        // --- Temp Code ---
-        #[cfg(not(feature = "no-debugging-log"))]
-        println!(
-            "FIXME: Single player mode is not implemented yet. ({}/{})",
-            file!(),
-            line!()
-        );
+    if loaded_sessions.len() == 2 {
+        let n0 = loaded_sessions.pop().unwrap();
+        let n1 = loaded_sessions.pop().unwrap();
+        let (left, right) = if n0.left_side {
+            (n0.session, n1.session)
+        } else {
+            (n1.session, n0.session)
+        };
 
-        n.session.tx.send(Packet::GameLoadTimeout).unwrap();
-        next_state(State::Title, n.session);
-        //------------------
+        tokio::spawn(prepare::wait(left, right, num_player));
     }
 }

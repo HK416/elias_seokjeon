@@ -85,7 +85,7 @@ fn packet_receive_loop(mut commands: Commands, network: Res<Network>) {
             Ok(packet) => match packet {
                 Packet::Connection(p) => {
                     commands.insert_resource(PlayerInfo {
-                        uuid: p.uuid,
+                        uuid: p.uuid.unwrap(),
                         name: p.name,
                         hero: p.hero,
                         win: p.win,

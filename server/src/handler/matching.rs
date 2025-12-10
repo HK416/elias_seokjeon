@@ -6,15 +6,15 @@ const MAX_LOOP: usize = 100;
 static NEW: SegQueue<Node> = SegQueue::new();
 
 struct Node {
-    session: Session,
+    player: Box<Player>,
     previous_instant: Instant,
     millis: u16,
 }
 
 impl Node {
-    pub fn new(session: Session) -> Self {
+    pub fn new(player: Box<Player>) -> Self {
         Self {
-            session,
+            player,
             previous_instant: Instant::now(),
             millis: MAX_MATCHING_TIME,
         }
@@ -42,7 +42,7 @@ async fn update_internal() {
             #[cfg(not(feature = "no-debugging-log"))]
             println!(
                 "Added Matching Queue ({:?}) - Queue Size: {}",
-                n.session,
+                n.player,
                 nodes.len() + 1
             );
             nodes.push_back(n);
@@ -53,7 +53,7 @@ async fn update_internal() {
         'update: while let Some(mut node) = nodes.pop_front() {
             let mut cnt = MAX_LOOP;
             while cnt > 0 {
-                match poll_stream_nonblocking(&mut node.session.read) {
+                match poll_stream_nonblocking(&mut node.player.read) {
                     StreamPollResult::Pending => break,
                     StreamPollResult::Item(message) => {
                         if let Message::Text(s) = message
@@ -61,8 +61,8 @@ async fn update_internal() {
                         {
                             match packet {
                                 Packet::TryCancelGame => {
-                                    node.session.tx.send(Packet::CancelSuccess).unwrap();
-                                    next_state(State::Title, node.session);
+                                    node.player.tx.send(Packet::CancelSuccess).unwrap();
+                                    next_state(State::Title, node.player);
                                     continue 'update; // Session is removed from matching.
                                 }
                                 _ => { /* empty */ }
@@ -70,13 +70,13 @@ async fn update_internal() {
                         }
                     }
                     StreamPollResult::Error(e) => {
-                        println!("WebSocket disconnected ({:?}): {e}", node.session);
+                        println!("WebSocket disconnected ({:?}): {e}", node.player);
                         #[cfg(not(feature = "no-debugging-log"))]
                         println!("Queue Size: {}", nodes.len());
                         continue 'update; // Session is removed due to error.
                     }
                     StreamPollResult::Closed => {
-                        println!("WebSocket disconnected ({:?})", node.session);
+                        println!("WebSocket disconnected ({:?})", node.player);
                         #[cfg(not(feature = "no-debugging-log"))]
                         println!("Queue Size: {}", nodes.len());
                         continue 'update; // Session is removed due to closure.
@@ -90,13 +90,13 @@ async fn update_internal() {
 
         // 3. Try to match sessions who are still in the queue.
         while nodes.len() >= 2 {
-            let left = nodes.pop_front().unwrap().session;
-            let right = nodes.pop_front().unwrap().session;
+            let left = nodes.pop_front().unwrap().player;
+            let right = nodes.pop_front().unwrap().player;
 
             #[cfg(not(feature = "no-debugging-log"))]
             println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
 
-            tokio::spawn(sync::wait(left, right));
+            tokio::spawn(sync::wait(left, right, 2));
         }
 
         // 4. Update status for the remaining sessions.
@@ -108,20 +108,19 @@ async fn update_internal() {
             node.millis = node.millis.saturating_sub(elapsed as u16);
 
             if node.millis == 0 {
-                // --- Temp code ---
-                #[cfg(not(feature = "no-debugging-log"))]
-                println!(
-                    "FIXME: Single player mode is not implemented yet. ({}/{})",
-                    file!(),
-                    line!()
-                );
+                let (left, right): (Box<dyn Session>, Box<dyn Session>) = match rand::random() {
+                    true => (Box::new(Bot::new()), node.player),
+                    false => (node.player, Box::new(Bot::new())),
+                };
 
-                next_state(State::Matching, node.session);
+                #[cfg(not(feature = "no-debugging-log"))]
+                println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
+
+                tokio::spawn(sync::wait(left, right, 1));
                 continue;
-                //-------------------
             }
 
-            node.session
+            node.player
                 .tx
                 .send(Packet::MatchingStatus {
                     millis: node.millis,
@@ -135,8 +134,8 @@ async fn update_internal() {
     }
 }
 
-pub async fn regist(session: Session) {
+pub async fn regist(player: Box<Player>) {
     #[cfg(not(feature = "no-debugging-log"))]
-    println!("{:?} - Current State: Matching", session);
-    NEW.push(Node::new(session));
+    println!("{:?} - Current State: Matching", player);
+    NEW.push(Node::new(player));
 }
