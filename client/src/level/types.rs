@@ -539,3 +539,12 @@ pub struct RightPlayerHead(pub Entity);
 pub struct Projectile {
     pub hit: bool,
 }
+
+#[derive(Component)]
+pub struct BackgroundSound;
+
+#[derive(Component)]
+pub struct EffectSound;
+
+#[derive(Component)]
+pub struct VoiceSound;

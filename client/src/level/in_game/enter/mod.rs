@@ -131,6 +131,22 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<TextureAtlasLayout> = asset_server.load(ATLAS_PATH_ID_PANEL);
     loading_assets.push(handle);
 
+    // --- Sound Loading ---
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK_END);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_RUBBING);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_EMOTICON_HIT);
+    loading_assets.push(handle);
+
     // --- Stage Loading ---
     for path in IMG_PATH_BG_FAIRY {
         let handle: Handle<Image> = asset_server.load(path);

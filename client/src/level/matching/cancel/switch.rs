@@ -19,6 +19,7 @@ impl Plugin for InnerPlugin {
                 setup_scene_timer,
                 show_matching_cancel_entities,
                 setup_matching_cancel_interfaces,
+                play_popup_sounds,
             ),
         )
         .add_systems(

@@ -27,6 +27,7 @@ impl Plugin for InnerPlugin {
                     cleanup_resource,
                     #[cfg(target_arch = "wasm32")]
                     save_volume_options,
+                    play_popup_close_sounds,
                 ),
             )
             .add_systems(
@@ -52,6 +53,14 @@ impl Plugin for InnerPlugin {
                     update_volume_slider_for_moblie,
                 )
                     .run_if(in_state(LevelStates::InOption)),
+            )
+            .add_systems(
+                FixedUpdate,
+                (
+                    update_background_volumes,
+                    update_effect_volumes,
+                    update_voice_volumes,
+                ),
             );
 
         #[cfg(target_arch = "wasm32")]
@@ -108,14 +117,18 @@ fn handle_keyboard_inputs(
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn handle_pn_button_pressed(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &PNButton, &Interaction),
-        (With<OptionLevelEntity>, With<Button>),
+        (With<OptionLevelEntity>, Changed<Interaction>, With<Button>),
     >,
 ) {
     for (entity, &pn_button, interaction) in interaction_query.iter_mut() {
@@ -129,7 +142,13 @@ fn handle_pn_button_pressed(
 
         match (pn_button, interaction) {
             (PNButton::Positive, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::InTitle);
+            }
+            (PNButton::Positive, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
             _ => { /* empty */ }
         }
@@ -137,14 +156,18 @@ fn handle_pn_button_pressed(
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn handle_locale_button_pressed(
+    mut commands: Commands,
     mut locale: ResMut<Locale>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &LocaleButton, &Interaction),
-        (With<OptionLevelEntity>, With<Button>),
+        (With<OptionLevelEntity>, Changed<Interaction>, With<Button>),
     >,
 ) {
     for (entity, &locale_button, interaction) in interaction_query.iter_mut() {
@@ -158,13 +181,25 @@ fn handle_locale_button_pressed(
 
         match (locale_button, interaction) {
             (LocaleButton::En, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::En;
             }
             (LocaleButton::Ja, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::Ja;
             }
             (LocaleButton::Ko, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::Ko;
+            }
+            (LocaleButton::En, Interaction::Hovered)
+            | (LocaleButton::Ja, Interaction::Hovered)
+            | (LocaleButton::Ko, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
             _ => { /* empty */ }
         }
@@ -173,6 +208,9 @@ fn handle_locale_button_pressed(
 
 #[allow(clippy::type_complexity)]
 fn handle_volume_button_pressed(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
         (Entity, &VolumeSlider, &Interaction),
@@ -184,8 +222,16 @@ fn handle_volume_button_pressed(
             (VolumeSlider::Background, Interaction::Pressed)
             | (VolumeSlider::Effect, Interaction::Pressed)
             | (VolumeSlider::Voice, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 selected.set(volume_slider, entity, 0);
                 break;
+            }
+            (VolumeSlider::Background, Interaction::Hovered)
+            | (VolumeSlider::Effect, Interaction::Hovered)
+            | (VolumeSlider::Voice, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
             _ => { /* empty */ }
         }
@@ -194,7 +240,10 @@ fn handle_volume_button_pressed(
 
 #[allow(clippy::type_complexity)]
 fn handle_volume_button_pressed_for_moblie(
+    mut commands: Commands,
     touches: Res<Touches>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
         (Entity, &VolumeSlider, &Interaction),
@@ -207,8 +256,16 @@ fn handle_volume_button_pressed_for_moblie(
                 (VolumeSlider::Background, Interaction::Pressed)
                 | (VolumeSlider::Effect, Interaction::Pressed)
                 | (VolumeSlider::Voice, Interaction::Pressed) => {
+                    let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                    play_effect_sound(&mut commands, &system_volume, source);
                     selected.set(volume_slider, entity, touch.id());
                     break;
+                }
+                (VolumeSlider::Background, Interaction::Hovered)
+                | (VolumeSlider::Effect, Interaction::Hovered)
+                | (VolumeSlider::Voice, Interaction::Hovered) => {
+                    let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
+                    play_effect_sound(&mut commands, &system_volume, source);
                 }
                 _ => { /* empty */ }
             }
@@ -217,11 +274,26 @@ fn handle_volume_button_pressed_for_moblie(
 }
 
 fn handle_volume_button_released(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut selected: ResMut<SelectedSliderCursor>,
 ) {
-    if mouse_buttons.just_released(MouseButton::Left) {
-        let _ = selected.take();
+    if mouse_buttons.just_released(MouseButton::Left)
+        && let Some((slider, _, _)) = selected.take()
+    {
+        match slider {
+            VolumeSlider::Effect => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_UP);
+                play_effect_sound(&mut commands, &system_volume, source);
+            }
+            VolumeSlider::Voice => {
+                let source = asset_server.load(VOC_PATH_ERPIN);
+                play_voice_sound(&mut commands, &system_volume, source);
+            }
+            _ => { /* empty */ }
+        }
     }
 }
 
@@ -313,5 +385,32 @@ fn update_volume_slider_for_moblie(
             VolumeSlider::Effect => system_volume.effect = (p * 255.0) as u8,
             VolumeSlider::Voice => system_volume.voice = (p * 255.0) as u8,
         }
+    }
+}
+
+fn update_background_volumes(
+    system_volume: Res<SystemVolume>,
+    mut query: Query<&mut AudioSink, With<BackgroundSound>>,
+) {
+    for mut sink in query.iter_mut() {
+        sink.set_volume(system_volume.get_background());
+    }
+}
+
+fn update_effect_volumes(
+    system_volume: Res<SystemVolume>,
+    mut query: Query<&mut AudioSink, With<EffectSound>>,
+) {
+    for mut sink in query.iter_mut() {
+        sink.set_volume(system_volume.get_effect());
+    }
+}
+
+fn update_voice_volumes(
+    system_volume: Res<SystemVolume>,
+    mut query: Query<&mut AudioSink, With<VoiceSound>>,
+) {
+    for mut sink in query.iter_mut() {
+        sink.set_volume(system_volume.get_voice());
     }
 }

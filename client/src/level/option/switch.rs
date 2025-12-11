@@ -19,6 +19,7 @@ impl Plugin for InnerPlugin {
                 show_option_entities,
                 setup_scene_timer,
                 setup_option_interfaces,
+                play_popup_sounds,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToInOption), cleanup_scene_timer)

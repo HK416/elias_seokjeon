@@ -1,5 +1,7 @@
 // Import necessary Bevy modules.
-use bevy::prelude::*;
+use bevy::{audio::PlaybackMode, prelude::*};
+
+use crate::assets::sound::SystemVolume;
 
 use super::*;
 
@@ -156,4 +158,34 @@ pub fn update_entity_spawn_progress(
 
     let progress = loading_assets.percent();
     node.width = Val::Percent(progress * 100.0);
+}
+
+pub fn play_popup_sounds(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+) {
+    commands.spawn((
+        AudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_TOAST_MESSAGE)),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_effect(),
+            ..Default::default()
+        },
+    ));
+}
+
+pub fn play_popup_close_sounds(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+) {
+    commands.spawn((
+        AudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_CLOSE)),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_effect(),
+            ..Default::default()
+        },
+    ));
 }

@@ -1,6 +1,8 @@
 // Import necessary Bevy modules.
-use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*};
+use bevy::{audio::PlaybackMode, ecs::relationship::RelatedSpawnerCommands, prelude::*};
 use bevy_spine::Spine;
+
+use crate::assets::sound::SystemVolume;
 
 use super::*;
 
@@ -116,4 +118,36 @@ pub fn play_character_animation(
 
 pub fn normalized_wave(t: f32, a: f32, k: f32, omega: f32, phi: f32) -> f32 {
     a * (1.0 - t).powf(k) * (omega * t * TAU + phi).sin()
+}
+
+pub fn play_effect_sound(
+    commands: &mut Commands,
+    system_volume: &SystemVolume,
+    source: Handle<AudioSource>,
+) {
+    commands.spawn((
+        AudioPlayer::new(source),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_effect(),
+            ..Default::default()
+        },
+        EffectSound,
+    ));
+}
+
+pub fn play_voice_sound(
+    commands: &mut Commands,
+    system_volume: &SystemVolume,
+    source: Handle<AudioSource>,
+) {
+    commands.spawn((
+        AudioPlayer::new(source),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_voice(),
+            ..Default::default()
+        },
+        VoiceSound,
+    ));
 }

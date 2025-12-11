@@ -19,6 +19,7 @@ impl Plugin for InnerPlugin {
                 setup_scene_timer,
                 show_matching_entities,
                 setup_matching_interfaces,
+                play_popup_sounds,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToInMatching), cleanup_scene_timer)

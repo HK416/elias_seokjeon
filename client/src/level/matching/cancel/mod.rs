@@ -76,6 +76,8 @@ fn handle_keyboard_input(
 fn handle_button_interaction(
     mut commands: Commands,
     #[cfg(target_arch = "wasm32")] network: Res<Network>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
@@ -98,10 +100,19 @@ fn handle_button_interaction(
             (PNButton::Positive, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_cancel_game_message(&network);
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 commands.insert_resource(CancelFlag);
             }
             (PNButton::Negative, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatching);
+            }
+            (PNButton::Positive, Interaction::Hovered)
+            | (PNButton::Negative, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
             _ => { /* empty */ }
         }
@@ -111,6 +122,8 @@ fn handle_button_interaction(
 #[cfg(target_arch = "wasm32")]
 fn handle_received_packets(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut next_state: ResMut<NextState<LevelStates>>,
     network: Res<Network>,
     player_info: Res<PlayerInfo>,
@@ -119,6 +132,8 @@ fn handle_received_packets(
         match result {
             Ok(packet) => match packet {
                 Packet::CancelSuccess => {
+                    let source = asset_server.load(SFX_PATH_COMMON_POPUP_CLOSE);
+                    play_effect_sound(&mut commands, &system_volume, source);
                     next_state.set(LevelStates::InTitle);
                 }
                 Packet::MatchingSuccess { left, right } => {

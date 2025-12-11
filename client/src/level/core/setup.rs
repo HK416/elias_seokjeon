@@ -83,6 +83,28 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer) {
     let handle: Handle<Font> = asset_server.load(FONT_PATH);
     loading_assets.push(handle);
 
+    // --- Sound Loading ---
+    let handle: Handle<AudioSource> = asset_server.load(BGM_PATH_BACKGROUND);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_BUTTON_UP);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_POPUP_CLOSE);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_POPUP_TOAST_MESSAGE);
+    loading_assets.push(handle);
+
     // --- Resource Insertion ---
     commands.insert_resource(loading_assets);
     commands.insert_resource(localizations);

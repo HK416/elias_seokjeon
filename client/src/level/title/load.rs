@@ -91,6 +91,25 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     let handle: Handle<SkeletonData> = asset_server.load(path);
     loading_assets.push(handle);
 
+    // --- Sound Loading ---
+    let handle: Handle<AudioSource> = asset_server.load(VOC_PATH_ERPIN);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK_END);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_RUBBING);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_EMOTICON_HIT);
+    loading_assets.push(handle);
+
     // --- Resource Insersion ---
     commands.insert_resource(loading_assets);
 }

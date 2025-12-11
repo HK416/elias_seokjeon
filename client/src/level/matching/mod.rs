@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 use crate::assets::locale::Locale;
+use crate::assets::sound::SystemVolume;
 
 use super::*;
 
@@ -69,7 +70,11 @@ fn handle_keyboard_input(
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn handle_pn_button_interaction(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
@@ -90,7 +95,13 @@ fn handle_pn_button_interaction(
 
         match (button, interaction) {
             (PNButton::Negative, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatchingCancel);
+            }
+            (PNButton::Negative, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
             _ => { /* empty */ }
         }

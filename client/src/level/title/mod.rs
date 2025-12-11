@@ -4,10 +4,13 @@ mod message;
 
 // Import necessary Bevy modules.
 use bevy::{
+    audio::PlaybackMode,
     input::{ButtonState, mouse::MouseButtonInput},
     prelude::*,
 };
 use bevy_spine::{SkeletonController, Spine, SpineReadyEvent};
+
+use crate::assets::sound::SystemVolume;
 
 use super::*;
 
@@ -22,7 +25,12 @@ impl Plugin for InnerPlugin {
             .add_plugins(message::InnerPlugin)
             .add_systems(
                 OnEnter(LevelStates::InTitle),
-                (debug_label, show_title_entities, setup_camera),
+                (
+                    debug_label,
+                    show_title_entities,
+                    setup_camera,
+                    play_background_sound,
+                ),
             )
             .add_systems(OnExit(LevelStates::InTitle), hide_title_entities)
             .add_systems(
@@ -87,6 +95,25 @@ fn setup_camera(mut commands: Commands, camera_query: Query<(), With<Camera2d>>)
     }
 }
 
+fn play_background_sound(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+    query: Query<(), With<BackgroundSound>>,
+) {
+    if query.is_empty() {
+        commands.spawn((
+            AudioPlayer::new(asset_server.load(BGM_PATH_BACKGROUND)),
+            PlaybackSettings {
+                mode: PlaybackMode::Loop,
+                volume: system_volume.get_background(),
+                ..Default::default()
+            },
+            BackgroundSound,
+        ));
+    }
+}
+
 // --- CLEANUP SYSTEMS ---
 
 #[allow(clippy::type_complexity)]
@@ -107,10 +134,13 @@ fn hide_title_entities(
 
 // --- PREUPDATE SYSTEMS ---
 
-#[allow(unreachable_patterns)]
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn handle_button_interaction(
+    mut commands: Commands,
     #[cfg(target_arch = "wasm32")] network: Res<Network>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut next_state: ResMut<NextState<LevelStates>>,
     children_query: Query<&Children>,
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
@@ -133,12 +163,25 @@ fn handle_button_interaction(
             (TitleButton::GameStart, Interaction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network);
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatching);
             }
             (TitleButton::Option, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInOption);
             }
-            (TitleButton::HowToPlay, Interaction::Pressed) => {}
+            (TitleButton::HowToPlay, Interaction::Pressed) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
+            }
+            (TitleButton::GameStart, Interaction::Hovered)
+            | (TitleButton::Option, Interaction::Hovered)
+            | (TitleButton::HowToPlay, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
+            }
             _ => { /* empty */ }
         }
     }
@@ -186,6 +229,9 @@ fn handle_mouse_input(
 // --- UPDATE SYSTEMS ---
 
 fn update_grabbed_timer(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
     mut grabbed_query: Query<(&TargetSpine, &ColliderType, &mut Grabbed)>,
     time: Res<Time>,
@@ -198,13 +244,21 @@ fn update_grabbed_timer(
                 spine_query.get_mut(target_spine.entity)
             && !matches!(*anim_state, CharacterAnimState::PatIdle)
         {
+            let source = asset_server.load(SFX_PATH_COMMON_RUBBING);
+            play_effect_sound(&mut commands, &system_volume, source);
+
             *anim_state = CharacterAnimState::PatIdle;
             play_character_animation(&mut spine, *character, *anim_state);
         }
     }
 }
 
+#[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn added_grabbed_component(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     bone_query: Query<&GlobalTransform>,
     mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
     mut grabbed_query: Query<
@@ -223,6 +277,9 @@ fn added_grabbed_component(
         {
             match ty {
                 ColliderType::Ball => {
+                    let source = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK);
+                    play_effect_sound(&mut commands, &system_volume, source);
+
                     origin_position.world = transform.translation().xy();
                     *anim_state = CharacterAnimState::TouchIdle;
                     play_character_animation(&mut spine, *character, *anim_state);
@@ -234,8 +291,11 @@ fn added_grabbed_component(
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn removed_grabbed_component(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut entities: RemovedComponents<Grabbed>,
@@ -254,6 +314,9 @@ fn removed_grabbed_component(
         {
             match ty {
                 ColliderType::Ball => {
+                    let source = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK_END);
+                    play_effect_sound(&mut commands, &system_volume, source);
+
                     *anim_state = CharacterAnimState::TouchEnd;
                     play_character_animation(&mut spine, *character, *anim_state);
 
@@ -276,9 +339,15 @@ fn removed_grabbed_component(
                 }
                 ColliderType::Head => {
                     if matches!(*anim_state, CharacterAnimState::PatIdle) {
+                        let source = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
+                        play_effect_sound(&mut commands, &system_volume, source);
+
                         *anim_state = CharacterAnimState::PatEnd;
                         play_character_animation(&mut spine, *character, *anim_state);
                     } else {
+                        let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
+                        play_effect_sound(&mut commands, &system_volume, source);
+
                         *anim_state = CharacterAnimState::SmashEnd1;
                         play_character_animation(&mut spine, *character, *anim_state);
                     }

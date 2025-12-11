@@ -37,6 +37,23 @@
                 }
             }
         },
+        "sounds": {
+            "target_files": [
+                "Erpin.sound",
+                "BGM_PatchGame.sound",
+                "SFX_Common_ButtonDown.sound",
+                "SFX_Common_ButtonTouch.sound",
+                "SFX_Common_ButtonUp.sound",
+                "SFX_Common_PopupButtonTouch.sound",
+                "SFX_Common_PopupClose.sound",
+                "SFX_Common_PopupToastMessage.sound",
+                "SFX_Common_PullCheek.sound",
+                "SFX_Common_PullCheekEnd.sound",
+                "SFX_Common_Rubbing.sound",
+                "SFX_Common_RubbingEnd.sound",
+                "SFX_Emoticon_Hit.sound"
+            ]
+        },
         "textures": {
             "target_files": [
                 "Background.texture",

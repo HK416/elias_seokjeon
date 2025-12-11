@@ -16,6 +16,20 @@ use protocol::{Hero, NUM_HEROS};
 #[rustfmt::skip] pub const MODEL_PATH_BUTTER: &str = concatcp!("models/butter/Butter.model", QUERY, VERSION);
 #[rustfmt::skip] pub const MODEL_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.model", QUERY, VERSION);
 
+#[rustfmt::skip] pub const BGM_PATH_BACKGROUND: &str = concatcp!("sounds/BGM_PatchGame.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_UP: &str = concatcp!("sounds/SFX_Common_ButtonUp.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_DOWN: &str = concatcp!("sounds/SFX_Common_ButtonDown.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_TOUCH: &str = concatcp!("sounds/SFX_Common_ButtonTouch.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_POPUP_CLOSE: &str = concatcp!("sounds/SFX_Common_PopupClose.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_POPUP_BUTTON_TOUCH: &str = concatcp!("sounds/SFX_Common_PopupButtonTouch.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_POPUP_TOAST_MESSAGE: &str = concatcp!("sounds/SFX_Common_PopupToastMessage.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_PULL_CHEEK: &str = concatcp!("sounds/SFX_Common_PullCheek.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_PULL_CHEEK_END: &str = concatcp!("sounds/SFX_Common_PullCheekEnd.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_RUBBING: &str = concatcp!("sounds/SFX_Common_Rubbing.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_COMMON_RUBBING_END: &str = concatcp!("sounds/SFX_Common_RubbingEnd.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_EMOTICON_HIT: &str = concatcp!("sounds/SFX_Emoticon_Hit.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const VOC_PATH_ERPIN: &str = concatcp!("sounds/Erpin.sound", QUERY, VERSION);
+
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND: &str = concatcp!("textures/Background.texture", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_BG_FAIRY_0: &str = concatcp!("textures/BG_Fairy_0.texture", QUERY, VERSION);
