@@ -170,7 +170,7 @@ fn setup_in_game_entities(
                 ..Default::default()
             },
             CharacterAnimState::Idle,
-            Character::new(left),
+            Character::from(left),
         ))
         .id();
     loading_entities.insert(left_entity);
@@ -185,7 +185,7 @@ fn setup_in_game_entities(
                 visibility: Visibility::Visible,
                 ..Default::default()
             },
-            Character::new(right),
+            Character::from(right),
         ))
         .id();
     loading_entities.insert(right_entity);

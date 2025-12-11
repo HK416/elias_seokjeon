@@ -25,7 +25,7 @@ impl Plugin for InnerPlugin {
                 setup_in_game_sprite,
                 setup_in_game_spines,
                 setup_in_game_interfaces,
-                play_popup_bobble_sounds,
+                play_in_game_victory_sound,
             ),
         )
         .add_systems(
@@ -33,7 +33,7 @@ impl Plugin for InnerPlugin {
             (
                 cleanup_scene_timer,
                 cleanup_in_game_entities,
-                play_in_game_victory_sound,
+                play_in_game_victory_voice,
             ),
         )
         .add_systems(
@@ -108,7 +108,7 @@ fn setup_game_result_spines(
             .entity(entity)
             .insert(FadeEffect::new(SCENE_DURATION));
 
-        *anim_state = CharacterAnimState::Blank;
+        *anim_state = CharacterAnimState::Happy;
         play_character_animation(&mut spine, *character, *anim_state);
         spine.skeleton.color_mut().set_a(0.0);
     }

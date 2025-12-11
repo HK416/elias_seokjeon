@@ -1,7 +1,30 @@
+mod butter;
+mod kommy;
+
 use bevy::platform::collections::HashMap;
 use const_format::concatcp;
 use lazy_static::lazy_static;
 use protocol::{Hero, NUM_HEROS};
+
+pub trait HeroVoiceSet {
+    fn all(&self) -> &[&'static str];
+
+    fn defeat(&self) -> [&'static str; 2];
+
+    fn victory(&self) -> [&'static str; 2];
+
+    fn smash_end(&self) -> [&'static str; 5];
+
+    fn pull_cheek(&self) -> &'static str;
+
+    fn rubbing(&self) -> [&'static str; 3];
+
+    fn attack(&self) -> [&'static str; 2];
+
+    fn hit(&self) -> [&'static str; 5];
+}
+
+pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [&butter::HeroVoice, &kommy::HeroVoice];
 
 #[rustfmt::skip] pub const QUERY: &str = "?";
 #[rustfmt::skip] pub const VERSION: &str = concat!("v=", env!("CARGO_PKG_VERSION_PATCH"));

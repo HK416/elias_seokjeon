@@ -1,5 +1,7 @@
 // Import necessary Bevy modules.
 use bevy::{audio::PlaybackMode, prelude::*};
+use protocol::Hero;
+use rand::seq::IndexedRandom;
 
 use crate::assets::sound::SystemVolume;
 
@@ -229,6 +231,30 @@ pub fn play_in_game_defeat_sound(
     ));
 }
 
+pub fn play_in_game_defeat_voice(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+    player_info: Res<PlayerInfo>,
+    query: Query<Entity, With<VoiceSound>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+
+    let set = HERO_VOICE_SETS[player_info.hero as usize];
+    let path = set.defeat().choose(&mut rand::rng()).copied().unwrap();
+    commands.spawn((
+        AudioPlayer::new(asset_server.load(path)),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_effect(),
+            ..Default::default()
+        },
+        VoiceSound,
+    ));
+}
+
 pub fn play_in_game_victory_sound(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -247,6 +273,30 @@ pub fn play_in_game_victory_sound(
             ..Default::default()
         },
         BackgroundSound,
+    ));
+}
+
+pub fn play_in_game_victory_voice(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+    player_info: Res<PlayerInfo>,
+    query: Query<Entity, With<VoiceSound>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+
+    let set = HERO_VOICE_SETS[player_info.hero as usize];
+    let path = set.victory().choose(&mut rand::rng()).copied().unwrap();
+    commands.spawn((
+        AudioPlayer::new(asset_server.load(path)),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: system_volume.get_effect(),
+            ..Default::default()
+        },
+        VoiceSound,
     ));
 }
 
@@ -323,6 +373,7 @@ pub fn removed_grabbed_component(
     mut entities: RemovedComponents<Grabbed>,
     mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
     grabbed_query: Query<(Entity, &TargetSpine, &TargetSpineBone, &ColliderType)>,
+    voices: Query<Entity, With<VoiceSound>>,
 ) {
     let Ok(window) = windows.single() else { return };
     let Ok((camera, camera_transform)) = cameras.single() else {
@@ -338,6 +389,12 @@ pub fn removed_grabbed_component(
                 ColliderType::Ball => {
                     let source = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK_END);
                     play_effect_sound(&mut commands, &system_volume, source);
+
+                    cleanup_voices(&mut commands, &voices);
+                    let hero: Hero = (*character).into();
+                    let path = HERO_VOICE_SETS[hero as usize].pull_cheek();
+                    let source = asset_server.load(path);
+                    play_voice_sound(&mut commands, &system_volume, source);
 
                     *anim_state = CharacterAnimState::TouchEnd;
                     play_character_animation(&mut spine, *character, *anim_state);
@@ -363,6 +420,16 @@ pub fn removed_grabbed_component(
                     if matches!(*anim_state, CharacterAnimState::PatIdle) {
                         let source = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
                         play_effect_sound(&mut commands, &system_volume, source);
+
+                        cleanup_voices(&mut commands, &voices);
+                        let hero: Hero = (*character).into();
+                        let path = HERO_VOICE_SETS[hero as usize]
+                            .rubbing()
+                            .choose(&mut rand::rng())
+                            .copied()
+                            .unwrap();
+                        let source = asset_server.load(path);
+                        play_voice_sound(&mut commands, &system_volume, source);
 
                         *anim_state = CharacterAnimState::PatEnd;
                         play_character_animation(&mut spine, *character, *anim_state);

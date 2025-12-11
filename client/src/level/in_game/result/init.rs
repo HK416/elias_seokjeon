@@ -132,7 +132,7 @@ fn setup_game_result_entities(
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },
-            Character::new(player_info.hero),
+            Character::from(player_info.hero),
             SpineSync,
         ))
         .id();

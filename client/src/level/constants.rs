@@ -46,9 +46,6 @@ pub const KOMMY_TITLE: &str = "Taunt_1";
 pub const BUTTER_IDLE: &str = "Idle_1";
 pub const KOMMY_IDLE: &str = "Idle_1";
 
-pub const BUTTER_BLANK: &str = "Panic_1";
-pub const KOMMY_BLANK: &str = "Surprise_1";
-
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;
 pub const BALL_WAVE_DURATION: f32 = 0.5;

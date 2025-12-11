@@ -86,7 +86,7 @@ fn setup_in_prepare_entities(
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },
-            Character::new(player_info.hero),
+            Character::from(player_info.hero),
             SpineSync,
         ))
         .id();
@@ -102,7 +102,7 @@ fn setup_in_prepare_entities(
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },
-            Character::new(other_info.hero),
+            Character::from(other_info.hero),
             SpineSync,
         ))
         .id();

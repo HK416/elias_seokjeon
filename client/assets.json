@@ -38,6 +38,56 @@
             }
         },
         "sounds": {
+            "directories": {
+                "Butter": {
+                    "target_files": [
+                        "Voice_Butter_Anger1.sound",
+                        "Voice_Butter_Anger2.sound",
+                        "Voice_Butter_Anger3.sound",
+                        "Voice_Butter_Anger4.sound",
+                        "Voice_Butter_Anger5.sound",
+                        "Voice_Butter_BasicAttack1.sound",
+                        "Voice_Butter_BasicAttack2.sound",
+                        "Voice_Butter_Defeat1.sound",
+                        "Voice_Butter_Defeat2.sound",
+                        "Voice_Butter_Hit1.sound",
+                        "Voice_Butter_Hit2.sound",
+                        "Voice_Butter_Hit3.sound",
+                        "Voice_Butter_Hit4.sound",
+                        "Voice_Butter_Hit5.sound",
+                        "Voice_Butter_Touch1.sound",
+                        "Voice_Butter_Touch2.sound",
+                        "Voice_Butter_Touch2_1.sound",
+                        "Voice_Butter_Touch2_2.sound",
+                        "Voice_Butter_Victory1.sound",
+                        "Voice_Butter_Victory2.sound"
+                    ]
+                },
+                "Kommy": {
+                    "target_files": [
+                        "Voice_Kommy_BasicAttack1.sound",
+                        "Voice_Kommy_BasicAttack2.sound",
+                        "Voice_Kommy_Defeat1.sound",
+                        "Voice_Kommy_Defeat2.sound",
+                        "Voice_Kommy_Hit1.sound",
+                        "Voice_Kommy_Hit2.sound",
+                        "Voice_Kommy_Hit3.sound",
+                        "Voice_Kommy_Hit4.sound",
+                        "Voice_Kommy_Hit5.sound",
+                        "Voice_Kommy_Sorrow1.sound",
+                        "Voice_Kommy_Sorrow2.sound",
+                        "Voice_Kommy_Sorrow3.sound",
+                        "Voice_Kommy_Sorrow4.sound",
+                        "Voice_Kommy_Sorrow5.sound",
+                        "Voice_Kommy_Touch1.sound",
+                        "Voice_Kommy_Touch2.sound",
+                        "Voice_Kommy_Touch2_1.sound",
+                        "Voice_Kommy_Touch2_2.sound",
+                        "Voice_Kommy_Victory1.sound",
+                        "Voice_Kommy_Victory2.sound"
+                    ]
+                }
+            },
             "target_files": [
                 "BGM_PatchGame.sound",
                 "Erpin.sound",

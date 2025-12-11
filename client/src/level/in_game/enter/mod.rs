@@ -168,6 +168,14 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_SWING);
     loading_assets.push(handle);
 
+    // --- Voice Loading ---
+    for &hero in heros {
+        for &path in HERO_VOICE_SETS[hero as usize].all() {
+            let handle: Handle<AudioSource> = asset_server.load(path);
+            loading_assets.push(handle);
+        }
+    }
+
     // --- Stage Loading ---
     for path in IMG_PATH_BG_FAIRY {
         let handle: Handle<Image> = asset_server.load(path);

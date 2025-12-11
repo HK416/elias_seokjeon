@@ -8,9 +8,9 @@ mod switch;
 use bevy::prelude::*;
 use bevy_vector_shapes::prelude::*;
 use protocol::{
-    GRAVITY, LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_PLAYER_POS_Y, LEFT_START_ANGLE, LEFT_THROW_POS_X,
-    LEFT_THROW_POS_Y, MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE, RIGHT_START_ANGLE,
-    RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y,
+    GRAVITY, Hero, LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_PLAYER_POS_Y, LEFT_START_ANGLE,
+    LEFT_THROW_POS_X, LEFT_THROW_POS_Y, MAX_CTRL_TIME, RIGHT_CAM_POS_X, RIGHT_END_ANGLE,
+    RIGHT_START_ANGLE, RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y,
 };
 
 use crate::assets::sound::SystemVolume;
@@ -705,7 +705,14 @@ fn play_swing_sound(
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn setup_projectile(
+    mut commands: Commands,
+    play_side: Res<PlaySide>,
+    other_info: Res<OtherInfo>,
+    player_info: ResMut<PlayerInfo>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut query: Query<(
         &mut Visibility,
         &mut Sprite,
@@ -724,6 +731,30 @@ fn setup_projectile(
         transform.translation.y = snapshot.position.y;
         transform.translation.z = 0.8;
         projectile.hit = false;
+
+        match (*play_side, other_info.left_side) {
+            (PlaySide::LeftThrown, false) | (PlaySide::RightThrown, true) => {
+                let hero = player_info.hero;
+                let path = HERO_VOICE_SETS[hero as usize]
+                    .attack()
+                    .choose(&mut rand::rng())
+                    .copied()
+                    .unwrap();
+                let source = asset_server.load(path);
+                play_voice_sound(&mut commands, &system_volume, source);
+            }
+            (PlaySide::LeftThrown, true) | (PlaySide::RightThrown, false) => {
+                let hero = other_info.hero;
+                let path = HERO_VOICE_SETS[hero as usize]
+                    .attack()
+                    .choose(&mut rand::rng())
+                    .copied()
+                    .unwrap();
+                let source = asset_server.load(path);
+                play_voice_sound(&mut commands, &system_volume, source);
+            }
+            _ => { /* empty */ }
+        };
     }
 }
 
@@ -831,11 +862,13 @@ fn update_camera_position(
     };
 }
 
+#[allow(clippy::too_many_arguments)]
 fn check_collisions(
     mut commands: Commands,
     play_side: Res<PlaySide>,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
+    voices: Query<Entity, With<VoiceSound>>,
     mut spines: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
     left_collider: Query<(&Collider2d, &GlobalTransform, &LeftPlayerHead)>,
     right_collider: Query<(&Collider2d, &GlobalTransform, &RightPlayerHead)>,
@@ -857,6 +890,16 @@ fn check_collisions(
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
 
+                cleanup_voices(&mut commands, &voices);
+                let hero: Hero = (*character).into();
+                let path = HERO_VOICE_SETS[hero as usize]
+                    .hit()
+                    .choose(&mut rand::rng())
+                    .copied()
+                    .unwrap();
+                let source = asset_server.load(path);
+                play_voice_sound(&mut commands, &system_volume, source);
+
                 let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
                 play_effect_sound(&mut commands, &system_volume, source);
             }
@@ -875,6 +918,16 @@ fn check_collisions(
                 projectile.hit = true;
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
+
+                cleanup_voices(&mut commands, &voices);
+                let hero: Hero = (*character).into();
+                let path = HERO_VOICE_SETS[hero as usize]
+                    .hit()
+                    .choose(&mut rand::rng())
+                    .copied()
+                    .unwrap();
+                let source = asset_server.load(path);
+                play_voice_sound(&mut commands, &system_volume, source);
 
                 let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
                 play_effect_sound(&mut commands, &system_volume, source);

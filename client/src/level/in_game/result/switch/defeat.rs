@@ -25,7 +25,7 @@ impl Plugin for InnerPlugin {
                 setup_in_game_sprite,
                 setup_in_game_spines,
                 setup_in_game_interfaces,
-                play_popup_bobble_sounds,
+                play_in_game_defeat_sound,
             ),
         )
         .add_systems(
@@ -33,7 +33,7 @@ impl Plugin for InnerPlugin {
             (
                 cleanup_scene_timer,
                 cleanup_in_game_entities,
-                play_in_game_defeat_sound,
+                play_in_game_defeat_voice,
             ),
         )
         .add_systems(

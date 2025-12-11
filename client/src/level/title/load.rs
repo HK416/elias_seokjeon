@@ -113,6 +113,12 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_POPUP_BOBBLE);
     loading_assets.push(handle);
 
+    // --- Voice Loading ---
+    for &path in HERO_VOICE_SETS[hero as usize].all() {
+        let handle: Handle<AudioSource> = asset_server.load(path);
+        loading_assets.push(handle);
+    }
+
     // --- Resource Insersion ---
     commands.insert_resource(loading_assets);
 }

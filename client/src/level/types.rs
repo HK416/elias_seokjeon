@@ -151,11 +151,20 @@ pub enum Character {
     Kommy,
 }
 
-impl Character {
-    pub fn new(hero: Hero) -> Self {
+impl From<Hero> for Character {
+    fn from(hero: Hero) -> Self {
         match hero {
             Hero::Butter => Self::Butter,
             Hero::Kommy => Self::Kommy,
+        }
+    }
+}
+
+impl Into<Hero> for Character {
+    fn into(self) -> Hero {
+        match self {
+            Self::Butter => Hero::Butter,
+            Self::Kommy => Hero::Kommy,
         }
     }
 }
@@ -174,7 +183,6 @@ pub enum CharacterAnimState {
     InGameHit2,
     Happy,
     Sad,
-    Blank,
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq)]

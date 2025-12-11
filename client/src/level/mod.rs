@@ -13,9 +13,14 @@ mod utils;
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 use bevy_spine::{Spine, SpineEvent};
+use rand::seq::IndexedRandom;
 
 use crate::{
-    WND_HEIGHT, WND_WIDTH, assets::path::*, collider::*, resizable_font::*, translatable_text::*,
+    WND_HEIGHT, WND_WIDTH,
+    assets::{path::*, sound::SystemVolume},
+    collider::*,
+    resizable_font::*,
+    translatable_text::*,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -128,8 +133,12 @@ fn update_backout_anim(
 }
 
 fn handle_spine_animation_completed(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut spine_events: MessageReader<SpineEvent>,
     mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    voices: Query<Entity, With<VoiceSound>>,
 ) {
     for event in spine_events.read() {
         if let SpineEvent::Complete { entity, animation } = event
@@ -149,6 +158,25 @@ fn handle_spine_animation_completed(
                 CharacterAnimState::InGameHit2 => CharacterAnimState::InGame,
                 _ => continue,
             };
+
+            match *anim_state {
+                CharacterAnimState::SmashEnd2 => {
+                    for entity in voices.iter() {
+                        commands.entity(entity).despawn();
+                    }
+
+                    let hero: Character = (*character).into();
+                    let path = HERO_VOICE_SETS[hero as usize]
+                        .smash_end()
+                        .choose(&mut rand::rng())
+                        .copied()
+                        .unwrap();
+                    let source = asset_server.load(path);
+                    play_voice_sound(&mut commands, &system_volume, source);
+                }
+                _ => { /* empty */ }
+            }
+
             play_character_animation(&mut spine, *character, *anim_state);
         }
     }

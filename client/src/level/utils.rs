@@ -104,10 +104,6 @@ pub fn play_character_animation(
         CharacterAnimState::InGameHit2 => (SMASH_END_2, false),
         CharacterAnimState::Happy => (HAPPY_1, true),
         CharacterAnimState::Sad => (SAD_1, true),
-        CharacterAnimState::Blank => match character {
-            Character::Butter => (BUTTER_BLANK, true),
-            Character::Kommy => (KOMMY_BLANK, true),
-        },
     };
 
     spine
@@ -150,4 +146,10 @@ pub fn play_voice_sound(
         },
         VoiceSound,
     ));
+}
+
+pub fn cleanup_voices(commands: &mut Commands, voices: &Query<Entity, With<VoiceSound>>) {
+    for entity in voices.iter() {
+        commands.entity(entity).despawn();
+    }
 }
