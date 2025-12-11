@@ -20,6 +20,7 @@ impl Plugin for InnerPlugin {
                 show_enter_game_interfaces,
                 setup_enter_game_patterns,
                 setup_enter_game_interfaces,
+                play_popup_bobble_sounds,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToLoadGame), cleanup_scene_timer)

@@ -110,6 +110,9 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_EMOTICON_HIT);
     loading_assets.push(handle);
 
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_POPUP_BOBBLE);
+    loading_assets.push(handle);
+
     // --- Resource Insersion ---
     commands.insert_resource(loading_assets);
 }

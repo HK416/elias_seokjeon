@@ -17,6 +17,10 @@ use protocol::{Hero, NUM_HEROS};
 #[rustfmt::skip] pub const MODEL_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.model", QUERY, VERSION);
 
 #[rustfmt::skip] pub const BGM_PATH_BACKGROUND: &str = concatcp!("sounds/BGM_PatchGame.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const BGM_PATH_INGAME_DEFEAT: &str = concatcp!("sounds/SFX_InGame_Defeat.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const BGM_PATH_INGAME_VICTORY: &str = concatcp!("sounds/SFX_InGame_Victory.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_BOXING_BELL: &str = concatcp!("sounds/SFX_Boxing_Bell.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_CHEER: &str = concatcp!("sounds/SFX_Cheer.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_UP: &str = concatcp!("sounds/SFX_Common_ButtonUp.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_DOWN: &str = concatcp!("sounds/SFX_Common_ButtonDown.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_COMMON_BUTTON_TOUCH: &str = concatcp!("sounds/SFX_Common_ButtonTouch.sound", QUERY, VERSION);
@@ -28,6 +32,10 @@ use protocol::{Hero, NUM_HEROS};
 #[rustfmt::skip] pub const SFX_PATH_COMMON_RUBBING: &str = concatcp!("sounds/SFX_Common_Rubbing.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_COMMON_RUBBING_END: &str = concatcp!("sounds/SFX_Common_RubbingEnd.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_EMOTICON_HIT: &str = concatcp!("sounds/SFX_Emoticon_Hit.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_FIRE_FAIL: &str = concatcp!("sounds/SFX_FireFail.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_INGAME_TIME_OVER: &str = concatcp!("sounds/SFX_InGame_TimeOver.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_POPUP_BOBBLE: &str = concatcp!("sounds/SFX_PopupBobble.sound", QUERY, VERSION);
+#[rustfmt::skip] pub const SFX_PATH_SWING: &str = concatcp!("sounds/SFX_Swing.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const VOC_PATH_ERPIN: &str = concatcp!("sounds/Erpin.sound", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND: &str = concatcp!("textures/Background.texture", QUERY, VERSION);

@@ -22,6 +22,7 @@ impl Plugin for InnerPlugin {
                 setup_prepare_interface,
                 show_ingame_entities,
                 setup_ingame_interface,
+                play_popup_bobble_sounds,
             ),
         )
         .add_systems(OnExit(LevelStates::SwitchToInGame), cleanup_scene_timer)

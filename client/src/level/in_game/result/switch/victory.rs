@@ -25,11 +25,16 @@ impl Plugin for InnerPlugin {
                 setup_in_game_sprite,
                 setup_in_game_spines,
                 setup_in_game_interfaces,
+                play_popup_bobble_sounds,
             ),
         )
         .add_systems(
             OnExit(LevelStates::SwitchToGameVictory),
-            (cleanup_scene_timer, cleanup_in_game_entities),
+            (
+                cleanup_scene_timer,
+                cleanup_in_game_entities,
+                play_in_game_victory_sound,
+            ),
         )
         .add_systems(
             Update,

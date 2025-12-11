@@ -13,6 +13,8 @@ use protocol::{
     RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y,
 };
 
+use crate::assets::sound::SystemVolume;
+
 use super::*;
 
 // --- PLUGIN ---
@@ -44,15 +46,19 @@ impl Plugin for InnerPlugin {
                 (
                     update_hud_ingame_timer,
                     update_hud_player_timer,
-                    update_wind_indicator,
+                    update_wind_indicator.run_if(resource_exists::<Wind>),
                     draw_range_indicator,
                     draw_range_arrow_indicator,
                     update_left_health_heart
                         .run_if(resource_exists_and_changed::<LeftPlayerHealth>),
                     update_right_health_heart
                         .run_if(resource_exists_and_changed::<RightPlayerHealth>),
+                    play_timer_sound.run_if(resource_exists_and_changed::<Wind>),
+                    play_swing_sound.run_if(resource_added::<ProjectileObject>),
                     setup_projectile.run_if(resource_added::<ProjectileObject>),
-                    update_projectile.run_if(resource_exists::<ProjectileObject>),
+                    update_projectile
+                        .run_if(resource_exists::<Wind>)
+                        .run_if(resource_exists::<ProjectileObject>),
                     cleanup_projectile.run_if(resource_removed::<ProjectileObject>),
                 )
                     .run_if(in_state(LevelStates::InGame)),
@@ -98,7 +104,6 @@ fn setup_resource(mut commands: Commands) {
     commands.insert_resource(LeftPlayerHealth::default());
     commands.insert_resource(RightPlayerHealth::default());
     commands.insert_resource(PlaySide::default());
-    commands.insert_resource(Wind::default());
 }
 
 fn cleanup_title_assets(mut commands: Commands) {
@@ -137,7 +142,6 @@ fn reset_camera_position(mut query: Query<&mut Transform, With<Camera>>) {
 #[allow(clippy::too_many_arguments)]
 fn handle_received_packets(
     mut commands: Commands,
-    mut wind: ResMut<Wind>,
     mut side: ResMut<PlaySide>,
     mut left_health: ResMut<LeftPlayerHealth>,
     mut right_health: ResMut<RightPlayerHealth>,
@@ -189,7 +193,7 @@ fn handle_received_packets(
                     wind_angle,
                     wind_power,
                 } => {
-                    *wind = Wind::new(wind_angle, wind_power);
+                    commands.insert_resource(Wind::new(wind_angle, wind_power));
                     commands.remove_resource::<MouseButtonPressed>();
                     commands.remove_resource::<ProjectileObject>();
                 }
@@ -682,6 +686,24 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
     }
 }
 
+fn play_timer_sound(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+) {
+    let source = asset_server.load(SFX_PATH_INGAME_TIME_OVER);
+    play_effect_sound(&mut commands, &system_volume, source);
+}
+
+fn play_swing_sound(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+) {
+    let source = asset_server.load(SFX_PATH_SWING);
+    play_effect_sound(&mut commands, &system_volume, source);
+}
+
 #[allow(clippy::type_complexity)]
 fn setup_projectile(
     mut query: Query<(
@@ -810,7 +832,10 @@ fn update_camera_position(
 }
 
 fn check_collisions(
+    mut commands: Commands,
     play_side: Res<PlaySide>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut spines: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
     left_collider: Query<(&Collider2d, &GlobalTransform, &LeftPlayerHead)>,
     right_collider: Query<(&Collider2d, &GlobalTransform, &RightPlayerHead)>,
@@ -831,6 +856,9 @@ fn check_collisions(
                 projectile.hit = true;
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
+
+                let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
         }
         PlaySide::RightThrown => {
@@ -847,6 +875,9 @@ fn check_collisions(
                 projectile.hit = true;
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
+
+                let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
+                play_effect_sound(&mut commands, &system_volume, source);
             }
         }
         _ => { /* empty */ }

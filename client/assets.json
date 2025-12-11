@@ -39,8 +39,10 @@
         },
         "sounds": {
             "target_files": [
-                "Erpin.sound",
                 "BGM_PatchGame.sound",
+                "Erpin.sound",
+                "SFX_Boxing_Bell.sound",
+                "SFX_Cheer.sound",
                 "SFX_Common_ButtonDown.sound",
                 "SFX_Common_ButtonTouch.sound",
                 "SFX_Common_ButtonUp.sound",
@@ -51,7 +53,13 @@
                 "SFX_Common_PullCheekEnd.sound",
                 "SFX_Common_Rubbing.sound",
                 "SFX_Common_RubbingEnd.sound",
-                "SFX_Emoticon_Hit.sound"
+                "SFX_Emoticon_Hit.sound",
+                "SFX_FireFail.sound",
+                "SFX_InGame_Defeat.sound",
+                "SFX_InGame_TimeOver.sound",
+                "SFX_InGame_Victory.sound",
+                "SFX_PopupBobble.sound",
+                "SFX_Swing.sound"
             ]
         },
         "textures": {

@@ -132,6 +132,9 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     loading_assets.push(handle);
 
     // --- Sound Loading ---
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_CHEER);
+    loading_assets.push(handle);
+
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK);
     loading_assets.push(handle);
 
@@ -144,7 +147,25 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
     loading_assets.push(handle);
 
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_BOXING_BELL);
+    loading_assets.push(handle);
+
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_EMOTICON_HIT);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_FIRE_FAIL);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(BGM_PATH_INGAME_DEFEAT);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_INGAME_TIME_OVER);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(BGM_PATH_INGAME_VICTORY);
+    loading_assets.push(handle);
+
+    let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_SWING);
     loading_assets.push(handle);
 
     // --- Stage Loading ---
