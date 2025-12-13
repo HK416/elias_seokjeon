@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn update(mut player: Box<Player>) {
+pub async fn update(mut player: Box<Player>, redis_conn: MultiplexedConnection) {
     #[cfg(not(feature = "no-debugging-log"))]
     println!("{:?} - Current State: Title", player);
 
@@ -18,7 +18,7 @@ pub async fn update(mut player: Box<Player>) {
         {
             match packet {
                 Packet::EnterGame => {
-                    return next_state(State::Matching, player);
+                    return next_state(State::Matching, player, redis_conn);
                 }
                 _ => { /* empty */ }
             }

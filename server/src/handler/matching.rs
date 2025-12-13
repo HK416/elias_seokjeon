@@ -21,14 +21,14 @@ impl Node {
     }
 }
 
-pub async fn update() {
+pub async fn update(redis_conn: MultiplexedConnection) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let n = COUNTER.fetch_add(1, MemOrdering::AcqRel);
     assert!(n < 1, "This function must be called only once!");
-    update_internal().await;
+    update_internal(redis_conn).await;
 }
 
-async fn update_internal() {
+async fn update_internal(redis_conn: MultiplexedConnection) {
     const TICK: u64 = 1000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut interval = time::interval(PERIOD);
@@ -61,8 +61,9 @@ async fn update_internal() {
                         {
                             match packet {
                                 Packet::TryCancelGame => {
+                                    let redis_conn_cloned = redis_conn.clone();
                                     node.player.tx.send(Packet::CancelSuccess).unwrap();
-                                    next_state(State::Title, node.player);
+                                    next_state(State::Title, node.player, redis_conn_cloned);
                                     continue 'update; // Session is removed from matching.
                                 }
                                 _ => { /* empty */ }
@@ -96,7 +97,8 @@ async fn update_internal() {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
 
-            tokio::spawn(sync::wait(left, right, 2));
+            let redis_conn_cloned = redis_conn.clone();
+            tokio::spawn(sync::wait(left, right, 2, redis_conn_cloned));
         }
 
         // 4. Update status for the remaining sessions.
@@ -116,7 +118,8 @@ async fn update_internal() {
                 #[cfg(not(feature = "no-debugging-log"))]
                 println!("[{:?} VS {:?}] - Queue Size: {}", left, right, nodes.len());
 
-                tokio::spawn(sync::wait(left, right, 1));
+                let redis_conn_cloned = redis_conn.clone();
+                tokio::spawn(sync::wait(left, right, 1, redis_conn_cloned));
                 continue;
             }
 

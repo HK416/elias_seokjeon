@@ -14,7 +14,12 @@ impl Node {
     }
 }
 
-pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
+pub async fn wait(
+    mut left: Box<dyn Session>,
+    mut right: Box<dyn Session>,
+    mut num_player: usize,
+    redis_conn: MultiplexedConnection,
+) {
     let message = Packet::PrepareInGame;
     left = send_message(left, &message, &mut num_player);
     right = send_message(right, &message, &mut num_player);
@@ -104,6 +109,6 @@ pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
             (n1.session, n0.session)
         };
 
-        tokio::spawn(in_game::play(left, right, num_player));
+        tokio::spawn(in_game::play(left, right, num_player, redis_conn));
     }
 }

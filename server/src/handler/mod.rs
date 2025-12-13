@@ -30,6 +30,7 @@ use protocol::{
     serde_json, uuid::Uuid,
 };
 use rand::seq::IndexedRandom;
+use redis::{AsyncTypedCommands, aio::MultiplexedConnection};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -39,7 +40,7 @@ use tokio::{
 use tokio_tungstenite::{WebSocketStream, tungstenite::Message};
 
 use crate::{
-    name::get_name_table,
+    DRAWS_KEY, LOSSES_KEY, WINS_KEY, get_name_table,
     stream::{StreamPollResult, poll_stream_nonblocking},
 };
 
@@ -51,18 +52,16 @@ pub enum State {
 
 pub trait Session: fmt::Debug + Send + Sync {
     fn uuid(&self) -> Option<Uuid>;
-    fn addr(&self) -> Option<SocketAddr>;
     fn name(&self) -> &str;
     fn hero(&self) -> Hero;
     fn win(&self) -> u16;
     fn lose(&self) -> u16;
-    fn draw(&self) -> u16;
     fn increase_win(&mut self);
     fn increase_lose(&mut self);
     fn increase_draw(&mut self);
     fn reader(&mut self) -> Option<&mut SplitStream<WebSocketStream<TcpStream>>>;
     fn sender(&self) -> Option<&UnboundedSender<Packet>>;
-    fn into_any(self: Box<Self>) -> Box<dyn Any>;
+    fn into_any(self: Box<Self>) -> Box<dyn Any + Send>;
 }
 
 pub struct Player {
@@ -129,10 +128,6 @@ impl Session for Player {
         Some(self.uuid)
     }
 
-    fn addr(&self) -> Option<SocketAddr> {
-        Some(self.addr)
-    }
-
     fn name(&self) -> &str {
         &self.name
     }
@@ -147,10 +142,6 @@ impl Session for Player {
 
     fn lose(&self) -> u16 {
         self.lose
-    }
-
-    fn draw(&self) -> u16 {
-        self.draw
     }
 
     fn increase_win(&mut self) {
@@ -173,7 +164,7 @@ impl Session for Player {
         Some(&self.tx)
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+    fn into_any(self: Box<Self>) -> Box<dyn Any + Send> {
         self
     }
 }
@@ -232,10 +223,6 @@ impl Session for Bot {
         None
     }
 
-    fn addr(&self) -> Option<SocketAddr> {
-        None
-    }
-
     fn name(&self) -> &str {
         &self.name
     }
@@ -250,10 +237,6 @@ impl Session for Bot {
 
     fn lose(&self) -> u16 {
         self.lose
-    }
-
-    fn draw(&self) -> u16 {
-        0
     }
 
     fn increase_win(&mut self) {
@@ -276,14 +259,14 @@ impl Session for Bot {
         None
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+    fn into_any(self: Box<Self>) -> Box<dyn Any + Send> {
         self
     }
 }
 
-fn next_state(state: State, player: Box<Player>) {
+fn next_state(state: State, player: Box<Player>, redis_conn: MultiplexedConnection) {
     match state {
-        State::Title => tokio::spawn(title::update(player)),
+        State::Title => tokio::spawn(title::update(player, redis_conn)),
         State::Matching => tokio::spawn(matching::regist(player)),
     };
 }

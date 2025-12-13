@@ -14,7 +14,12 @@ impl Node {
     }
 }
 
-pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
+pub async fn wait(
+    mut left: Box<dyn Session>,
+    mut right: Box<dyn Session>,
+    mut num_player: usize,
+    redis_conn: MultiplexedConnection,
+) {
     let message = Packet::MatchingSuccess {
         left: PlayData {
             uuid: left.uuid(),
@@ -175,7 +180,8 @@ pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 (n1.session, n0.session)
             };
 
-            tokio::spawn(prepare::wait(left, right, num_player));
+            let redis_conn_cloned = redis_conn.clone();
+            tokio::spawn(prepare::wait(left, right, num_player, redis_conn_cloned));
             return;
         }
     }
@@ -190,9 +196,10 @@ pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
 
         let message = Packet::GameLoadTimeout;
         session = send_message(session, &message, &mut num_player);
-        let result: Result<Box<Player>, Box<dyn Any>> = session.into_any().downcast();
+        let result: Result<Box<Player>, Box<dyn Any + Send>> = session.into_any().downcast();
         if let Ok(player) = result {
-            next_state(State::Title, player);
+            let redis_conn_cloned = redis_conn.clone();
+            next_state(State::Title, player, redis_conn_cloned);
         }
     }
 
@@ -205,6 +212,6 @@ pub async fn wait(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
             (n1.session, n0.session)
         };
 
-        tokio::spawn(prepare::wait(left, right, num_player));
+        tokio::spawn(prepare::wait(left, right, num_player, redis_conn));
     }
 }

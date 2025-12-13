@@ -67,7 +67,12 @@ impl GameState {
     }
 }
 
-pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut num_player: usize) {
+pub async fn play(
+    mut left: Box<dyn Session>,
+    mut right: Box<dyn Session>,
+    mut num_player: usize,
+    mut redis_conn: MultiplexedConnection,
+) {
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
     let left_collider = COLLIDER_DATA.get(&left.hero()).unwrap();
@@ -609,9 +614,16 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 victory: false,
             };
             left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let mut redis_conn_cloned = redis_conn.clone();
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn_cloned.hincr(&key, LOSSES_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn_cloned);
             }
 
             right.increase_win();
@@ -621,9 +633,16 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 victory: true,
             };
             right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let mut redis_conn_cloned = redis_conn.clone();
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn_cloned);
             }
         }
         std::cmp::Ordering::Equal => {
@@ -633,16 +652,30 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
             let message = Packet::GameResultDraw;
             left.increase_draw();
             left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let mut redis_conn_cloned = redis_conn.clone();
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn_cloned);
             }
 
             right.increase_draw();
             right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let mut redis_conn_cloned = redis_conn.clone();
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn_cloned);
             }
         }
         std::cmp::Ordering::Greater => {
@@ -656,9 +689,16 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 victory: true,
             };
             left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = left.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let mut redis_conn_cloned = redis_conn.clone();
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn_cloned);
             }
 
             right.increase_lose();
@@ -668,9 +708,15 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 victory: false,
             };
             right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any>> = right.into_any().downcast();
+            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
-                next_state(State::Title, player);
+                let key = format!("user:{}", player.uuid);
+                let result = redis_conn.hincr(key, LOSSES_KEY, 1).await;
+                if let Err(e) = result {
+                    eprintln!("Redis Error: {e}");
+                    return;
+                }
+                next_state(State::Title, player, redis_conn);
             }
         }
     }
