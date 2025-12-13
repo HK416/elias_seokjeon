@@ -736,22 +736,22 @@ fn setup_projectile(
             (PlaySide::LeftThrown, false) | (PlaySide::RightThrown, true) => {
                 let hero = player_info.hero;
                 let path = HERO_VOICE_SETS[hero as usize]
-                    .attack()
+                    .shout()
                     .choose(&mut rand::rng())
                     .copied()
                     .unwrap();
                 let source = asset_server.load(path);
-                play_voice_sound(&mut commands, &system_volume, source);
+                play_voice_sound(&mut commands, &system_volume, source, VoiceChannel::MySelf);
             }
             (PlaySide::LeftThrown, true) | (PlaySide::RightThrown, false) => {
                 let hero = other_info.hero;
                 let path = HERO_VOICE_SETS[hero as usize]
-                    .attack()
+                    .shout()
                     .choose(&mut rand::rng())
                     .copied()
                     .unwrap();
                 let source = asset_server.load(path);
-                play_voice_sound(&mut commands, &system_volume, source);
+                play_voice_sound(&mut commands, &system_volume, source, VoiceChannel::Other);
             }
             _ => { /* empty */ }
         };
@@ -868,8 +868,13 @@ fn check_collisions(
     play_side: Res<PlaySide>,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
-    voices: Query<Entity, With<VoiceSound>>,
-    mut spines: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    voices: Query<(Entity, &VoiceSound)>,
+    mut spines: Query<(
+        &mut Spine,
+        &Character,
+        &VoiceChannel,
+        &mut CharacterAnimState,
+    )>,
     left_collider: Query<(&Collider2d, &GlobalTransform, &LeftPlayerHead)>,
     right_collider: Query<(&Collider2d, &GlobalTransform, &RightPlayerHead)>,
     mut projectile: Query<(&Collider2d, &GlobalTransform, &mut Projectile)>,
@@ -884,13 +889,14 @@ fn check_collisions(
                     (hero_collider, hero_transform),
                     (projectile_collider, projectile_transform),
                 )
-                && let Ok((mut spine, character, mut anim_state)) = spines.get_mut(parent.0)
+                && let Ok((mut spine, character, channel, mut anim_state)) =
+                    spines.get_mut(parent.0)
             {
                 projectile.hit = true;
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
 
-                cleanup_voices(&mut commands, &voices);
+                cleanup_voices(channel, &mut commands, &voices);
                 let hero: Hero = (*character).into();
                 let path = HERO_VOICE_SETS[hero as usize]
                     .hit()
@@ -898,7 +904,7 @@ fn check_collisions(
                     .copied()
                     .unwrap();
                 let source = asset_server.load(path);
-                play_voice_sound(&mut commands, &system_volume, source);
+                play_voice_sound(&mut commands, &system_volume, source, *channel);
 
                 let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
                 play_effect_sound(&mut commands, &system_volume, source);
@@ -913,13 +919,14 @@ fn check_collisions(
                     (hero_collider, hero_transform),
                     (projectile_collider, projectile_transform),
                 )
-                && let Ok((mut spine, character, mut anim_state)) = spines.get_mut(parent.0)
+                && let Ok((mut spine, character, channel, mut anim_state)) =
+                    spines.get_mut(parent.0)
             {
                 projectile.hit = true;
                 *anim_state = CharacterAnimState::InGameHit1;
                 play_character_animation(&mut spine, *character, *anim_state);
 
-                cleanup_voices(&mut commands, &voices);
+                cleanup_voices(channel, &mut commands, &voices);
                 let hero: Hero = (*character).into();
                 let path = HERO_VOICE_SETS[hero as usize]
                     .hit()
@@ -927,7 +934,7 @@ fn check_collisions(
                     .copied()
                     .unwrap();
                 let source = asset_server.load(path);
-                play_voice_sound(&mut commands, &system_volume, source);
+                play_voice_sound(&mut commands, &system_volume, source, *channel);
 
                 let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
                 play_effect_sound(&mut commands, &system_volume, source);

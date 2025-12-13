@@ -55,6 +55,12 @@ impl Plugin for InnerPlugin {
                     .run_if(in_state(LevelStates::InTitle)),
             );
 
+        #[cfg(not(feature = "no-debugging-title"))]
+        app.add_systems(
+            PreUpdate,
+            (change_hero, reverse_spine_forward).run_if(in_state(LevelStates::InTitle)),
+        );
+
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
@@ -133,6 +139,49 @@ fn hide_title_entities(
 }
 
 // --- PREUPDATE SYSTEMS ---
+
+#[cfg(not(feature = "no-debugging-title"))]
+fn change_hero(
+    mut commands: Commands,
+    mut player_info: ResMut<PlayerInfo>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<LevelStates>>,
+    query: Query<Entity, With<TitleLevelRoot>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::F3) {
+        commands.remove_resource::<TitleAssets>();
+        for entity in query.iter() {
+            commands.entity(entity).despawn();
+        }
+
+        let next = match player_info.hero {
+            Hero::Aya => Hero::BigWood,
+            Hero::BigWood => Hero::Erpin,
+            Hero::Butter => Hero::Erpin,
+            Hero::Erpin => Hero::Kidian,
+            Hero::Kidian => Hero::Kommy,
+            Hero::Kommy => Hero::Mayo,
+            Hero::Mayo => Hero::Rohne,
+            Hero::Rohne => Hero::Speaki,
+            Hero::Speaki => Hero::Xion,
+            Hero::Xion => Hero::Aya,
+        };
+        player_info.hero = next;
+        next_state.set(LevelStates::LoadTitle);
+    }
+}
+
+fn reverse_spine_forward(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut spines: Query<&mut Spine, With<TitleLevelEntity>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::F2) {
+        for mut spine in spines.iter_mut() {
+            let scale = spine.skeleton.scale();
+            spine.skeleton.set_scale_x(-scale.x);
+        }
+    }
+}
 
 #[allow(clippy::type_complexity)]
 #[allow(clippy::too_many_arguments)]

@@ -290,7 +290,12 @@ fn handle_volume_button_released(
             }
             VolumeSlider::Voice => {
                 let source = asset_server.load(VOC_PATH_ERPIN);
-                play_voice_sound(&mut commands, &system_volume, source);
+                play_voice_sound(
+                    &mut commands,
+                    &system_volume,
+                    source,
+                    VoiceChannel::default(),
+                );
             }
             _ => { /* empty */ }
         }

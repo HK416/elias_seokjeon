@@ -13,6 +13,7 @@ mod utils;
 // Import necessary Bevy modules.
 use bevy::prelude::*;
 use bevy_spine::{Spine, SpineEvent};
+use protocol::Hero;
 use rand::seq::IndexedRandom;
 
 use crate::{
@@ -137,12 +138,18 @@ fn handle_spine_animation_completed(
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
     mut spine_events: MessageReader<SpineEvent>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
-    voices: Query<Entity, With<VoiceSound>>,
+    mut spine_query: Query<(
+        &mut Spine,
+        &Character,
+        &VoiceChannel,
+        &mut CharacterAnimState,
+    )>,
+    voices: Query<(Entity, &VoiceSound)>,
 ) {
     for event in spine_events.read() {
         if let SpineEvent::Complete { entity, animation } = event
-            && let Ok((mut spine, character, mut anim_state)) = spine_query.get_mut(*entity)
+            && let Ok((mut spine, character, channel, mut anim_state)) =
+                spine_query.get_mut(*entity)
             && let Some(track) = spine.animation_state.get_current(0)
         {
             if track.animation().name() != animation {
@@ -161,18 +168,15 @@ fn handle_spine_animation_completed(
 
             match *anim_state {
                 CharacterAnimState::SmashEnd2 => {
-                    for entity in voices.iter() {
-                        commands.entity(entity).despawn();
-                    }
-
-                    let hero: Character = (*character).into();
+                    cleanup_voices(channel, &mut commands, &voices);
+                    let hero: Hero = (*character).into();
                     let path = HERO_VOICE_SETS[hero as usize]
-                        .smash_end()
-                        .choose(&mut rand::rng())
+                        .ducth_rub_end()
+                        .last()
                         .copied()
                         .unwrap();
                     let source = asset_server.load(path);
-                    play_voice_sound(&mut commands, &system_volume, source);
+                    play_voice_sound(&mut commands, &system_volume, source, *channel);
                 }
                 _ => { /* empty */ }
             }

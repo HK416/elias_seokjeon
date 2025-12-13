@@ -2,6 +2,7 @@ pub use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
 // Import necessary Bevy modules.
 use bevy::prelude::*;
+use protocol::NUM_HEROS;
 
 #[cfg(target_arch = "wasm32")]
 pub const SYSTEM_VOLUME_KEY: &str = "system_volume";
@@ -31,6 +32,7 @@ pub const LOADING_BAR_COLOR: Color = Color::srgb(0.2, 0.8, 0.2);
 pub const BALL_BONE_NAME: &str = "Character_Ball_Move";
 pub const HEAD_BONE_NAME: &str = "Character_Pat";
 
+pub const IDLE: &str = "Idle_1";
 pub const PAT_IDLE: &str = "Pat_Idle";
 pub const PAT_END: &str = "Pat_End";
 pub const TOUCH_IDLE: &str = "Touch_Idle";
@@ -40,11 +42,28 @@ pub const SMASH_END_2: &str = "Smash_End_2";
 pub const HAPPY_1: &str = "Happy_1";
 pub const SAD_1: &str = "Sad_1";
 
+pub const AYA_TITLE: &str = "Idle_1";
+pub const BIGWOOD_TITLE: &str = "Happy_2";
 pub const BUTTER_TITLE: &str = "Idle_1";
+pub const ERPIN_TITLE: &str = "Idle_1";
+pub const KIDIAN_TITLE: &str = "Idle_2";
 pub const KOMMY_TITLE: &str = "Taunt_1";
-
-pub const BUTTER_IDLE: &str = "Idle_1";
-pub const KOMMY_IDLE: &str = "Idle_1";
+pub const MAYO_TITLE: &str = "Happy_2";
+pub const ROHNE_TITLE: &str = "Idle_1";
+pub const SPEAKI_TITLE: &str = "Idle_1";
+pub const XION_TITLE: &str = "Ganzi_4";
+pub const TITLE_ANIM: [&str; NUM_HEROS] = [
+    AYA_TITLE,
+    BIGWOOD_TITLE,
+    BUTTER_TITLE,
+    ERPIN_TITLE,
+    KIDIAN_TITLE,
+    KOMMY_TITLE,
+    MAYO_TITLE,
+    ROHNE_TITLE,
+    SPEAKI_TITLE,
+    XION_TITLE,
+];
 
 pub const BALL_MOVE_RANGE: f32 = 30.0;
 pub const GRABBED_TIME_THRESHOLD: f32 = 0.25;

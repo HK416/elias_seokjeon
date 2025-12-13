@@ -107,6 +107,7 @@ fn setup_title_screen(
                 ..Default::default()
             },
             Character::from(hero),
+            VoiceChannel::MySelf,
             SpineSync,
         ))
         .id();
@@ -599,21 +600,12 @@ fn play_animation(
             ..
         }) = spine.as_mut();
 
-        match character {
-            Character::Butter => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, BUTTER_TITLE, true)
-                    .unwrap();
-            }
-            Character::Kommy => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, KOMMY_TITLE, true)
-                    .unwrap();
-            }
-            _ => { /* empty */ }
-        }
+        let hero: Hero = (*character).into();
+        let animation_name = TITLE_ANIM[hero as usize];
+        skeleton.set_skin_by_name("Normal").unwrap();
+        animation_state
+            .set_animation_by_name(0, animation_name, true)
+            .unwrap();
 
         commands
             .entity(event.entity)

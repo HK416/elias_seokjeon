@@ -650,10 +650,10 @@ fn check_loading_progress(
 fn play_animation(
     mut commands: Commands,
     mut spine_ready_event: MessageReader<SpineReadyEvent>,
-    mut spine_query: Query<(&mut Spine, &Character)>,
+    mut spine_query: Query<&mut Spine>,
 ) {
     for event in spine_ready_event.read() {
-        let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
+        let mut spine = spine_query.get_mut(event.entity).unwrap();
 
         let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
         let (bone, bone_index) = spine
@@ -711,21 +711,10 @@ fn play_animation(
             ..
         }) = spine.as_mut();
 
-        match character {
-            Character::Butter => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, BUTTER_IDLE, true)
-                    .unwrap();
-            }
-            Character::Kommy => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, KOMMY_IDLE, true)
-                    .unwrap();
-            }
-            _ => { /* empty */ }
-        }
+        skeleton.set_skin_by_name("Normal").unwrap();
+        animation_state
+            .set_animation_by_name(0, IDLE, true)
+            .unwrap();
 
         commands
             .entity(event.entity)

@@ -88,4 +88,5 @@ js-sys = "0.3"
 default = []
 no-debugging-log = []
 no-debugging-gizmo = []
-product-build = ["no-debugging-log", "no-debugging-gizmo"]
+no-debugging-title = []
+product-build = ["no-debugging-log", "no-debugging-gizmo", "no-debugging-title"]

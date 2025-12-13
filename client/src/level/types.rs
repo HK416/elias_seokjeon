@@ -147,15 +147,48 @@ pub enum TitleButton {
 
 #[derive(Debug, Component, Clone, Copy, PartialEq, Eq)]
 pub enum Character {
+    Aya,
+    BigWood,
     Butter,
+    Erpin,
+    Kidian,
     Kommy,
+    Mayo,
+    Rohne,
+    Speaki,
+    Xion,
+}
+
+impl Character {
+    pub fn trans(&self, distance: Vec2, scale_x: f32) -> Vec2 {
+        match self {
+            Character::Aya => distance.xy() * Vec2::new(scale_x, 1.0),
+            Character::BigWood => distance.yx() * Vec2::new(1.0, -scale_x),
+            Character::Butter => distance.yx() * Vec2::new(1.0, -scale_x),
+            Character::Kommy => distance.yx() * Vec2::new(1.0, -scale_x),
+            Character::Erpin => distance.xy() * Vec2::new(scale_x, 1.0),
+            Character::Kidian => distance.xy() * Vec2::new(scale_x, 1.0),
+            Character::Mayo => distance.yx() * Vec2::new(1.0, -scale_x),
+            Character::Rohne => distance.yx() * Vec2::new(1.0, -scale_x),
+            Character::Speaki => distance.xy() * Vec2::new(scale_x, 1.0),
+            Character::Xion => distance.xy() * Vec2::new(scale_x, 1.0),
+        }
+    }
 }
 
 impl From<Hero> for Character {
     fn from(hero: Hero) -> Self {
         match hero {
+            Hero::Aya => Self::Aya,
+            Hero::BigWood => Self::BigWood,
             Hero::Butter => Self::Butter,
             Hero::Kommy => Self::Kommy,
+            Hero::Erpin => Self::Erpin,
+            Hero::Kidian => Self::Kidian,
+            Hero::Mayo => Self::Mayo,
+            Hero::Rohne => Self::Rohne,
+            Hero::Speaki => Self::Speaki,
+            Hero::Xion => Self::Xion,
         }
     }
 }
@@ -163,8 +196,16 @@ impl From<Hero> for Character {
 impl Into<Hero> for Character {
     fn into(self) -> Hero {
         match self {
+            Self::Aya => Hero::Aya,
+            Self::BigWood => Hero::BigWood,
             Self::Butter => Hero::Butter,
             Self::Kommy => Hero::Kommy,
+            Self::Erpin => Hero::Erpin,
+            Self::Kidian => Hero::Kidian,
+            Self::Mayo => Hero::Mayo,
+            Self::Rohne => Hero::Rohne,
+            Self::Speaki => Hero::Speaki,
+            Self::Xion => Hero::Xion,
         }
     }
 }
@@ -554,5 +595,14 @@ pub struct BackgroundSound;
 #[derive(Component)]
 pub struct EffectSound;
 
-#[derive(Component)]
-pub struct VoiceSound;
+#[derive(Default, Component)]
+pub struct VoiceSound {
+    pub channel: VoiceChannel,
+}
+
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
+pub enum VoiceChannel {
+    #[default]
+    MySelf,
+    Other,
+}

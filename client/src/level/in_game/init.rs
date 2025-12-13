@@ -153,10 +153,16 @@ fn setup_in_game_entities(
     loading_entities.insert(entity);
 
     // -- Spawn Spine Player ---
-    let (left, right) = if other_info.left_side {
-        (other_info.hero, player_info.hero)
+    let ((left, left_channel), (right, right_channel)) = if other_info.left_side {
+        (
+            (other_info.hero, VoiceChannel::Other),
+            (player_info.hero, VoiceChannel::MySelf),
+        )
     } else {
-        (player_info.hero, other_info.hero)
+        (
+            (player_info.hero, VoiceChannel::MySelf),
+            (other_info.hero, VoiceChannel::Other),
+        )
     };
 
     let path = MODEL_PATH_HEROS.get(&left).copied().unwrap();
@@ -169,8 +175,8 @@ fn setup_in_game_entities(
                 visibility: Visibility::Visible,
                 ..Default::default()
             },
-            CharacterAnimState::Idle,
             Character::from(left),
+            left_channel,
         ))
         .id();
     loading_entities.insert(left_entity);
@@ -186,6 +192,7 @@ fn setup_in_game_entities(
                 ..Default::default()
             },
             Character::from(right),
+            right_channel,
         ))
         .id();
     loading_entities.insert(right_entity);
@@ -237,7 +244,7 @@ fn setup_in_game_entities(
     let entity = commands
         .spawn((
             Collider2d::Circle {
-                offset: circle.center.into(),
+                offset: Vec2::from(circle.center) * Vec2::new(-1.0, 1.0),
                 radius: circle.radius,
             },
             Transform::from_xyz(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y, 0.5),
@@ -995,31 +1002,20 @@ fn check_loading_progress(
 fn play_animation(
     mut commands: Commands,
     mut spine_ready_event: MessageReader<SpineReadyEvent>,
-    mut spine_query: Query<(&mut Spine, &Character)>,
+    mut spine_query: Query<&mut Spine>,
 ) {
     for event in spine_ready_event.read() {
-        let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
+        let mut spine = spine_query.get_mut(event.entity).unwrap();
         let Spine(SkeletonController {
             skeleton,
             animation_state,
             ..
         }) = spine.as_mut();
 
-        match character {
-            Character::Butter => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, BUTTER_IDLE, true)
-                    .unwrap();
-            }
-            Character::Kommy => {
-                skeleton.set_skin_by_name("Normal").unwrap();
-                animation_state
-                    .set_animation_by_name(0, KOMMY_IDLE, true)
-                    .unwrap();
-            }
-            _ => { /* empty */ }
-        }
+        skeleton.set_skin_by_name("Normal").unwrap();
+        animation_state
+            .set_animation_by_name(0, IDLE, true)
+            .unwrap();
 
         commands
             .entity(event.entity)

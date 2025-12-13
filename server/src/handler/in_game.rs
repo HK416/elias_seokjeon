@@ -87,7 +87,8 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
     let mut bot_src_vel = Vec2::new(LEFT_START_ANGLE.cos(), LEFT_START_ANGLE.sin()) * f32::EPSILON;
     let mut bot_dst_vel = update_left_bot_parameter(
         Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
-        Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y) + Vec2::from(right_collider.center),
+        Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y)
+            + Vec2::from(right_collider.center) * Vec2::new(-1.0, 1.0),
         wind_vel,
         level,
     );
@@ -419,7 +420,7 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                     bot_dst_vel = update_left_bot_parameter(
                         Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
                         Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y)
-                            + Vec2::from(right_collider.center),
+                            + Vec2::from(right_collider.center) * Vec2::new(-1.0, 1.0),
                         wind_vel,
                         level,
                     );
@@ -441,6 +442,7 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                 }
 
                 let mut collider_pos: Vec2 = right_collider.center.into();
+                collider_pos *= Vec2::new(-1.0, 1.0);
                 collider_pos += Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y);
                 let distance_squared = (projectile_pos - collider_pos).length_squared();
                 let radius_sum = PROJECTILE_SIZE * 0.5 + right_collider.radius;
@@ -579,7 +581,7 @@ pub async fn play(mut left: Box<dyn Session>, mut right: Box<dyn Session>, mut n
                     bot_dst_vel = update_left_bot_parameter(
                         Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
                         Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y)
-                            + Vec2::from(right_collider.center),
+                            + Vec2::from(right_collider.center) * Vec2::new(-1.0, 1.0),
                         wind_vel,
                         level,
                     );

@@ -251,7 +251,7 @@ pub fn play_in_game_defeat_voice(
             volume: system_volume.get_effect(),
             ..Default::default()
         },
-        VoiceSound,
+        VoiceSound::default(),
     ));
 }
 
@@ -296,7 +296,7 @@ pub fn play_in_game_victory_voice(
             volume: system_volume.get_effect(),
             ..Default::default()
         },
-        VoiceSound,
+        VoiceSound::default(),
     ));
 }
 
@@ -371,9 +371,14 @@ pub fn removed_grabbed_component(
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut entities: RemovedComponents<Grabbed>,
-    mut spine_query: Query<(&mut Spine, &Character, &mut CharacterAnimState)>,
+    mut spine_query: Query<(
+        &mut Spine,
+        &Character,
+        &VoiceChannel,
+        &mut CharacterAnimState,
+    )>,
     grabbed_query: Query<(Entity, &TargetSpine, &TargetSpineBone, &ColliderType)>,
-    voices: Query<Entity, With<VoiceSound>>,
+    voices: Query<(Entity, &VoiceSound)>,
 ) {
     let Ok(window) = windows.single() else { return };
     let Ok((camera, camera_transform)) = cameras.single() else {
@@ -382,7 +387,7 @@ pub fn removed_grabbed_component(
 
     for entity in entities.read() {
         if let Ok((entity, target_spine, target_spine_bone, ty)) = grabbed_query.get(entity)
-            && let Ok((mut spine, character, mut anim_state)) =
+            && let Ok((mut spine, character, channel, mut anim_state)) =
                 spine_query.get_mut(target_spine.entity)
         {
             match ty {
@@ -390,11 +395,15 @@ pub fn removed_grabbed_component(
                     let source = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK_END);
                     play_effect_sound(&mut commands, &system_volume, source);
 
-                    cleanup_voices(&mut commands, &voices);
+                    cleanup_voices(channel, &mut commands, &voices);
                     let hero: Hero = (*character).into();
-                    let path = HERO_VOICE_SETS[hero as usize].pull_cheek();
+                    let path = HERO_VOICE_SETS[hero as usize]
+                        .touch_1()
+                        .first()
+                        .copied()
+                        .unwrap();
                     let source = asset_server.load(path);
-                    play_voice_sound(&mut commands, &system_volume, source);
+                    play_voice_sound(&mut commands, &system_volume, source, *channel);
 
                     *anim_state = CharacterAnimState::TouchEnd;
                     play_character_animation(&mut spine, *character, *anim_state);
@@ -421,21 +430,31 @@ pub fn removed_grabbed_component(
                         let source = asset_server.load(SFX_PATH_COMMON_RUBBING_END);
                         play_effect_sound(&mut commands, &system_volume, source);
 
-                        cleanup_voices(&mut commands, &voices);
+                        cleanup_voices(channel, &mut commands, &voices);
                         let hero: Hero = (*character).into();
                         let path = HERO_VOICE_SETS[hero as usize]
-                            .rubbing()
-                            .choose(&mut rand::rng())
+                            .touch_2()
+                            .first()
                             .copied()
                             .unwrap();
                         let source = asset_server.load(path);
-                        play_voice_sound(&mut commands, &system_volume, source);
+                        play_voice_sound(&mut commands, &system_volume, source, *channel);
 
                         *anim_state = CharacterAnimState::PatEnd;
                         play_character_animation(&mut spine, *character, *anim_state);
                     } else {
                         let source = asset_server.load(SFX_PATH_EMOTICON_HIT);
                         play_effect_sound(&mut commands, &system_volume, source);
+
+                        cleanup_voices(channel, &mut commands, &voices);
+                        let hero: Hero = (*character).into();
+                        let path = HERO_VOICE_SETS[hero as usize]
+                            .ducth_rub_end()
+                            .first()
+                            .copied()
+                            .unwrap();
+                        let source = asset_server.load(path);
+                        play_voice_sound(&mut commands, &system_volume, source, *channel);
 
                         *anim_state = CharacterAnimState::SmashEnd1;
                         play_character_animation(&mut spine, *character, *anim_state);
@@ -449,7 +468,7 @@ pub fn removed_grabbed_component(
 pub fn update_spine_bone_position(
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
-    mut spine_query: Query<(&mut Spine, &GlobalTransform)>,
+    mut spine_query: Query<(&mut Spine, &Character, &GlobalTransform)>,
     mut grabbed_query: Query<
         (
             &TargetSpine,
@@ -467,7 +486,7 @@ pub fn update_spine_bone_position(
 
     for (target_spine, target_spine_bone, origin_position, ty) in grabbed_query.iter_mut() {
         if matches!(ty, ColliderType::Ball)
-            && let Ok((mut spine, transform)) = spine_query.get_mut(target_spine.entity)
+            && let Ok((mut spine, character, transform)) = spine_query.get_mut(target_spine.entity)
             && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
             && let Some(cursor_viewport_position) = window.cursor_position()
             && let Ok(point) =
@@ -476,11 +495,11 @@ pub fn update_spine_bone_position(
             let w_bone_position = origin_position.world;
             let distance = point - w_bone_position;
             let length = distance.length();
-            let offset = vec2(1.0, -transform.scale().x);
             if length > f32::EPSILON {
                 bone.set_position(
                     origin_position.local
-                        + distance.yx() * offset / length * length.min(BALL_MOVE_RANGE),
+                        + character.trans(distance, transform.scale().x) / length
+                            * length.min(BALL_MOVE_RANGE),
                 );
             } else {
                 bone.set_position(w_bone_position);

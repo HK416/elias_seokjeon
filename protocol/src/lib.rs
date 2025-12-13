@@ -13,19 +13,35 @@ pub use uuid;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub const NUM_HEROS: usize = 2;
+pub const NUM_HEROS: usize = 10;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Hero {
+    Aya,
+    BigWood,
     Butter,
+    Erpin,
+    Kidian,
     Kommy,
+    Mayo,
+    Rohne,
+    Speaki,
+    Xion,
 }
 
 impl fmt::Display for Hero {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Hero::Aya => write!(f, "aya"),
+            Hero::BigWood => write!(f, "big_wood"),
             Hero::Butter => write!(f, "butter"),
+            Hero::Erpin => write!(f, "erpin"),
+            Hero::Kidian => write!(f, "kidian"),
             Hero::Kommy => write!(f, "kommy"),
+            Hero::Mayo => write!(f, "mayo"),
+            Hero::Rohne => write!(f, "rohne"),
+            Hero::Speaki => write!(f, "speaki"),
+            Hero::Xion => write!(f, "xion"),
         }
     }
 }
@@ -33,8 +49,16 @@ impl fmt::Display for Hero {
 impl Distribution<Hero> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Hero {
         match rng.random_range(0..NUM_HEROS) {
-            0 => Hero::Butter,
-            1 => Hero::Kommy,
+            0 => Hero::Aya,
+            1 => Hero::BigWood,
+            2 => Hero::Butter,
+            3 => Hero::Erpin,
+            4 => Hero::Kidian,
+            5 => Hero::Kommy,
+            6 => Hero::Mayo,
+            7 => Hero::Rohne,
+            8 => Hero::Speaki,
+            9 => Hero::Xion,
             _ => unreachable!(),
         }
     }
@@ -161,10 +185,23 @@ pub const PROJECTILE_SIZE: f32 = 64.0;
 pub const GRAVITY: f32 = -9.80665 * 50.0;
 
 lazy_static! {
-    pub static ref COLLIDER_DATA: HashMap<Hero, Circle> = HashMap::from_iter([
-        (Hero::Butter, Circle::new(40.0, (0.0, 142.0))),
-        (Hero::Kommy, Circle::new(40.0, (0.0, 152.0))),
-    ]);
+    pub static ref COLLIDER_DATA: HashMap<Hero, Circle> = {
+        let map = HashMap::from_iter([
+            (Hero::Aya, Circle::new(40.0, (0.0, 172.0))),
+            (Hero::BigWood, Circle::new(45.0, (16.0, 216.0))),
+            (Hero::Butter, Circle::new(40.0, (0.0, 142.0))),
+            (Hero::Erpin, Circle::new(40.0, (0.0, 142.0))),
+            (Hero::Kidian, Circle::new(36.0, (0.0, 126.0))),
+            (Hero::Kommy, Circle::new(40.0, (0.0, 152.0))),
+            (Hero::Mayo, Circle::new(40.0, (0.0, 152.0))),
+            (Hero::Rohne, Circle::new(40.0, (0.0, 152.0))),
+            (Hero::Speaki, Circle::new(36.0, (0.0, 146.0))),
+            (Hero::Xion, Circle::new(40.0, (0.0, 142.0))),
+        ]);
+        
+        assert_eq!(map.len(), NUM_HEROS);
+        map
+    };
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

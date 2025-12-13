@@ -1,30 +1,41 @@
-mod butter;
-mod kommy;
+mod sound;
 
 use bevy::platform::collections::HashMap;
 use const_format::concatcp;
 use lazy_static::lazy_static;
 use protocol::{Hero, NUM_HEROS};
+use sound::*;
 
 pub trait HeroVoiceSet {
     fn all(&self) -> &[&'static str];
 
-    fn defeat(&self) -> [&'static str; 2];
+    fn defeat(&self) -> &[&'static str];
 
-    fn victory(&self) -> [&'static str; 2];
+    fn ducth_rub_end(&self) -> &[&'static str];
 
-    fn smash_end(&self) -> [&'static str; 5];
+    fn hit(&self) -> &[&'static str];
 
-    fn pull_cheek(&self) -> &'static str;
+    fn shout(&self) -> &[&'static str];
 
-    fn rubbing(&self) -> [&'static str; 3];
+    fn touch_1(&self) -> &[&'static str];
 
-    fn attack(&self) -> [&'static str; 2];
+    fn touch_2(&self) -> &[&'static str];
 
-    fn hit(&self) -> [&'static str; 5];
+    fn victory(&self) -> &[&'static str];
 }
 
-pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [&butter::HeroVoice, &kommy::HeroVoice];
+pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [
+    &aya::HeroVoice,
+    &bigwood::HeroVoice,
+    &butter::HeroVoice,
+    &erpin::HeroVoice,
+    &kidian::HeroVoice,
+    &kommy::HeroVoice,
+    &mayo::HeroVoice,
+    &rohne::HeroVoice,
+    &speaki::HeroVoice,
+    &xion::HeroVoice,
+];
 
 #[rustfmt::skip] pub const QUERY: &str = "?";
 #[rustfmt::skip] pub const VERSION: &str = concat!("v=", env!("CARGO_PKG_VERSION_PATCH"));
@@ -36,8 +47,16 @@ pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [&butter::HeroVoice,
 
 #[rustfmt::skip] pub const FONT_PATH: &str = concatcp!("fonts/NotoSans-Bold.otf", QUERY, VERSION);
 
+#[rustfmt::skip] pub const MODEL_PATH_AYA: &str = concatcp!("models/aya/Aya.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_BIGWOOD: &str = concatcp!("models/bigwood/BigWood.model", QUERY, VERSION);
 #[rustfmt::skip] pub const MODEL_PATH_BUTTER: &str = concatcp!("models/butter/Butter.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_ERPIN: &str = concatcp!("models/erpin/Erpin.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_KIDIAN: &str = concatcp!("models/kidian/Kidian.model", QUERY, VERSION);
 #[rustfmt::skip] pub const MODEL_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_MAYO: &str = concatcp!("models/mayo/Mayo.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_ROHNE: &str = concatcp!("models/rohne/Rohne.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_SPEAKI: &str = concatcp!("models/speaki/Speaki.model", QUERY, VERSION);
+#[rustfmt::skip] pub const MODEL_PATH_XION: &str = concatcp!("models/xion/xXionx.model", QUERY, VERSION);
 
 #[rustfmt::skip] pub const BGM_PATH_BACKGROUND: &str = concatcp!("sounds/BGM_PatchGame.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const BGM_PATH_INGAME_DEFEAT: &str = concatcp!("sounds/SFX_InGame_Defeat.sound", QUERY, VERSION);
@@ -105,9 +124,18 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
 
 lazy_static! {
     pub static ref MODEL_PATH_HEROS: HashMap<Hero, &'static str> = {
-        let mut map = HashMap::default();
-        map.insert(Hero::Butter, MODEL_PATH_BUTTER);
-        map.insert(Hero::Kommy, MODEL_PATH_KOMMY);
+        let map = HashMap::from_iter([
+            (Hero::Aya, MODEL_PATH_AYA),
+            (Hero::BigWood, MODEL_PATH_BIGWOOD),
+            (Hero::Butter, MODEL_PATH_BUTTER),
+            (Hero::Erpin, MODEL_PATH_ERPIN),
+            (Hero::Kidian, MODEL_PATH_KIDIAN),
+            (Hero::Kommy, MODEL_PATH_KOMMY),
+            (Hero::Mayo, MODEL_PATH_MAYO),
+            (Hero::Rohne, MODEL_PATH_ROHNE),
+            (Hero::Speaki, MODEL_PATH_SPEAKI),
+            (Hero::Xion, MODEL_PATH_XION),
+        ]);
 
         assert_eq!(map.len(), NUM_HEROS);
         map

@@ -86,20 +86,18 @@ pub fn play_character_animation(
     anim_state: CharacterAnimState,
 ) {
     let (animation_name, looping) = match anim_state {
-        CharacterAnimState::Idle => match character {
-            Character::Butter => (BUTTER_TITLE, true),
-            Character::Kommy => (KOMMY_TITLE, true),
-        },
+        CharacterAnimState::Idle => {
+            let hero: Hero = character.into();
+            let animation_name = TITLE_ANIM[hero as usize];
+            (animation_name, true)
+        }
         CharacterAnimState::PatIdle => (PAT_IDLE, true),
         CharacterAnimState::PatEnd => (PAT_END, false),
         CharacterAnimState::TouchIdle => (TOUCH_IDLE, true),
         CharacterAnimState::TouchEnd => (TOUCH_END, false),
         CharacterAnimState::SmashEnd1 => (SMASH_END_1, false),
         CharacterAnimState::SmashEnd2 => (SMASH_END_2, false),
-        CharacterAnimState::InGame => match character {
-            Character::Butter => (BUTTER_IDLE, true),
-            Character::Kommy => (KOMMY_IDLE, true),
-        },
+        CharacterAnimState::InGame => (IDLE, true),
         CharacterAnimState::InGameHit1 => (SMASH_END_1, false),
         CharacterAnimState::InGameHit2 => (SMASH_END_2, false),
         CharacterAnimState::Happy => (HAPPY_1, true),
@@ -136,6 +134,7 @@ pub fn play_voice_sound(
     commands: &mut Commands,
     system_volume: &SystemVolume,
     source: Handle<AudioSource>,
+    channel: VoiceChannel,
 ) {
     commands.spawn((
         AudioPlayer::new(source),
@@ -144,12 +143,18 @@ pub fn play_voice_sound(
             volume: system_volume.get_voice(),
             ..Default::default()
         },
-        VoiceSound,
+        VoiceSound { channel },
     ));
 }
 
-pub fn cleanup_voices(commands: &mut Commands, voices: &Query<Entity, With<VoiceSound>>) {
-    for entity in voices.iter() {
-        commands.entity(entity).despawn();
+pub fn cleanup_voices(
+    channel: &VoiceChannel,
+    commands: &mut Commands,
+    voices: &Query<(Entity, &VoiceSound)>,
+) {
+    for (entity, sound) in voices.iter() {
+        if sound.channel.eq(channel) {
+            commands.entity(entity).despawn();
+        }
     }
 }
