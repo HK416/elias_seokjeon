@@ -32,16 +32,16 @@ pub enum Hero {
 impl fmt::Display for Hero {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Hero::Aya => write!(f, "aya"),
-            Hero::BigWood => write!(f, "big_wood"),
-            Hero::Butter => write!(f, "butter"),
-            Hero::Erpin => write!(f, "erpin"),
-            Hero::Kidian => write!(f, "kidian"),
-            Hero::Kommy => write!(f, "kommy"),
-            Hero::Mayo => write!(f, "mayo"),
-            Hero::Rohne => write!(f, "rohne"),
-            Hero::Speaki => write!(f, "speaki"),
-            Hero::Xion => write!(f, "xion"),
+            Hero::Aya => write!(f, "야아"),
+            Hero::BigWood => write!(f, "빅우드"),
+            Hero::Butter => write!(f, "버터"),
+            Hero::Erpin => write!(f, "에르핀"),
+            Hero::Kidian => write!(f, "키디언"),
+            Hero::Kommy => write!(f, "코미"),
+            Hero::Mayo => write!(f, "마요"),
+            Hero::Rohne => write!(f, "로네"),
+            Hero::Speaki => write!(f, "스피키"),
+            Hero::Xion => write!(f, "시온"),
         }
     }
 }

@@ -156,7 +156,7 @@ fn change_hero(
 
         let next = match player_info.hero {
             Hero::Aya => Hero::BigWood,
-            Hero::BigWood => Hero::Erpin,
+            Hero::BigWood => Hero::Butter,
             Hero::Butter => Hero::Erpin,
             Hero::Erpin => Hero::Kidian,
             Hero::Kidian => Hero::Kommy,
@@ -266,7 +266,7 @@ fn handle_mouse_input(
                 }
             }
             (MouseButton::Left, ButtonState::Released) => {
-                if let Ok(entity) = grabbed_query.single() {
+                for entity in grabbed_query.iter() {
                     commands.entity(entity).remove::<Grabbed>();
                 }
             }

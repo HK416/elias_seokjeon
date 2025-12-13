@@ -137,13 +137,13 @@ fn handle_mouse_inputs(
                     for (entity, collider, transform) in collider_query.iter() {
                         if Collider2d::contains((collider, transform), point) {
                             commands.entity(entity).insert(Grabbed::default());
-                            return;
+                            break;
                         }
                     }
                 }
             }
             (MouseButton::Left, ButtonState::Released) => {
-                if let Ok(entity) = grabbed_query.single() {
+                for entity in grabbed_query.iter() {
                     commands.entity(entity).remove::<Grabbed>();
                 }
             }

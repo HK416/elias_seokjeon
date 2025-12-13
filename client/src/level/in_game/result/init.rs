@@ -133,6 +133,7 @@ fn setup_game_result_entities(
                 ..Default::default()
             },
             Character::from(player_info.hero),
+            VoiceChannel::MySelf,
             SpineSync,
         ))
         .id();

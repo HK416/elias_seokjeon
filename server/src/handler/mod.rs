@@ -29,6 +29,7 @@ use protocol::{
     RIGHT_THROW_POS_Y, THROW_END_TIME, THROW_POWER, WIND_POWER, WORLD_MAX_X, WORLD_MIN_X, rand,
     serde_json, uuid::Uuid,
 };
+use rand::seq::IndexedRandom;
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -37,7 +38,10 @@ use tokio::{
 };
 use tokio_tungstenite::{WebSocketStream, tungstenite::Message};
 
-use crate::stream::{StreamPollResult, poll_stream_nonblocking};
+use crate::{
+    name::get_name_table,
+    stream::{StreamPollResult, poll_stream_nonblocking},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
@@ -90,10 +94,13 @@ impl Player {
             write
         });
 
+        let hero: Hero = rand::random();
+        let prefix = get_name_table().choose(&mut rand::rng()).unwrap();
+
         Self {
             uuid,
-            name: "Test".to_string(),
-            hero: rand::random(),
+            name: format!("{} {}", prefix, hero),
+            hero,
             win: 0,
             lose: 0,
             draw: 0,
@@ -180,11 +187,14 @@ pub struct Bot {
 
 impl Bot {
     pub fn new() -> Self {
+        let hero: Hero = rand::random();
+        let prefix = get_name_table().choose(&mut rand::rng()).unwrap();
+
         Self {
-            name: "Bot".to_string(),
-            hero: rand::random(),
-            win: 0,
-            lose: 0,
+            name: format!("{} {}", prefix, hero),
+            hero,
+            win: rand::random_range(0..=3),
+            lose: rand::random_range(0..=3),
         }
     }
 }

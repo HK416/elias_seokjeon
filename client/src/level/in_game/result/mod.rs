@@ -91,7 +91,7 @@ fn handle_mouse_inputs(
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut button_inputs: MessageReader<MouseButtonInput>,
-    collider_query: Query<(Entity, &Collider2d, &GlobalTransform), With<InGameResultLevelEntity>>,
+    collider_query: Query<(Entity, &Collider2d, &GlobalTransform)>,
     grabbed_query: Query<Entity, With<Grabbed>>,
     mut next_state: ResMut<NextState<LevelStates>>,
 ) {
@@ -100,7 +100,7 @@ fn handle_mouse_inputs(
         return;
     };
 
-    for event in button_inputs.read() {
+    'input: for event in button_inputs.read() {
         match (event.button, event.state) {
             (MouseButton::Left, ButtonState::Pressed) => {
                 if grabbed_query.is_empty()
@@ -111,14 +111,14 @@ fn handle_mouse_inputs(
                     for (entity, collider, transform) in collider_query.iter() {
                         if Collider2d::contains((collider, transform), point) {
                             commands.entity(entity).insert(Grabbed::default());
-                            return;
+                            continue 'input;
                         }
                     }
                     next_state.set(LevelStates::LoadTitle);
                 }
             }
             (MouseButton::Left, ButtonState::Released) => {
-                if let Ok(entity) = grabbed_query.single() {
+                for entity in grabbed_query.iter() {
                     commands.entity(entity).remove::<Grabbed>();
                 }
             }

@@ -459,7 +459,7 @@ fn setup_title_interface(
                                     Text::new(&player_info.name),
                                     TextFont::from(asset_server.load(FONT_PATH)),
                                     TextLayout::new_with_justify(Justify::Center),
-                                    ResizableFont::vertical(1280.0, 52.0),
+                                    ResizableFont::vertical(1280.0, 36.0),
                                     TextColor::BLACK,
                                     Visibility::Inherited,
                                     SpawnRequest,

@@ -1,11 +1,18 @@
 mod handler;
+mod name;
 mod stream;
 
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 
+use crate::name::get_name_table;
+
 #[tokio::main]
 async fn main() {
+    // --- Init ---
+    get_name_table();
+    // ------------
+
     let listener = TcpListener::bind("0.0.0.0:8889").await.unwrap();
     println!("WebSocket server listening on ws://0.0.0.0:8889");
 
