@@ -6,9 +6,12 @@ use std::sync::OnceLock;
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 
+const EXPIRE: i64 = 15_552_000; // 180 days
+const NAME_KEY: &str = "name";
 const WINS_KEY: &str = "wins";
 const LOSSES_KEY: &str = "losses";
 const DRAWS_KEY: &str = "draws";
+const LEADER_BOARD_KEY: &str = "leaderboard";
 
 const NAMES: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/name.txt"));
 static NAME_TABLE: OnceLock<Vec<String>> = OnceLock::new();

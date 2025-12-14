@@ -617,8 +617,10 @@ pub async fn play(
             let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
                 let mut redis_conn_cloned = redis_conn.clone();
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn_cloned.hincr(&key, LOSSES_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn_cloned.hincr(&key, LOSSES_KEY, 1).await;
+                let result =
+                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 1, 0).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -636,8 +638,10 @@ pub async fn play(
             let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
                 let mut redis_conn_cloned = redis_conn.clone();
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                let result =
+                    record_game_result(&mut redis_conn_cloned, &player.uuid, 1, 0, 0).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -655,8 +659,10 @@ pub async fn play(
             let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
                 let mut redis_conn_cloned = redis_conn.clone();
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                let result =
+                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 0, 1).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -669,8 +675,10 @@ pub async fn play(
             let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
                 let mut redis_conn_cloned = redis_conn.clone();
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
+                let result =
+                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 0, 1).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -692,8 +700,10 @@ pub async fn play(
             let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
             if let Ok(player) = result {
                 let mut redis_conn_cloned = redis_conn.clone();
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
+                let result =
+                    record_game_result(&mut redis_conn_cloned, &player.uuid, 1, 0, 0).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -710,8 +720,9 @@ pub async fn play(
             right = send_message(right, &message, &mut num_player);
             let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
             if let Ok(player) = result {
-                let key = format!("user:{}", player.uuid);
-                let result = redis_conn.hincr(key, LOSSES_KEY, 1).await;
+                // let key = format!("user:{}", player.uuid);
+                // let result = redis_conn.hincr(key, LOSSES_KEY, 1).await;
+                let result = record_game_result(&mut redis_conn, &player.uuid, 0, 1, 0).await;
                 if let Err(e) = result {
                     eprintln!("Redis Error: {e}");
                     return;
@@ -778,4 +789,53 @@ fn update_right_bot_parameter(
     let angle = (dir.to_angle() + lv.angle_offset()).clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
 
     Vec2::new(angle.cos(), angle.sin()) * power
+}
+
+pub async fn record_game_result(
+    redis_conn: &mut MultiplexedConnection,
+    uuid: &Uuid,
+    win_inc: i32,
+    loss_inc: i32,
+    draw_inc: i32,
+) -> redis::RedisResult<()> {
+    let user_key = format!("user{uuid}");
+
+    // Lua Script
+    // ARGV[1]: win_inc, ARGV[2]: loss_inc, ARGV[3]: draw_inc
+    // KEYS[1]: user_key, KEYS[2]: leader_board_key
+    let script = Script::new(
+        r#"
+        --- Update Hash data (HINCRBY) ---
+        local win = redis.call('HINCRBY', KEYS[1], 'win', ARGV[1])
+        local loss = redis.call('HINCRBY', KEYS[1], 'loss', ARGV[2])
+        local draw = redis.call('HINCRBY', KEYS[1], 'draw', ARGV[3])
+
+        --- Calculate ranking score ---
+        local w = win
+        if win > 9999 then w = 9999 end
+        local l = loss
+        if loss > 9999 then l = 9999 end
+        local d = draw
+        if draw > 9999 then d = 9999 end
+
+        local inverted_loss = 9999 - l
+        local score = (w * 10000000000) + (inverted_loss * 100000) + d
+
+        --- Update Leader Board ---
+        redis.call('ZADD', KEYS[2], score, KEYS[1])
+
+        return score
+    "#,
+    );
+
+    let _: f64 = script
+        .key(&user_key)
+        .key(LEADER_BOARD_KEY)
+        .arg(win_inc)
+        .arg(loss_inc)
+        .arg(draw_inc)
+        .invoke_async(redis_conn)
+        .await?;
+
+    Ok(())
 }

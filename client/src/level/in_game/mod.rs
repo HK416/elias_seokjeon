@@ -5,7 +5,7 @@ mod result;
 mod switch;
 
 // Import necessary Bevy modules.
-use bevy::{camera, prelude::*};
+use bevy::prelude::*;
 use bevy_vector_shapes::prelude::*;
 use protocol::{
     GRAVITY, Hero, LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_PLAYER_POS_Y, LEFT_START_ANGLE,
@@ -89,7 +89,7 @@ impl Plugin for InnerPlugin {
                             .run_if(resource_exists::<MouseButtonPressed>),
                         handle_touch_pressed.run_if(not(resource_exists::<TouchPressed>)),
                         handle_touch_released
-                            .run_if(not(resource_exists::<MouseButtonPressedd>))
+                            .run_if(not(resource_exists::<MouseButtonPressed>))
                             .run_if(resource_exists::<TouchPressed>),
                         handle_touch_movement
                             .run_if(not(resource_exists::<MouseButtonPressed>))

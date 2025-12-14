@@ -218,25 +218,25 @@ fn handle_volume_button_pressed(
         (With<OptionLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    if mouse_buttons.just_pressed(MouseButton::Left) {
-        for (entity, &volume_slider, &interaction) in interaction_query.iter() {
-            match (volume_slider, interaction) {
-                (VolumeSlider::Background, Interaction::Pressed)
-                | (VolumeSlider::Effect, Interaction::Pressed)
-                | (VolumeSlider::Voice, Interaction::Pressed) => {
+    for (entity, &volume_slider, &interaction) in interaction_query.iter() {
+        match (volume_slider, interaction) {
+            (VolumeSlider::Background, Interaction::Pressed)
+            | (VolumeSlider::Effect, Interaction::Pressed)
+            | (VolumeSlider::Voice, Interaction::Pressed) => {
+                if mouse_buttons.just_pressed(MouseButton::Left) {
                     let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                     play_effect_sound(&mut commands, &system_volume, source);
                     selected.set(volume_slider, entity, 0);
                     break;
                 }
-                (VolumeSlider::Background, Interaction::Hovered)
-                | (VolumeSlider::Effect, Interaction::Hovered)
-                | (VolumeSlider::Voice, Interaction::Hovered) => {
-                    let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
-                    play_effect_sound(&mut commands, &system_volume, source);
-                }
-                _ => { /* empty */ }
             }
+            (VolumeSlider::Background, Interaction::Hovered)
+            | (VolumeSlider::Effect, Interaction::Hovered)
+            | (VolumeSlider::Voice, Interaction::Hovered) => {
+                let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
+                play_effect_sound(&mut commands, &system_volume, source);
+            }
+            _ => { /* empty */ }
         }
     }
 }
@@ -263,12 +263,6 @@ fn handle_volume_button_pressed_for_mobile(
                     play_effect_sound(&mut commands, &system_volume, source);
                     selected.set(volume_slider, entity, touch.id());
                     break;
-                }
-                (VolumeSlider::Background, Interaction::Hovered)
-                | (VolumeSlider::Effect, Interaction::Hovered)
-                | (VolumeSlider::Voice, Interaction::Hovered) => {
-                    let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
-                    play_effect_sound(&mut commands, &system_volume, source);
                 }
                 _ => { /* empty */ }
             }

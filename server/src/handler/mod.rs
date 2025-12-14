@@ -26,11 +26,11 @@ use protocol::{
     LEFT_START_ANGLE, LEFT_THROW_POS_X, LEFT_THROW_POS_Y, MAX_CTRL_TIME, MAX_HEALTH_COUNT,
     MAX_PLAY_TIME, MAX_POINT, PROJECTILE_SIZE, Packet, PlayData, RIGHT_END_ANGLE,
     RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y, RIGHT_START_ANGLE, RIGHT_THROW_POS_X,
-    RIGHT_THROW_POS_Y, THROW_END_TIME, THROW_POWER, WIND_POWER, WORLD_MAX_X, WORLD_MIN_X, rand,
-    serde_json, uuid::Uuid,
+    RIGHT_THROW_POS_Y, RankItem, THROW_END_TIME, THROW_POWER, WIND_POWER, WORLD_MAX_X, WORLD_MIN_X,
+    rand, serde_json, uuid::Uuid,
 };
 use rand::seq::IndexedRandom;
-use redis::{AsyncTypedCommands, aio::MultiplexedConnection};
+use redis::{AsyncTypedCommands, Script, aio::MultiplexedConnection};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -40,7 +40,7 @@ use tokio::{
 use tokio_tungstenite::{WebSocketStream, tungstenite::Message};
 
 use crate::{
-    DRAWS_KEY, LOSSES_KEY, WINS_KEY, get_name_table,
+    DRAWS_KEY, EXPIRE, LEADER_BOARD_KEY, LOSSES_KEY, NAME_KEY, WINS_KEY, get_name_table,
     stream::{StreamPollResult, poll_stream_nonblocking},
 };
 
@@ -78,7 +78,13 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(uuid: Uuid, addr: SocketAddr, ws_stream: WebSocketStream<TcpStream>) -> Self {
+    pub fn new(
+        uuid: Uuid,
+        hero: Hero,
+        name: String,
+        addr: SocketAddr,
+        ws_stream: WebSocketStream<TcpStream>,
+    ) -> Self {
         let (tx, mut rx) = unbounded_channel::<Packet>();
         let (mut write, read) = ws_stream.split();
         let write_task = tokio::spawn(async move {
@@ -93,12 +99,9 @@ impl Player {
             write
         });
 
-        let hero: Hero = rand::random();
-        let prefix = get_name_table().choose(&mut rand::rng()).unwrap();
-
         Self {
             uuid,
-            name: format!("{} {}", prefix, hero),
+            name,
             hero,
             win: 0,
             lose: 0,

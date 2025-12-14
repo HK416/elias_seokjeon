@@ -139,6 +139,13 @@ pub enum Packet {
     },
     // Server -> Client
     GameResultDraw,
+    // Client -> Server
+    QueryRanking,
+    // Server -> Client
+    RankingResult {
+        my_rank: Option<u32>,
+        top_list: Vec<RankItem>,
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -214,4 +221,13 @@ impl Circle {
     pub fn new(radius: f32, center: (f32, f32)) -> Self {
         Self { radius, center }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RankItem {
+    pub rank: u32,
+    pub uuid: String,
+    pub name: String,
+    pub wins: u32,
+    pub losses: u32,
 }

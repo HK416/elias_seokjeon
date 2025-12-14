@@ -8,8 +8,11 @@ pub async fn setup(
     #[cfg(not(feature = "no-debugging-log"))]
     println!("Addr:{addr} - Current State: Init");
 
-    let uuid = loop {
-        let uuid = Uuid::new_v4();
+    let mut uuid = Uuid::new_v4();
+    let hero = rand::random();
+    let prefix = get_name_table().choose(&mut rand::rng()).unwrap();
+    let name = format!("{prefix} {hero}");
+    uuid = loop {
         let key = format!("user:{uuid}");
         let value = addr.to_string();
 
@@ -24,9 +27,11 @@ pub async fn setup(
 
         if is_created {
             let result: Result<(), redis::RedisError> = redis::pipe()
+                .hset(&key, NAME_KEY, &name)
                 .hset(&key, WINS_KEY, 0)
                 .hset(&key, LOSSES_KEY, 0)
                 .hset(&key, DRAWS_KEY, 0)
+                .expire(&key, EXPIRE)
                 .query_async(&mut redis_conn)
                 .await;
 
@@ -36,10 +41,12 @@ pub async fn setup(
             }
 
             break uuid;
+        } else {
+            uuid = Uuid::new_v4();
         }
     };
 
-    let player = Player::new(uuid, addr, ws_stream);
+    let player = Player::new(uuid, hero, name, addr, ws_stream);
     let result = player.tx.send(Packet::Connection(PlayData {
         uuid: player.uuid(),
         name: player.name().to_string(),

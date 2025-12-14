@@ -197,18 +197,33 @@ fn setup_title_interface(
 
                             let entity = parent
                                 .spawn((
-                                    Node::default(),
-                                    Text::new(format!(
-                                        "Win:{} Lose:{}",
-                                        player_info.win, player_info.lose
-                                    )),
-                                    TextFont::from(asset_server.load(FONT_PATH)),
-                                    TextLayout::new_with_justify(Justify::Center),
-                                    ResizableFont::vertical(1280.0, 48.0),
-                                    TextColor::BLACK,
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..Default::default()
+                                    },
                                     Visibility::Inherited,
                                     SpawnRequest,
                                 ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(format!(
+                                                "Win:{} Lose:{}",
+                                                player_info.win, player_info.lose
+                                            )),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            ResizableFont::vertical(1280.0, 48.0),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
                                 .id();
                             loading_entities.insert(entity);
 
@@ -429,7 +444,7 @@ fn setup_title_interface(
                                 .spawn((
                                     Node {
                                         top: Val::Percent(-74.0),
-                                        left: Val::Percent(-34.0),
+                                        right: Val::Percent(0.0),
                                         ..Default::default()
                                     },
                                     Visibility::Inherited,
@@ -455,15 +470,30 @@ fn setup_title_interface(
 
                             let entity = parent
                                 .spawn((
-                                    Node::default(),
-                                    Text::new(&player_info.name),
-                                    TextFont::from(asset_server.load(FONT_PATH)),
-                                    TextLayout::new_with_justify(Justify::Center),
-                                    ResizableFont::vertical(1280.0, 36.0),
-                                    TextColor::BLACK,
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..Default::default()
+                                    },
                                     Visibility::Inherited,
                                     SpawnRequest,
                                 ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(&player_info.name),
+                                            TextFont::from(asset_server.load(FONT_PATH)),
+                                            TextLayout::new_with_justify(Justify::Center),
+                                            ResizableFont::vertical(1280.0, 36.0),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
                                 .id();
                             loading_entities.insert(entity);
 
@@ -471,7 +501,7 @@ fn setup_title_interface(
                                 .spawn((
                                     Node {
                                         top: Val::Percent(-74.0),
-                                        right: Val::Percent(-34.0),
+                                        left: Val::Percent(0.0),
                                         ..Default::default()
                                     },
                                     Visibility::Inherited,
