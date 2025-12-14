@@ -8,7 +8,7 @@ use super::*;
 
 // --- CONSTANTS ---
 
-const TIMEOUT: f32 = 10.0;
+const TIMEOUT: f32 = 30.0;
 const MAX_RETRY_COUNT: u32 = 0;
 
 // --- PLUGIN ---

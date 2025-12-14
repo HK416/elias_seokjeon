@@ -3,7 +3,7 @@ mod switch;
 
 // Import necessary Bevy modules.
 use bevy::{
-    input::{ButtonState, mouse::MouseButtonInput},
+    input::{ButtonState, mouse::MouseButtonInput, touch::TouchPhase},
     prelude::*,
 };
 
@@ -24,11 +24,16 @@ impl Plugin for InnerPlugin {
                     setup_loading_screen,
                     cleanup_in_game_assets,
                     cleanup_in_game_entities,
+                    cleanup_background_sounds,
                 ),
             )
             .add_systems(
                 PreUpdate,
-                (handle_keyboard_inputs, handle_mouse_inputs)
+                (
+                    handle_keyboard_inputs,
+                    handle_mouse_inputs,
+                    handle_touch_inputs,
+                )
                     .run_if(in_state(LevelStates::InGameResult)),
             )
             .add_systems(
@@ -38,6 +43,7 @@ impl Plugin for InnerPlugin {
                     added_grabbed_component,
                     removed_grabbed_component,
                     update_spine_bone_position,
+                    update_spine_bone_position_for_mobile,
                 )
                     .run_if(in_state(LevelStates::InGameResult)),
             )
@@ -69,6 +75,12 @@ fn cleanup_in_game_assets(mut commands: Commands) {
 }
 
 fn cleanup_in_game_entities(mut commands: Commands, query: Query<Entity, With<InGameLevelRoot>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+fn cleanup_background_sounds(mut commands: Commands, query: Query<Entity, With<BackgroundSound>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -127,6 +139,43 @@ fn handle_mouse_inputs(
     }
 }
 
+fn handle_touch_inputs(
+    mut commands: Commands,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut touch_inputs: MessageReader<TouchInput>,
+    collider_query: Query<(Entity, &Collider2d, &GlobalTransform)>,
+    grabbed_query: Query<Entity, With<Grabbed>>,
+    mut next_state: ResMut<NextState<LevelStates>>,
+) {
+    let Ok((camera, camera_transform)) = cameras.single() else {
+        return;
+    };
+
+    'input: for event in touch_inputs.read() {
+        match event.phase {
+            TouchPhase::Started => {
+                if grabbed_query.is_empty()
+                    && let Ok(point) = camera.viewport_to_world_2d(camera_transform, event.position)
+                {
+                    for (entity, collider, transform) in collider_query.iter() {
+                        if Collider2d::contains((collider, transform), point) {
+                            commands.entity(entity).insert(Grabbed::new(event.id));
+                            continue 'input;
+                        }
+                    }
+                    next_state.set(LevelStates::LoadTitle);
+                }
+            }
+            TouchPhase::Ended => {
+                for entity in grabbed_query.iter() {
+                    commands.entity(entity).remove::<Grabbed>();
+                }
+            }
+            _ => { /* empty */ }
+        }
+    }
+}
+
 // --- POSTUPDATE SYSTEMS ---
 
 fn update_collider_transform(
@@ -134,9 +183,10 @@ fn update_collider_transform(
     mut query: Query<(&mut Transform, &TargetSpineBone), With<InGameResultLevelEntity>>,
 ) {
     for (mut transform, target_spine_bone) in query.iter_mut() {
-        let bone_transform = transform_query.get(target_spine_bone.entity).unwrap();
-        transform.translation = bone_transform.translation();
-        transform.rotation = bone_transform.rotation();
-        transform.scale = bone_transform.scale();
+        if let Ok(bone_transform) = transform_query.get(target_spine_bone.entity) {
+            transform.translation = bone_transform.translation();
+            transform.rotation = bone_transform.rotation();
+            transform.scale = bone_transform.scale();
+        }
     }
 }

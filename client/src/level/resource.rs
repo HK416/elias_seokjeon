@@ -222,6 +222,11 @@ pub struct SyncFlags;
 #[derive(Resource)]
 pub struct MouseButtonPressed;
 
+#[derive(Resource)]
+pub struct TouchPressed {
+    pub id: u64,
+}
+
 #[derive(Default, Resource)]
 pub struct InGameTimer {
     pub miliis: i32,

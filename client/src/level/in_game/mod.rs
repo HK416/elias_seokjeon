@@ -5,7 +5,7 @@ mod result;
 mod switch;
 
 // Import necessary Bevy modules.
-use bevy::prelude::*;
+use bevy::{camera, prelude::*};
 use bevy_vector_shapes::prelude::*;
 use protocol::{
     GRAVITY, Hero, LEFT_CAM_POS_X, LEFT_END_ANGLE, LEFT_PLAYER_POS_Y, LEFT_START_ANGLE,
@@ -81,8 +81,19 @@ impl Plugin for InnerPlugin {
                     (
                         handle_mouse_button_pressed
                             .run_if(not(resource_exists::<MouseButtonPressed>)),
-                        handle_mouse_button_released.run_if(resource_exists::<MouseButtonPressed>),
-                        handle_cursor_movement.run_if(resource_exists::<MouseButtonPressed>),
+                        handle_mouse_button_released
+                            .run_if(not(resource_exists::<TouchPressed>))
+                            .run_if(resource_exists::<MouseButtonPressed>),
+                        handle_cursor_movement
+                            .run_if(not(resource_exists::<TouchPressed>))
+                            .run_if(resource_exists::<MouseButtonPressed>),
+                        handle_touch_pressed.run_if(not(resource_exists::<TouchPressed>)),
+                        handle_touch_released
+                            .run_if(not(resource_exists::<MouseButtonPressedd>))
+                            .run_if(resource_exists::<TouchPressed>),
+                        handle_touch_movement
+                            .run_if(not(resource_exists::<MouseButtonPressed>))
+                            .run_if(resource_exists::<TouchPressed>),
                     )
                         .after(handle_received_packets),
                 )
@@ -402,6 +413,175 @@ fn handle_cursor_movement(
                 && let Ok((camera, camera_transform)) = cameras.single()
                 && let Some(viewport_position) = window.cursor_position()
                 && let Ok(point) = camera.viewport_to_world_2d(camera_transform, viewport_position)
+            {
+                let center = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
+                let dist = center - point;
+                let norm = dist.try_normalize().unwrap_or(Vec2::X);
+                let length = dist.length().min(THROW_RANGE);
+                let delta = length / THROW_RANGE;
+                let power = (delta * 255.0) as u8;
+
+                let mut angle = norm.to_angle();
+                if angle < 0.0 {
+                    angle += TAU;
+                }
+
+                let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                let delta =
+                    (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
+                let angle = (delta * 255.0) as u8;
+
+                *play_side = PlaySide::Right(Some((angle, power)));
+                network
+                    .send(&Packet::UpdateThrowParams { angle, power })
+                    .unwrap();
+            }
+        }
+        _ => { /* empty */ }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(clippy::too_many_arguments)]
+fn handle_touch_pressed(
+    mut commands: Commands,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    left_player_trigger: Query<(&Collider2d, &GlobalTransform), With<LeftPlayerTrigger>>,
+    right_player_trigger: Query<(&Collider2d, &GlobalTransform), With<RightPlayerTrigger>>,
+    touches: Res<Touches>,
+    other_info: Res<OtherInfo>,
+    play_side: Res<PlaySide>,
+    network: Res<Network>,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left(_), false) => {
+            for touch in touches.iter() {
+                if let Ok((camera, camera_transform)) = cameras.single()
+                    && let Ok((collider, transform)) = left_player_trigger.single()
+                    && let Ok(point) =
+                        camera.viewport_to_world_2d(camera_transform, touch.position())
+                    && Collider2d::contains((collider, transform), point)
+                {
+                    network
+                        .send(&Packet::UpdateThrowParams { angle: 0, power: 0 })
+                        .unwrap();
+                    commands.insert_resource(TouchPressed { id: touch.id() });
+                    break;
+                }
+            }
+        }
+        (PlaySide::Right(_), true) => {
+            for touch in touches.iter() {
+                if let Ok((camera, camera_transform)) = cameras.single()
+                    && let Ok((collider, transform)) = right_player_trigger.single()
+                    && let Ok(point) =
+                        camera.viewport_to_world_2d(camera_transform, touch.position())
+                    && Collider2d::contains((collider, transform), point)
+                {
+                    network
+                        .send(&Packet::UpdateThrowParams { angle: 0, power: 0 })
+                        .unwrap();
+                    commands.insert_resource(TouchPressed { id: touch.id() });
+                    break;
+                }
+            }
+        }
+        _ => { /* empty */ }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(clippy::too_many_arguments)]
+fn handle_touch_released(
+    mut commands: Commands,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    touches: Res<Touches>,
+    touch_pressed: Res<TouchPressed>,
+    other_info: Res<OtherInfo>,
+    network: Res<Network>,
+) {
+    if let Some(touch) = touches.get_released(touch_pressed.id) {
+        commands.remove_resource::<TouchPressed>();
+
+        if let Ok((camera, camera_transform)) = cameras.single()
+            && let Ok(point) = camera.viewport_to_world_2d(camera_transform, touch.position())
+        {
+            let center = match other_info.left_side {
+                true => Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y),
+                false => Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y),
+            };
+            let dist = center - point;
+            let norm = dist.try_normalize().unwrap_or(Vec2::X);
+            let length = dist.length().min(THROW_RANGE);
+            let delta = length / THROW_RANGE;
+            let power = (delta * 255.0) as u8;
+
+            let mut angle = norm.to_angle();
+            let angle = if other_info.left_side {
+                // I'm right side player.
+                if angle < 0.0 {
+                    angle += TAU;
+                }
+
+                let clamped_angle = angle.clamp(RIGHT_START_ANGLE, RIGHT_END_ANGLE);
+                let delta =
+                    (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
+                (delta * 255.0) as u8
+            } else {
+                // I'm left side player.
+                let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                let delta =
+                    (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
+                (delta * 255.0) as u8
+            };
+
+            network
+                .send(&Packet::UpdateThrowParams { angle, power })
+                .unwrap();
+        }
+        network.send(&Packet::ThrowProjectile).unwrap();
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn handle_touch_movement(
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    touches: Res<Touches>,
+    touch_pressed: Res<TouchPressed>,
+    mut play_side: ResMut<PlaySide>,
+    other_info: Res<OtherInfo>,
+    network: Res<Network>,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left(_), false) => {
+            if let Ok((camera, camera_transform)) = cameras.single()
+                && let Some(touch) = touches.get_pressed(touch_pressed.id)
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, touch.position())
+            {
+                let center = Vec2::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y);
+                let dist = center - point;
+                let norm = dist.try_normalize().unwrap_or(Vec2::X);
+                let length = dist.length().min(THROW_RANGE);
+                let delta = length / THROW_RANGE;
+                let power = (delta * 255.0) as u8;
+
+                let angle = norm.to_angle();
+
+                let clamped_angle = angle.clamp(LEFT_START_ANGLE, LEFT_END_ANGLE);
+                let delta =
+                    (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
+                let angle = (delta * 255.0) as u8;
+
+                *play_side = PlaySide::Left(Some((angle, power)));
+                network
+                    .send(&Packet::UpdateThrowParams { angle, power })
+                    .unwrap();
+            }
+        }
+        (PlaySide::Right(_), true) => {
+            if let Ok((camera, camera_transform)) = cameras.single()
+                && let Some(touch) = touches.get_pressed(touch_pressed.id)
+                && let Ok(point) = camera.viewport_to_world_2d(camera_transform, touch.position())
             {
                 let center = Vec2::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y);
                 let dist = center - point;

@@ -368,6 +368,7 @@ pub fn removed_grabbed_component(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
+    touches: Res<Touches>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut entities: RemovedComponents<Grabbed>,
@@ -408,7 +409,9 @@ pub fn removed_grabbed_component(
                     *anim_state = CharacterAnimState::TouchEnd;
                     play_character_animation(&mut spine, *character, *anim_state);
 
-                    if let Some(cursor_viewport_position) = window.cursor_position()
+                    if let Some(cursor_viewport_position) = window
+                        .cursor_position()
+                        .or(touches.iter_just_released().last().map(|t| t.position()))
                         && let Ok(point) =
                             camera.viewport_to_world_2d(camera_transform, cursor_viewport_position)
                         && let Some(bone) = spine.skeleton.bone_at_index(target_spine_bone.index)
@@ -491,6 +494,45 @@ pub fn update_spine_bone_position(
             && let Some(cursor_viewport_position) = window.cursor_position()
             && let Ok(point) =
                 camera.viewport_to_world_2d(camera_transform, cursor_viewport_position)
+        {
+            let w_bone_position = origin_position.world;
+            let distance = point - w_bone_position;
+            let length = distance.length();
+            if length > f32::EPSILON {
+                bone.set_position(
+                    origin_position.local
+                        + character.trans(distance, transform.scale().x) / length
+                            * length.min(BALL_MOVE_RANGE),
+                );
+            } else {
+                bone.set_position(w_bone_position);
+            }
+        }
+    }
+}
+
+pub fn update_spine_bone_position_for_mobile(
+    touches: Res<Touches>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut spine_query: Query<(&mut Spine, &Character, &GlobalTransform)>,
+    mut grabbed_query: Query<(
+        &TargetSpine,
+        &TargetSpineBone,
+        &SpineBoneOriginPosition,
+        &ColliderType,
+        &Grabbed,
+    )>,
+) {
+    let Ok((camera, camera_transform)) = cameras.single() else {
+        return;
+    };
+
+    for (target_spine, target_spine_bone, origin_position, ty, grab) in grabbed_query.iter_mut() {
+        if matches!(ty, ColliderType::Ball)
+            && let Ok((mut spine, character, transform)) = spine_query.get_mut(target_spine.entity)
+            && let Some(mut bone) = spine.skeleton.bone_at_index_mut(target_spine_bone.index)
+            && let Some(touch) = touches.get_pressed(grab.touch_id)
+            && let Ok(point) = camera.viewport_to_world_2d(camera_transform, touch.position())
         {
             let w_bone_position = origin_position.world;
             let distance = point - w_bone_position;

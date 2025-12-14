@@ -37,9 +37,9 @@ impl Plugin for InnerPlugin {
                     handle_pn_button_pressed,
                     handle_locale_button_pressed,
                     handle_volume_button_pressed,
-                    handle_volume_button_pressed_for_moblie,
+                    handle_volume_button_pressed_for_mobile,
                     handle_volume_button_released,
-                    handle_volume_button_released_for_moblie,
+                    handle_volume_button_released_for_mobile,
                 )
                     .run_if(in_state(LevelStates::InOption)),
             )
@@ -50,7 +50,7 @@ impl Plugin for InnerPlugin {
                     update_wave_animation,
                     update_volume_text,
                     update_volume_slider,
-                    update_volume_slider_for_moblie,
+                    update_volume_slider_for_mobile,
                 )
                     .run_if(in_state(LevelStates::InOption)),
             )
@@ -211,35 +211,38 @@ fn handle_volume_button_pressed(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
         (Entity, &VolumeSlider, &Interaction),
         (With<OptionLevelEntity>, Changed<Interaction>),
     >,
 ) {
-    for (entity, &volume_slider, &interaction) in interaction_query.iter() {
-        match (volume_slider, interaction) {
-            (VolumeSlider::Background, Interaction::Pressed)
-            | (VolumeSlider::Effect, Interaction::Pressed)
-            | (VolumeSlider::Voice, Interaction::Pressed) => {
-                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
-                play_effect_sound(&mut commands, &system_volume, source);
-                selected.set(volume_slider, entity, 0);
-                break;
+    if mouse_buttons.just_pressed(MouseButton::Left) {
+        for (entity, &volume_slider, &interaction) in interaction_query.iter() {
+            match (volume_slider, interaction) {
+                (VolumeSlider::Background, Interaction::Pressed)
+                | (VolumeSlider::Effect, Interaction::Pressed)
+                | (VolumeSlider::Voice, Interaction::Pressed) => {
+                    let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                    play_effect_sound(&mut commands, &system_volume, source);
+                    selected.set(volume_slider, entity, 0);
+                    break;
+                }
+                (VolumeSlider::Background, Interaction::Hovered)
+                | (VolumeSlider::Effect, Interaction::Hovered)
+                | (VolumeSlider::Voice, Interaction::Hovered) => {
+                    let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
+                    play_effect_sound(&mut commands, &system_volume, source);
+                }
+                _ => { /* empty */ }
             }
-            (VolumeSlider::Background, Interaction::Hovered)
-            | (VolumeSlider::Effect, Interaction::Hovered)
-            | (VolumeSlider::Voice, Interaction::Hovered) => {
-                let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
-                play_effect_sound(&mut commands, &system_volume, source);
-            }
-            _ => { /* empty */ }
         }
     }
 }
 
 #[allow(clippy::type_complexity)]
-fn handle_volume_button_pressed_for_moblie(
+fn handle_volume_button_pressed_for_mobile(
     mut commands: Commands,
     touches: Res<Touches>,
     asset_server: Res<AssetServer>,
@@ -302,14 +305,33 @@ fn handle_volume_button_released(
     }
 }
 
-fn handle_volume_button_released_for_moblie(
+fn handle_volume_button_released_for_mobile(
+    mut commands: Commands,
     touches: Res<Touches>,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
     mut selected: ResMut<SelectedSliderCursor>,
 ) {
     if let Some((_, _, id)) = selected.get()
         && touches.just_released(id)
+        && let Some((slider, _, _)) = selected.take()
     {
-        let _ = selected.take();
+        match slider {
+            VolumeSlider::Effect => {
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_UP);
+                play_effect_sound(&mut commands, &system_volume, source);
+            }
+            VolumeSlider::Voice => {
+                let source = asset_server.load(VOC_PATH_ERPIN);
+                play_voice_sound(
+                    &mut commands,
+                    &system_volume,
+                    source,
+                    VoiceChannel::default(),
+                );
+            }
+            _ => { /* empty */ }
+        }
     }
 }
 
@@ -364,7 +386,7 @@ fn update_volume_slider(
     }
 }
 
-fn update_volume_slider_for_moblie(
+fn update_volume_slider_for_mobile(
     windows: Query<&Window>,
     slider_query: Query<(&ComputedNode, &UiGlobalTransform), With<OptionLevelEntity>>,
     mut handler_query: Query<(&mut Node, &ChildOf), With<OptionLevelEntity>>,

@@ -264,11 +264,24 @@ pub struct SpineBoneOriginPosition {
 #[derive(Component)]
 pub struct Grabbed {
     pub elapsed: f32,
+    pub touch_id: u64,
+}
+
+impl Grabbed {
+    pub fn new(touch_id: u64) -> Self {
+        Self {
+            touch_id,
+            ..Default::default()
+        }
+    }
 }
 
 impl Default for Grabbed {
     fn default() -> Self {
-        Self { elapsed: 0.0 }
+        Self {
+            elapsed: 0.0,
+            touch_id: 0,
+        }
     }
 }
 
