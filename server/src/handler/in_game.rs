@@ -798,10 +798,10 @@ pub async fn record_game_result(
     loss_inc: i32,
     draw_inc: i32,
 ) -> redis::RedisResult<()> {
-    let user_key = format!("user{uuid}");
+    let user_key = format!("user:{uuid}");
 
     // Lua Script
-    // ARGV[1]: win_inc, ARGV[2]: loss_inc, ARGV[3]: draw_inc
+    // ARGV[1]: win_inc, ARGV[2]: loss_inc, ARGV[3]: draw_inc, ARGV[4]: expire_seconds
     // KEYS[1]: user_key, KEYS[2]: leader_board_key
     let script = Script::new(
         r#"
@@ -809,6 +809,9 @@ pub async fn record_game_result(
         local win = redis.call('HINCRBY', KEYS[1], 'win', ARGV[1])
         local loss = redis.call('HINCRBY', KEYS[1], 'loss', ARGV[2])
         local draw = redis.call('HINCRBY', KEYS[1], 'draw', ARGV[3])
+
+        --- Update expiration to long-term ---
+        redis.call('EXPIRE', KEYS[1], ARGV[4])
 
         --- Calculate ranking score ---
         local w = win
@@ -834,6 +837,7 @@ pub async fn record_game_result(
         .arg(win_inc)
         .arg(loss_inc)
         .arg(draw_inc)
+        .arg(EXPIRE_SECONDS)
         .invoke_async(redis_conn)
         .await?;
 

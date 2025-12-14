@@ -1,5 +1,10 @@
 use super::*;
 
+const RATE_LIMIT_PREFIX: &str = "rate_limit:";
+const MAX_CONN_PER_MIN: i64 = 20;
+const RATE_LIMIT_TTL_SECONDS: i64 = 10;
+const MAX_UUID_RETRIES: u32 = 10;
+
 pub async fn setup(
     addr: SocketAddr,
     ws_stream: WebSocketStream<TcpStream>,
@@ -8,41 +13,85 @@ pub async fn setup(
     #[cfg(not(feature = "no-debugging-log"))]
     println!("Addr:{addr} - Current State: Init");
 
-    let mut uuid = Uuid::new_v4();
+    // --- Rate Limiting per IP ---
+    let ip = addr.ip().to_string();
+    let key = format!("{RATE_LIMIT_PREFIX}{ip}");
+
+    // Increment a counter for the IP and set it to expire in 60 seconds.
+    // This is a simple way to limit connections to MAX_CONN_PER_MIN per minute.
+    let pipe_result: redis::RedisResult<(i64, i32)> = redis::pipe()
+        .incr(&key, 1)
+        .expire(&key, RATE_LIMIT_TTL_SECONDS)
+        .query_async(&mut redis_conn)
+        .await;
+
+    let count = match pipe_result {
+        Ok((c, _)) => c, // We only need the count from INCR
+        Err(e) => {
+            eprintln!("Redis error during rate limiting: {e}");
+            return;
+        }
+    };
+
+    if count > MAX_CONN_PER_MIN {
+        eprintln!("Rate limit exceeded for IP: {ip}. Connection dropped.");
+        return;
+    }
+
     let hero = rand::random();
     let prefix = get_name_table().choose(&mut rand::rng()).unwrap();
     let name = format!("{prefix} {hero}");
-    uuid = loop {
+
+    let mut final_uuid = None;
+    // --- Try to create a new user with a unique UUID, with a limited number of retries ---
+    for _ in 0..MAX_UUID_RETRIES {
+        let uuid = Uuid::new_v4();
         let key = format!("user:{uuid}");
         let value = addr.to_string();
 
-        let result: Result<bool, redis::RedisError> = redis_conn.hset_nx(&key, "ip", &value).await;
-        let is_created = match result {
-            Ok(is_created) => is_created,
+        let is_created: bool = match redis_conn.hset_nx(&key, "ip", &value).await {
+            Ok(created) => created,
             Err(e) => {
-                eprintln!("Redis Error: {e}");
+                eprintln!("Redis Error on HSETNX: {e}");
+                // In case of error, stop trying.
                 return;
             }
         };
 
         if is_created {
-            let result: Result<(), redis::RedisError> = redis::pipe()
+            // If the UUID is unique and 'ip' field is set, populate the rest of the user data.
+            let pipe_result: Result<(), redis::RedisError> = redis::pipe()
                 .hset(&key, NAME_KEY, &name)
                 .hset(&key, WINS_KEY, 0)
                 .hset(&key, LOSSES_KEY, 0)
                 .hset(&key, DRAWS_KEY, 0)
-                .expire(&key, EXPIRE)
+                .expire(&key, INITIAL_EXPIRE_SECONDS)
                 .query_async(&mut redis_conn)
                 .await;
 
-            if let Err(e) = result {
-                eprintln!("Redis Error: {e}.");
+            if let Err(e) = pipe_result {
+                eprintln!("Redis Error on user init pipe: {e}.");
+                // The key was created with hset_nx, but population failed.
+                // The partial record will expire eventually.
+                // We stop here to prevent having a half-initialized player.
                 return;
             }
+            final_uuid = Some(uuid);
+            break; // Successfully created, exit loop.
+        }
+        // If not created (collision), the loop continues to the next attempt.
+    }
 
-            break uuid;
-        } else {
-            uuid = Uuid::new_v4();
+    let uuid = match final_uuid {
+        Some(u) => u,
+        None => {
+            // If we couldn't find a unique UUID after all retries, log it and drop the connection.
+            eprintln!(
+                "Failed to create a unique user for IP {} after {} retries.",
+                addr.ip(),
+                MAX_UUID_RETRIES
+            );
+            return;
         }
     };
 
