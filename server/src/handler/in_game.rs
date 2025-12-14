@@ -806,9 +806,9 @@ pub async fn record_game_result(
     let script = Script::new(
         r#"
         --- Update Hash data (HINCRBY) ---
-        local win = redis.call('HINCRBY', KEYS[1], 'win', ARGV[1])
-        local loss = redis.call('HINCRBY', KEYS[1], 'loss', ARGV[2])
-        local draw = redis.call('HINCRBY', KEYS[1], 'draw', ARGV[3])
+        local win = redis.call('HINCRBY', KEYS[1], 'wins', ARGV[1])
+        local loss = redis.call('HINCRBY', KEYS[1], 'losses', ARGV[2])
+        local draw = redis.call('HINCRBY', KEYS[1], 'draws', ARGV[3])
 
         --- Update expiration to long-term ---
         redis.call('EXPIRE', KEYS[1], ARGV[4])

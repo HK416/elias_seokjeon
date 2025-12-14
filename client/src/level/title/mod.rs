@@ -1,4 +1,5 @@
 mod init;
+mod leader_board;
 mod load;
 mod message;
 
@@ -21,6 +22,7 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(init::InnerPlugin)
+            .add_plugins(leader_board::InnerPlugin)
             .add_plugins(load::InnerPlugin)
             .add_plugins(message::InnerPlugin)
             .add_systems(
@@ -226,12 +228,20 @@ fn handle_button_interaction(
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInOption);
             }
+            (TitleButton::Ranking, Interaction::Pressed) => {
+                #[cfg(target_arch = "wasm32")]
+                send_ranking_query(&network);
+                let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
+                play_effect_sound(&mut commands, &system_volume, source);
+                next_state.set(LevelStates::SwitchToLeaderBoard);
+            }
             (TitleButton::HowToPlay, Interaction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
             }
             (TitleButton::GameStart, Interaction::Hovered)
             | (TitleButton::Option, Interaction::Hovered)
+            | (TitleButton::Ranking, Interaction::Hovered)
             | (TitleButton::HowToPlay, Interaction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
@@ -335,5 +345,11 @@ fn update_collider_transform(
 #[cfg(target_arch = "wasm32")]
 fn send_enter_game_message(network: &Network) {
     let packet = Packet::EnterGame;
+    network.send(&packet).unwrap();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn send_ranking_query(network: &Network) {
+    let packet = Packet::RankingQuery;
     network.send(&packet).unwrap();
 }

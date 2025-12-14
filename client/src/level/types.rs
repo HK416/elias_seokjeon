@@ -35,6 +35,9 @@ pub struct TitleMessageText;
 pub struct TitleMessageLevelEntity;
 
 #[derive(Component)]
+pub struct LeaderBoardLevelEntity;
+
+#[derive(Component)]
 pub struct MatchingLevelEntity;
 
 #[derive(Component)]
@@ -142,6 +145,7 @@ pub enum VolumeLevelTextId {
 pub enum TitleButton {
     GameStart,
     Option,
+    Ranking,
     HowToPlay,
 }
 
@@ -619,3 +623,24 @@ pub enum VoiceChannel {
     MySelf,
     Other,
 }
+
+#[derive(Component)]
+pub struct RankEntry(pub usize);
+
+#[derive(Component)]
+pub struct MyRankEntry;
+
+#[derive(Component)]
+pub struct RankItemNum;
+
+#[derive(Component)]
+pub struct RankItemUuid;
+
+#[derive(Component)]
+pub struct RankItemName;
+
+#[derive(Component)]
+pub struct RankItemWins;
+
+#[derive(Component)]
+pub struct RankItemLosses;

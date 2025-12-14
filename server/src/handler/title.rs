@@ -17,9 +17,8 @@ pub async fn update(mut player: Box<Player>, mut redis_conn: MultiplexedConnecti
             && let Ok(packet) = serde_json::from_str::<Packet>(&s)
         {
             match packet {
-                Packet::QueryRanking => {
-                    let my_uuid = player.uuid.to_string();
-                    let result = get_leaderboard_and_my_rank(&mut redis_conn, &my_uuid).await;
+                Packet::RankingQuery => {
+                    let result = get_leaderboard_and_my_rank(&mut redis_conn, &player.uuid).await;
                     match result {
                         Ok(packet) => {
                             let result = player.tx.send(packet);
@@ -45,17 +44,18 @@ pub async fn update(mut player: Box<Player>, mut redis_conn: MultiplexedConnecti
 
 pub async fn get_leaderboard_and_my_rank(
     redis_conn: &mut MultiplexedConnection,
-    my_uuid: &str,
+    my_uuid: &Uuid,
 ) -> redis::RedisResult<Packet> {
-    let (top_uuids, my_rank_idx): (Vec<String>, Option<u32>) = redis::pipe()
+    let my_key = format!("user:{my_uuid}");
+    let (top_keys, my_rank_idx): (Vec<String>, Option<u32>) = redis::pipe()
         .zrevrange(LEADER_BOARD_KEY, 0, 9)
-        .zrevrank(LEADER_BOARD_KEY, my_uuid)
+        .zrevrank(LEADER_BOARD_KEY, &my_key)
         .query_async(redis_conn)
         .await?;
 
     let my_rank = my_rank_idx.map(|r| r + 1);
 
-    if top_uuids.is_empty() {
+    if top_keys.is_empty() {
         return Ok(Packet::RankingResult {
             my_rank,
             top_list: Vec::new(),
@@ -63,21 +63,24 @@ pub async fn get_leaderboard_and_my_rank(
     }
 
     let mut pipe = redis::pipe();
-    for uuid in &top_uuids {
-        let key = format!("user:{uuid}");
-        pipe.hmget(&key, &[NAME_KEY, WINS_KEY, LOSSES_KEY]);
+    for key in &top_keys {
+        pipe.hmget(key, &[NAME_KEY, WINS_KEY, LOSSES_KEY]);
     }
 
-    let details: Vec<(String, u32, u32)> = pipe.query_async(redis_conn).await?;
-    let mut top_list = Vec::with_capacity(top_uuids.len());
-    for (i, ((name, wins, losses), uuid)) in details.into_iter().zip(top_uuids).enumerate() {
-        top_list.push(RankItem {
-            rank: i as u32 + 1,
-            uuid,
-            name,
-            wins,
-            losses,
-        });
+    let details: Vec<(Option<String>, Option<u32>, Option<u32>)> =
+        pipe.query_async(redis_conn).await?;
+    let mut top_list = Vec::with_capacity(top_keys.len());
+    for (i, ((name, wins, losses), key)) in details.into_iter().zip(top_keys).enumerate() {
+        if let (Some(name), Some(wins), Some(losses)) = (name, wins, losses) {
+            let uuid = key.strip_prefix("user:").unwrap_or(&key).to_string();
+            top_list.push(RankItem {
+                rank: i as u32 + 1,
+                uuid,
+                name,
+                wins,
+                losses,
+            });
+        }
     }
 
     Ok(Packet::RankingResult { my_rank, top_list })

@@ -65,7 +65,7 @@ impl Distribution<Hero> for StandardUniform {
 }
 
 pub const MAX_POINT: u16 = 9_999;
-pub const MAX_PLAY_TIME: i32 = 180_000; // 180 seconds
+pub const MAX_PLAY_TIME: i32 = 150_000; // 150 seconds
 pub const MAX_CTRL_TIME: u16 = 10_000; // 10 seconds
 pub const MAX_HEALTH_COUNT: usize = 5;
 
@@ -140,7 +140,7 @@ pub enum Packet {
     // Server -> Client
     GameResultDraw,
     // Client -> Server
-    QueryRanking,
+    RankingQuery,
     // Server -> Client
     RankingResult {
         my_rank: Option<u32>,

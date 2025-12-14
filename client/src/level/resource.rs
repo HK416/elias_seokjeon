@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 // Import necessary Bevy modules.
 use bevy::{asset::UntypedAssetId, platform::collections::HashSet, prelude::*};
-use protocol::{Hero, MAX_HEALTH_COUNT, THROW_END_TIME, uuid::Uuid};
+use protocol::{Hero, MAX_HEALTH_COUNT, RankItem, THROW_END_TIME, uuid::Uuid};
 
 use super::*;
 
@@ -388,5 +388,18 @@ impl ProjectileObject {
 
     pub fn get_alpha(&self) -> f32 {
         self.remaining_millis as f32 / THROW_END_TIME as f32
+    }
+}
+
+#[derive(Resource)]
+pub struct RankingData {
+    pub my_rank: Option<u32>,
+    pub top_list: Vec<RankItem>,
+}
+
+impl RankingData {
+    pub fn new(my_rank: Option<u32>, mut top_list: Vec<RankItem>) -> Self {
+        top_list.sort_by_key(|i| i.rank);
+        Self { my_rank, top_list }
     }
 }

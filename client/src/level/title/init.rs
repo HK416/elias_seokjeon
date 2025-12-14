@@ -372,6 +372,54 @@ fn setup_title_interface(
                             OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
                             BorderColor::all(BORDER_GREEN_COLOR_0),
                             BackgroundColor(BG_GREEN_COLOR_0),
+                            TitleButton::Ranking,
+                            Visibility::Inherited,
+                            BoxShadow::new(
+                                Color::BLACK.with_alpha(0.8),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::VMin(1.0),
+                                Val::Px(1.0),
+                            ),
+                            SpawnRequest,
+                            Button,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node::default(),
+                                    Text::new("Ranking"),
+                                    TextFont::from(asset_server.load(FONT_PATH)),
+                                    TextLayout::new_with_justify(Justify::Center),
+                                    ResizableFont::vertical(1280.0, 52.0),
+                                    TranslatableText("game_rank".into()),
+                                    OriginColor::<TextColor>::new(Color::BLACK),
+                                    TextColor::BLACK,
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+
+                    add_vertical_space(loading_entities, parent, Val::Percent(5.0));
+
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(16.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
+                            BorderRadius::all(Val::Percent(30.0)),
+                            OriginColor::<BackgroundColor>::new(BG_GREEN_COLOR_0),
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
                             TitleButton::HowToPlay,
                             Visibility::Inherited,
                             BoxShadow::new(

@@ -66,7 +66,8 @@ pub enum LevelStates {
     InitOption,         // -> InitMatching, Error
     InitMatching,       // -> InitMatchingCancel, Error
     InitMatchingCancel, // -> InitInTitleMessage, Error
-    InitInTitleMessage, // -> InitEnterGame, Error
+    InitInTitleMessage, // -> InitLeaderBoard, Error
+    InitLeaderBoard,    // -> InitEnterGame, Error
     InitEnterGame,      // -> InitTitle, Error
     InitTitle,          // -> InTitle, Error
     InTitle,            // -> SwitchToInMatching, SwitchToInOption, Error
@@ -99,6 +100,9 @@ pub enum LevelStates {
     SwitchToGameDefeat,
     SwitchToGameDraw,
     InGameResult,
+
+    SwitchToLeaderBoard,
+    LeaderBoard,
 }
 
 // --- UPDATE SYSTEMS ---
