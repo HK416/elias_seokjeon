@@ -7,7 +7,7 @@ pub use bevy::{
 use flume::{Receiver, Sender};
 use js_sys::{ArrayBuffer, Uint8Array};
 pub use protocol::Packet;
-pub use wasm_bindgen::{JsCast, JsValue, closure::Closure};
+pub use wasm_bindgen::prelude::*;
 pub use web_sys::{
     AudioBuffer, AudioBufferSourceNode, AudioContext, BinaryType, CloseEvent, ErrorEvent, GainNode,
     MessageEvent, Storage, WebSocket, window,
@@ -460,4 +460,16 @@ fn system_despawn_finished_sounds(
             }
         }
     }
+}
+
+// --- JavaScript FFI ---
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = start_tutorial)]
+    unsafe fn start_tutorial(lang: &str);
+}
+
+pub fn start_game_tutorial(lang: &str) {
+    unsafe { start_tutorial(lang) };
 }

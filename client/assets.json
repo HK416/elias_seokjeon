@@ -1,4 +1,7 @@
 {
+    "files": [
+        "Jjangdol.svg"
+    ],
     "target_files": [
         "config.json"
     ],
@@ -379,6 +382,13 @@
                 "Red_Flag.texture",
                 "Wind_Indicator_Arrow.texture",
                 "Wind_Indicator_Deco.texture"
+            ]
+        },
+        "tutorial": {
+            "files": [
+                "Tutorial_en.png",
+                "Tutorial_ja.png",
+                "Tutorial_ko.png"
             ]
         }
     }

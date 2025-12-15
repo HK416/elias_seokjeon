@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Elias: Seokjeon</title>
+    <link rel="icon", href="assets/Jjangdol.svg", type="image/svg+xml">
     <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
     <style>
         /* --- 기본 레이아웃 --- */
@@ -20,8 +21,8 @@
         
         /* --- 캔버스 및 컨테이너 --- */
         .canvas-container {
-            width: 100vmin;
-            height: 100vmin;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -82,6 +83,11 @@
             color: rgba(255, 255, 255, 0.7);
             margin-top: 2em !important;
         }
+        .privacy-info {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.5em;
+        }
 
         /* --- 외부 링크 (예: GitHub) --- */
         .external-link {
@@ -98,6 +104,26 @@
         }
         .external-link:hover svg {
             opacity: 0.7;
+        }
+
+        /* --- 튜토리얼 오버레이 --- */
+        #tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            cursor: pointer;
+        }
+        #tutorial-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -117,7 +143,12 @@
             <p id="text-sub-body"></p>
             <p id="text-start" class="start-prompt"></p>
             <p id="text-disclaimer" class="disclaimer"></p>
+            <p id="text-privacy" class="privacy-info"></p>
         </div>
+    </div>
+
+    <div id = "tutorial-overlay">
+        <img id="tutorial-image", src="">
     </div>
 
     <script type="module">
@@ -129,28 +160,31 @@
         // --- 다국어 텍스트 설정 ---
         const translations = {
             ko: {
-                web_title: "나의 Bevy 게임",
-                title: "환영합니다",
-                body: "이 게임에 대한 설명을 입력하세요.",
-                subBody: "추가적인 설명이 필요하다면 여기에 작성하세요.",
-                start: "- 클릭하여 시작하기 -",
-                disclaimer: "면책 조항: 이 게임은... 관련하여 어떠한 책임도 지지 않습니다."
+                web_title: "엘리아스 석전",
+                title: "안내",
+                body: "이 게임은 \'트릭컬: 리바이브\'의 2차 창작물입니다.",
+                subBody: "원저작권자인 EPID Games의 권리를 최우선으로 존중하며, 요청 시 비공개 또는 삭제처리할 예정입니다.",
+                start: "- 클릭하여 게임을 시작하기 -",
+                disclaimer: "면책 조항: 플레이에 지장을 주는 문제가 생길 수 있으며, 공지 없이 서비스가 중단되거나 사용자 데이터가 삭제될 수 있습니다.",
+                privacy: "수집되는 개인정보: IP 주소 (최대 3개월 보관)"
             },
             ja: {
-                web_title: "僕のBevyゲーム",
-                title: "ようこそ",
-                body: "このゲームに関する説明を入力してください。",
-                subBody: "追加の説明が必要な場合は、こちらに記入してください。",
-                start: "- クリックして開始 -",
-                disclaimer: "免責事項：このゲームは...に関して一切の責任を負いません。"
+                web_title: "エリアス石戦",
+                title: "案内",
+                body: "本ゲームは『トリッカル・もちもちほっペ大作戦』の二次創作物です。",
+                subBody: "原著作権者である EPID Games の権利を最優先に尊重し、要請があれば非公開または削除いたします。",
+                start: "- クリックしてゲームを開始 -",
+                disclaimer: "免責事項：プレイに支障をきたす問題が発生する可能性があり、予告なくサービスが中断されたりユーザーデータが削除される場合があります。",
+                privacy: "収集される個人情報：IP アドレス（最大 3 ヶ月間保管）"
             },
             en: {
-                web_title: "My Bevy Game",
-                title: "Welcome",
-                body: "Enter a description for this game.",
-                subBody: "If you need additional explanation, write it here.",
-                start: "- Click to Start -",
-                disclaimer: "Disclaimer: This game assumes no responsibility for..."
+                web_title: "Elias Seokjeon",
+                title: "Notice",
+                body: "This game is a secondary creation based on \'Trickcal:Chibi Go\'.",
+                subBody: "We fully respect the rights of the original copyright holder, EPID Games, and will unlist or delete this game upon request.",
+                start: "- Click to start the game -",
+                disclaimer: "Disclaimer: Issues that affect gameplay may occur, and the service may be suspended or user data deleted without prior notice.",
+                privacy: "Collected personal information: IP address (stored for up to 3 months)"
             }
         };
 
@@ -164,6 +198,7 @@
         document.getElementById('text-sub-body').textContent = translations[lang].subBody;
         document.getElementById('text-start').textContent = translations[lang].start;
         document.getElementById('text-disclaimer').textContent = translations[lang].disclaimer;
+        document.getElementById('text-privacy').textContent = translations[lang].privacy;
         
         // Bevy 앱을 로드하고 캔버스를 설정하는 함수
         async function runBevyApp() {
@@ -177,7 +212,6 @@
                 // 윈도우 크기 변경 시 캔버스 비율을 유지하며 리사이즈하는 함수
                 function resizeCanvas() {
                     const containerRect = container.getBoundingClientRect();
-                    // [바꿔야 할 부분] 원하는 게임의 종횡비를 설정하세요 (예: 16/9, 4/3, 1/1)
                     const aspectRatio = 16 / 9;
                     let newWidth, newHeight;
                     
@@ -216,6 +250,43 @@
 
         // 시작 오버레이를 한 번만 클릭할 수 있도록 이벤트 리스너 추가
         startOverlay.addEventListener('click', unlockAudioAndStartGame, { once: true });
+    </script>
+    
+    <script type="module">
+        window.tutorialImages = [];
+        window.tutorialIndex = 0;
+
+        window.start_tutorial = function (lang) {
+            switch (lang) {
+                case "ko":
+                    window.tutorialImages = [
+                        "assets/tutorial/Tutorial_ko.png", 
+                    ];
+                    break;
+                case "ja": 
+                    window.tutorialImages = [
+                        "assets/tutorial/Tutorial_ja.png", 
+                    ];
+                    break;
+                default:
+                    window.tutorialImages = [
+                        "assets/tutorial/Tutorial_en.png", 
+                    ];
+            }
+
+            window.tutorialIndex = 0;
+            document.getElementById("tutorial-image").src = window.tutorialImages[0];
+            document.getElementById("tutorial-overlay").style.display = "flex";
+        };
+
+        document.getElementById("tutorial-overlay").addEventListener("click", () => {
+            window.tutorialIndex++;
+            if (window.tutorialIndex < window.tutorialImages.length) {
+                document.getElementById("tutorial-image").src = window.tutorialImages[window.tutorialIndex];
+            } else {
+                document.getElementById("tutorial-overlay").style.display = "none";
+            }
+        });
     </script>
 </body>
 </html>

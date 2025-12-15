@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_spine::{SkeletonController, Spine, SpineReadyEvent};
 
-use crate::assets::sound::SystemVolume;
+use crate::assets::{locale::Locale, sound::SystemVolume};
 
 use super::*;
 
@@ -193,10 +193,12 @@ fn reverse_spine_forward(
     }
 }
 
+#[allow(unused_variables)]
 #[allow(clippy::type_complexity)]
 #[allow(clippy::too_many_arguments)]
 fn handle_button_interaction(
     mut commands: Commands,
+    locale: Res<Locale>,
     #[cfg(target_arch = "wasm32")] network: Res<Network>,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
@@ -241,6 +243,8 @@ fn handle_button_interaction(
             (TitleButton::HowToPlay, Interaction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
+                #[cfg(target_arch = "wasm32")]
+                start_game_tutorial(&locale.to_string());
             }
             (TitleButton::GameStart, Interaction::Hovered)
             | (TitleButton::Option, Interaction::Hovered)
