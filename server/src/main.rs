@@ -70,7 +70,7 @@ async fn main() {
             }
             Err(e) => {
                 eprintln!("Failed to accept WebSocket connection (Address:{addr}): {e}");
-                return;
+                continue;
             }
         };
 
