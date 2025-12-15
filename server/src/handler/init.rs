@@ -1,8 +1,5 @@
 use super::*;
 
-const RATE_LIMIT_PREFIX: &str = "rate_limit:";
-const MAX_CONN_PER_MIN: i64 = 20;
-const RATE_LIMIT_TTL_SECONDS: i64 = 10;
 const MAX_UUID_RETRIES: u32 = 10;
 
 pub async fn setup(
@@ -12,31 +9,6 @@ pub async fn setup(
 ) {
     #[cfg(not(feature = "no-debugging-log"))]
     println!("Addr:{addr} - Current State: Init");
-
-    // --- Rate Limiting per IP ---
-    let ip = addr.ip().to_string();
-    let key = format!("{RATE_LIMIT_PREFIX}{ip}");
-
-    // Increment a counter for the IP and set it to expire in 60 seconds.
-    // This is a simple way to limit connections to MAX_CONN_PER_MIN per minute.
-    let pipe_result: redis::RedisResult<(i64, i32)> = redis::pipe()
-        .incr(&key, 1)
-        .expire(&key, RATE_LIMIT_TTL_SECONDS)
-        .query_async(&mut redis_conn)
-        .await;
-
-    let count = match pipe_result {
-        Ok((c, _)) => c, // We only need the count from INCR
-        Err(e) => {
-            eprintln!("Redis error during rate limiting: {e}");
-            return;
-        }
-    };
-
-    if count > MAX_CONN_PER_MIN {
-        eprintln!("Rate limit exceeded for IP: {ip}. Connection dropped.");
-        return;
-    }
 
     let hero = rand::random();
     let prefix = get_name_table().choose(&mut rand::rng()).unwrap();

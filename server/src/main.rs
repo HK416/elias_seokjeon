@@ -58,8 +58,8 @@ async fn main() {
     tokio::spawn(handler::matching::update(redis_conn));
 
     // --- Init WebSocket server ---
-    let listener = TcpListener::bind("0.0.0.0:8889").await.unwrap();
-    println!("WebSocket server listening on ws://0.0.0.0:8889");
+    let listener = TcpListener::bind("127.0.0.0:8889").await.unwrap();
+    println!("WebSocket server listening on ws://127.0.0.0:8889");
 
     while let Ok((stream, addr)) = listener.accept().await {
         let result = accept_async(stream).await;

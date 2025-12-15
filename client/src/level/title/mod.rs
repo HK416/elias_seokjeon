@@ -181,6 +181,7 @@ fn change_hero(
     }
 }
 
+#[cfg(not(feature = "no-debugging-title"))]
 fn reverse_spine_forward(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut spines: Query<&mut Spine, With<TitleLevelEntity>>,
