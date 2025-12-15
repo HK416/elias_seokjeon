@@ -53,20 +53,21 @@ impl Plugin for InnerPlugin {
                     update_volume_slider_for_mobile,
                 )
                     .run_if(in_state(LevelStates::InOption)),
-            )
-            .add_systems(
-                FixedUpdate,
-                (
-                    update_background_volumes,
-                    update_effect_volumes,
-                    update_voice_volumes,
-                ),
             );
 
         #[cfg(target_arch = "wasm32")]
         app.add_systems(
             Update,
             packet_receive_loop.run_if(in_state(LevelStates::InOption)),
+        )
+        .add_systems(
+            FixedUpdate,
+            (
+                update_background_volumes,
+                update_effect_volumes,
+                update_voice_volumes,
+            )
+                .run_if(in_state(LevelStates::InOption)),
         );
     }
 }
@@ -409,29 +410,32 @@ fn update_volume_slider_for_mobile(
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn update_background_volumes(
     system_volume: Res<SystemVolume>,
-    mut query: Query<&mut AudioSink, With<BackgroundSound>>,
+    mut query: Query<&mut WebPlaybackSettings, With<BackgroundSound>>,
 ) {
-    for mut sink in query.iter_mut() {
-        sink.set_volume(system_volume.get_background());
+    for mut settings in query.iter_mut() {
+        settings.volume = system_volume.get_background();
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn update_effect_volumes(
     system_volume: Res<SystemVolume>,
-    mut query: Query<&mut AudioSink, With<EffectSound>>,
+    mut query: Query<&mut WebPlaybackSettings, With<EffectSound>>,
 ) {
-    for mut sink in query.iter_mut() {
-        sink.set_volume(system_volume.get_effect());
+    for mut settings in query.iter_mut() {
+        settings.volume = system_volume.get_effect();
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn update_voice_volumes(
     system_volume: Res<SystemVolume>,
-    mut query: Query<&mut AudioSink, With<VoiceSound>>,
+    mut query: Query<&mut WebPlaybackSettings, With<VoiceSound>>,
 ) {
-    for mut sink in query.iter_mut() {
-        sink.set_volume(system_volume.get_voice());
+    for mut settings in query.iter_mut() {
+        settings.volume = system_volume.get_voice();
     }
 }

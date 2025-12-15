@@ -114,14 +114,17 @@ pub fn normalized_wave(t: f32, a: f32, k: f32, omega: f32, phi: f32) -> f32 {
     a * (1.0 - t).powf(k) * (omega * t * TAU + phi).sin()
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 pub fn play_effect_sound(
     commands: &mut Commands,
     system_volume: &SystemVolume,
     source: Handle<AudioSource>,
 ) {
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(source),
-        PlaybackSettings {
+        WebAudioPlayer::new(source),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -130,15 +133,18 @@ pub fn play_effect_sound(
     ));
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 pub fn play_voice_sound(
     commands: &mut Commands,
     system_volume: &SystemVolume,
     source: Handle<AudioSource>,
     channel: VoiceChannel,
 ) {
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(source),
-        PlaybackSettings {
+        WebAudioPlayer::new(source),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_voice(),
             ..Default::default()

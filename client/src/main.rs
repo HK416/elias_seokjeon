@@ -21,7 +21,7 @@ const WND_HEIGHT: u32 = 1080;
 
 fn main() {
     App::new()
-        .add_plugins(
+        .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -47,7 +47,9 @@ fn main() {
                     },
                     ..Default::default()
                 }),
-        )
+            #[cfg(target_arch = "wasm32")]
+            web::WebAudioPlugin,
+        ))
         .add_plugins(SpinePlugin)
         .add_plugins(Shape2dPlugin::default())
         .add_plugins(assets::InnerPlugin)

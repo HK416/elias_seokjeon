@@ -108,6 +108,8 @@ fn setup_camera(mut commands: Commands, camera_query: Query<(), With<Camera2d>>)
     }
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 fn play_background_sound(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -115,9 +117,10 @@ fn play_background_sound(
     query: Query<(), With<BackgroundSound>>,
 ) {
     if query.is_empty() {
+        #[cfg(target_arch = "wasm32")]
         commands.spawn((
-            AudioPlayer::new(asset_server.load(BGM_PATH_BACKGROUND)),
-            PlaybackSettings {
+            WebAudioPlayer::new(asset_server.load(BGM_PATH_BACKGROUND)),
+            WebPlaybackSettings {
                 mode: PlaybackMode::Loop,
                 volume: system_volume.get_background(),
                 ..Default::default()

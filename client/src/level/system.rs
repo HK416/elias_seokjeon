@@ -162,14 +162,17 @@ pub fn update_entity_spawn_progress(
     node.width = Val::Percent(progress * 100.0);
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 pub fn play_popup_sounds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
 ) {
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_TOAST_MESSAGE)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_TOAST_MESSAGE)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -178,14 +181,17 @@ pub fn play_popup_sounds(
     ));
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 pub fn play_popup_bobble_sounds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
 ) {
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(SFX_PATH_POPUP_BOBBLE)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(SFX_PATH_POPUP_BOBBLE)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -194,14 +200,17 @@ pub fn play_popup_bobble_sounds(
     ));
 }
 
+#[allow(unused_mut)]
+#[allow(unused_variables)]
 pub fn play_popup_close_sounds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
 ) {
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_CLOSE)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(SFX_PATH_COMMON_POPUP_CLOSE)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -210,6 +219,7 @@ pub fn play_popup_close_sounds(
     ));
 }
 
+#[allow(unused_variables)]
 pub fn play_in_game_defeat_sound(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -220,9 +230,10 @@ pub fn play_in_game_defeat_sound(
         commands.entity(entity).despawn();
     }
 
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(BGM_PATH_INGAME_DEFEAT)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(BGM_PATH_INGAME_DEFEAT)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -231,6 +242,7 @@ pub fn play_in_game_defeat_sound(
     ));
 }
 
+#[allow(unused_variables)]
 pub fn play_in_game_defeat_voice(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -244,9 +256,10 @@ pub fn play_in_game_defeat_voice(
 
     let set = HERO_VOICE_SETS[player_info.hero as usize];
     let path = set.defeat().choose(&mut rand::rng()).copied().unwrap();
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(path)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(path)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -255,6 +268,7 @@ pub fn play_in_game_defeat_voice(
     ));
 }
 
+#[allow(unused_variables)]
 pub fn play_in_game_victory_sound(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -265,9 +279,10 @@ pub fn play_in_game_victory_sound(
         commands.entity(entity).despawn();
     }
 
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(BGM_PATH_INGAME_VICTORY)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(BGM_PATH_INGAME_VICTORY)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()
@@ -276,6 +291,7 @@ pub fn play_in_game_victory_sound(
     ));
 }
 
+#[allow(unused_variables)]
 pub fn play_in_game_victory_voice(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -289,9 +305,10 @@ pub fn play_in_game_victory_voice(
 
     let set = HERO_VOICE_SETS[player_info.hero as usize];
     let path = set.victory().choose(&mut rand::rng()).copied().unwrap();
+    #[cfg(target_arch = "wasm32")]
     commands.spawn((
-        AudioPlayer::new(asset_server.load(path)),
-        PlaybackSettings {
+        WebAudioPlayer::new(asset_server.load(path)),
+        WebPlaybackSettings {
             mode: PlaybackMode::Despawn,
             volume: system_volume.get_effect(),
             ..Default::default()

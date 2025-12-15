@@ -200,7 +200,14 @@ pub async fn wait(
         if let Ok(player) = result {
             let redis_conn_cloned = redis_conn.clone();
             next_state(State::Title, player, redis_conn_cloned);
+            num_player -= 1;
         }
+    }
+
+    if num_player == 0 {
+        #[cfg(not(feature = "no-debugging-log"))]
+        println!("Stop waiting.");
+        return;
     }
 
     if loaded_sessions.len() == 2 {
