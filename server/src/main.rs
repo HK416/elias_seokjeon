@@ -3,8 +3,12 @@ mod stream;
 
 use std::sync::OnceLock;
 
+use tikv_jemallocator::Jemalloc;
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
+
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
 
 const EXPIRE_SECONDS: i64 = 15_552_000; // 180 days
 const INITIAL_EXPIRE_SECONDS: i64 = 86_400; // 24 hours
