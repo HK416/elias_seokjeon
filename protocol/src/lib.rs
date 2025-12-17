@@ -174,14 +174,14 @@ pub const RIGHT_PLAYER_POS_Y: f32 = LEFT_PLAYER_POS_Y;
 pub const LEFT_THROW_POS_X: f32 = LEFT_PLAYER_POS_X;
 pub const LEFT_THROW_POS_Y: f32 = LEFT_PLAYER_POS_Y + 96.0;
 
-pub const LEFT_START_ANGLE: f32 = 15f32.to_radians();
+pub const LEFT_START_ANGLE: f32 = 30f32.to_radians();
 pub const LEFT_END_ANGLE: f32 = 75f32.to_radians();
 
 pub const RIGHT_THROW_POS_X: f32 = RIGHT_PLAYER_POS_X;
 pub const RIGHT_THROW_POS_Y: f32 = RIGHT_PLAYER_POS_Y + 96.0;
 
 pub const RIGHT_START_ANGLE: f32 = 105f32.to_radians();
-pub const RIGHT_END_ANGLE: f32 = 165f32.to_radians();
+pub const RIGHT_END_ANGLE: f32 = 150f32.to_radians();
 
 pub const THROW_POWER: f32 = 1500.0;
 pub const THROW_END_TIME: u16 = 3_000; // 3 seconds
@@ -189,7 +189,7 @@ pub const THROW_END_TIME: u16 = 3_000; // 3 seconds
 pub const WIND_POWER: f32 = THROW_POWER * 0.125;
 
 pub const PROJECTILE_SIZE: f32 = 64.0;
-pub const GRAVITY: f32 = -9.80665 * 50.0;
+pub const GRAVITY: f32 = -9.80665 * 84.0;
 
 lazy_static! {
     pub static ref COLLIDER_DATA: HashMap<Hero, Circle> = {

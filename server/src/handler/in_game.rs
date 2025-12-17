@@ -3,6 +3,8 @@ use super::*;
 const MAX_LOOP: usize = 100;
 const TICK: u64 = 1_000 / 15;
 const PERIOD: Duration = Duration::from_millis(TICK);
+const SUB_STEP: i32 = 8;
+const FRICTION: f32 = 0.25;
 
 const BIAS: f32 = 50.0;
 const BOT_LERP_RANGE: RangeInclusive<f32> = 0.5..=0.9;
@@ -86,6 +88,7 @@ pub async fn play(
     let mut total_remaining_millis = MAX_PLAY_TIME;
     let mut interval = time::interval(PERIOD);
     let mut previous_instant = Instant::now();
+    interval.set_missed_tick_behavior(time::MissedTickBehavior::Burst);
 
     let level = BotLevel::new();
     let mut lerp_p = rand::random_range(BOT_LERP_RANGE);
@@ -435,26 +438,32 @@ pub async fn play(
                     control = None;
                 }
             }
-            GameState::LeftProjectileThrown { hit } => {
+            GameState::LeftProjectileThrown { mut hit } => {
                 let delta_time = elapsed_u16 as f32 / 1000.0;
-                projectile_vel.y += GRAVITY * delta_time;
-                projectile_pos += (projectile_vel + wind_vel) * delta_time;
+                let sub_seconds = delta_time / SUB_STEP as f32;
 
-                if projectile_pos.y < LEFT_PLAYER_POS_Y {
-                    wind_vel = Vec2::ZERO;
-                    projectile_vel.x = projectile_vel.x.lerp(0.0, 0.25);
-                    projectile_pos.y = LEFT_PLAYER_POS_Y;
-                }
-
-                let mut collider_pos: Vec2 = right_collider.center.into();
-                collider_pos *= Vec2::new(-1.0, 1.0);
-                collider_pos += Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y);
-                let distance_squared = (projectile_pos - collider_pos).length_squared();
                 let radius_sum = PROJECTILE_SIZE * 0.5 + right_collider.radius;
-                if !hit && distance_squared <= radius_sum * radius_sum {
-                    game_state = GameState::LeftProjectileThrown { hit: true };
-                    right_health -= 1;
+                let mut collider_pos = Vec2::new(RIGHT_PLAYER_POS_X, RIGHT_PLAYER_POS_Y);
+                collider_pos += Vec2::from(right_collider.center) * Vec2::new(-1.0, 1.0);
+
+                for _ in 0..SUB_STEP {
+                    projectile_vel.y += GRAVITY * sub_seconds;
+                    projectile_pos += (projectile_vel + wind_vel) * sub_seconds;
+
+                    if projectile_pos.y < LEFT_PLAYER_POS_Y {
+                        wind_vel = Vec2::ZERO;
+                        projectile_vel.x = projectile_vel.x.lerp(0.0, FRICTION / SUB_STEP as f32);
+                        projectile_pos.y = LEFT_PLAYER_POS_Y;
+                    }
+
+                    let distance_squared = (projectile_pos - collider_pos).length_squared();
+
+                    if !hit && distance_squared <= radius_sum * radius_sum {
+                        hit = true;
+                        right_health -= 1;
+                    }
                 }
+                game_state = GameState::LeftProjectileThrown { hit };
 
                 if projectile_pos.y <= LEFT_PLAYER_POS_Y
                     || projectile_pos.x <= WORLD_MIN_X
@@ -516,25 +525,31 @@ pub async fn play(
                     control = None;
                 }
             }
-            GameState::RightProjectileThrown { hit } => {
+            GameState::RightProjectileThrown { mut hit } => {
                 let delta_time = elapsed_u16 as f32 / 1000.0;
-                projectile_vel.y += GRAVITY * delta_time;
-                projectile_pos += (projectile_vel + wind_vel) * delta_time;
+                let sub_seconds = delta_time / SUB_STEP as f32;
 
-                if projectile_pos.y < LEFT_PLAYER_POS_Y {
-                    wind_vel = Vec2::ZERO;
-                    projectile_vel.x = projectile_vel.x.lerp(0.0, 0.25);
-                    projectile_pos.y = LEFT_PLAYER_POS_Y;
-                }
-
-                let mut collider_pos: Vec2 = left_collider.center.into();
-                collider_pos += Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y);
-                let distance_squared = (projectile_pos - collider_pos).length_squared();
                 let radius_sum = PROJECTILE_SIZE * 0.5 + left_collider.radius;
-                if !hit && distance_squared <= radius_sum * radius_sum {
-                    game_state = GameState::RightProjectileThrown { hit: true };
-                    left_health -= 1;
+                let mut collider_pos = Vec2::new(LEFT_PLAYER_POS_X, LEFT_PLAYER_POS_Y);
+                collider_pos += Vec2::from(left_collider.center);
+
+                for _ in 0..SUB_STEP {
+                    projectile_vel.y += GRAVITY * sub_seconds;
+                    projectile_pos += (projectile_vel + wind_vel) * sub_seconds;
+
+                    if projectile_pos.y < LEFT_PLAYER_POS_Y {
+                        wind_vel = Vec2::ZERO;
+                        projectile_vel.x = projectile_vel.x.lerp(0.0, FRICTION / SUB_STEP as f32);
+                        projectile_pos.y = LEFT_PLAYER_POS_Y;
+                    }
+
+                    let distance_squared = (projectile_pos - collider_pos).length_squared();
+                    if !hit && distance_squared <= radius_sum * radius_sum {
+                        hit = true;
+                        left_health -= 1;
+                    }
                 }
+                game_state = GameState::RightProjectileThrown { hit };
 
                 if projectile_pos.y <= LEFT_PLAYER_POS_Y
                     || projectile_pos.x <= WORLD_MIN_X
