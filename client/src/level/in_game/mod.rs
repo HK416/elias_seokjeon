@@ -60,6 +60,10 @@ impl Plugin for InnerPlugin {
                         .run_if(resource_exists::<Wind>)
                         .run_if(resource_exists::<ProjectileObject>),
                     cleanup_projectile.run_if(resource_removed::<ProjectileObject>),
+                    highlight_my_character_position
+                        .run_if(not(resource_exists::<TouchPressed>))
+                        .run_if(not(resource_exists::<MouseButtonPressed>))
+                        .run_if(not(resource_exists::<ProjectileObject>)),
                 )
                     .run_if(in_state(LevelStates::InGame)),
             )
@@ -863,6 +867,39 @@ fn draw_range_arrow_indicator(play_side: Res<PlaySide>, mut painter: ShapePainte
 
         painter.set_translation(start_pos);
         painter.line(Vec3::ZERO, end);
+    }
+}
+
+fn highlight_my_character_position(
+    play_side: Res<PlaySide>,
+    other_info: Res<OtherInfo>,
+    timer: Res<PlayerTimer>,
+    mut painter: ShapePainter,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left(_), false) => {
+            let delta = timer.miliis as f32 / 1000.0 * 0.5 * PI;
+            let radius = 130.0 + 10.0 * (delta * 4.0).sin();
+
+            painter.cap = Cap::None;
+            painter.hollow = true;
+            painter.thickness = 4.0;
+            painter.set_color(BG_RED_COLOR_0);
+            painter.set_translation(Vec3::new(LEFT_THROW_POS_X, LEFT_THROW_POS_Y, 0.7));
+            painter.circle(radius);
+        }
+        (PlaySide::Right(_), true) => {
+            let delta = timer.miliis as f32 / 1000.0 * 0.5 * PI;
+            let radius = 100.0 + 20.0 * (delta * 4.0).sin();
+
+            painter.cap = Cap::None;
+            painter.hollow = true;
+            painter.thickness = 4.0;
+            painter.set_color(BG_RED_COLOR_0);
+            painter.set_translation(Vec3::new(RIGHT_THROW_POS_X, RIGHT_THROW_POS_Y, 0.7));
+            painter.circle(radius);
+        }
+        _ => { /* empty */ }
     }
 }
 
