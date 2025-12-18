@@ -895,6 +895,41 @@ fn setup_in_game_interface(
         })
         .id();
     loading_entities.insert(entity);
+
+    // --- Spawn Guide Gesture ---
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            Visibility::Visible,
+            SpawnRequest,
+        ))
+        .with_children(|parent| {
+            let entity = parent
+                .spawn((
+                    ImageNode::new(asset_server.load(IMG_PATH_GUIDE_GESTURE)),
+                    Node {
+                        width: Val::VMin(20.0),
+                        height: Val::VMin(20.0),
+                        ..Default::default()
+                    },
+                    GuideGestureTimer::new(GUIDE_CYCLE),
+                    Visibility::Hidden,
+                    SpawnRequest,
+                ))
+                .id();
+            loading_entities.insert(entity);
+
+            add_vertical_space(loading_entities, parent, Val::Percent(15.0));
+        })
+        .id();
+    loading_entities.insert(entity);
 }
 
 fn add_health_heart<T: Component>(

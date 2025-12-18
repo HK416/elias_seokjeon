@@ -362,7 +362,7 @@
                 "Game_Result_Draw_Text.texture",
                 "Game_Result_Victory_Icon.texture",
                 "Game_Result_Victory_Text.texture",
-                "Green_Flag.texture",
+                "Guide_Gesture.texture",
                 "Health_Heart.texture",
                 "ID_Panel.atlas",
                 "ID_Panel.texture",
@@ -379,7 +379,6 @@
                 "PVP_Ingame_VS.texture",
                 "Projectile.texture",
                 "Red_Dot.texture",
-                "Red_Flag.texture",
                 "Wind_Indicator_Arrow.texture",
                 "Wind_Indicator_Deco.texture"
             ]

@@ -644,3 +644,63 @@ pub struct RankItemWins;
 
 #[derive(Component)]
 pub struct RankItemLosses;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum GuideGestureStatus {
+    Moved,
+    FadeOut,
+}
+
+#[derive(Component)]
+pub struct GuideGestureTimer {
+    status: GuideGestureStatus,
+    fade_out_duration: f32,
+    moving_duration: f32,
+    elapsed: f32,
+}
+
+impl GuideGestureTimer {
+    pub fn new(duration: f32) -> Self {
+        assert!(duration > 0.0);
+        Self {
+            status: GuideGestureStatus::Moved,
+            fade_out_duration: duration * 0.3,
+            moving_duration: duration * 0.7,
+            elapsed: 0.0,
+        }
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        // Update the elapsed time
+        self.elapsed += delta;
+
+        loop {
+            let duration = self.duration();
+            if self.elapsed < duration {
+                break;
+            }
+
+            self.elapsed -= duration;
+            self.status = match self.status {
+                GuideGestureStatus::Moved => GuideGestureStatus::FadeOut,
+                GuideGestureStatus::FadeOut => GuideGestureStatus::Moved,
+            };
+        }
+    }
+
+    pub fn duration(&self) -> f32 {
+        match self.status {
+            GuideGestureStatus::Moved => self.moving_duration,
+            GuideGestureStatus::FadeOut => self.fade_out_duration,
+        }
+    }
+
+    pub fn percent(&self) -> (GuideGestureStatus, f32) {
+        (self.status, self.elapsed / self.duration())
+    }
+
+    pub fn reset(&mut self) {
+        self.elapsed = 0.0;
+        self.status = GuideGestureStatus::Moved;
+    }
+}

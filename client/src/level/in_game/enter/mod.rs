@@ -104,6 +104,9 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     let handle: Handle<Image> = asset_server.load(IMG_PATH_GAME_RESULT_VICTORY_TEXT);
     loading_assets.push(handle);
 
+    let handle: Handle<Image> = asset_server.load(IMG_PATH_GUIDE_GESTURE);
+    loading_assets.push(handle);
+
     let handle: Handle<Image> = asset_server.load(IMG_PATH_HEALTH_HEART);
     loading_assets.push(handle);
 

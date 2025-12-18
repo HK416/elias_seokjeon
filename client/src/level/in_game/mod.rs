@@ -64,6 +64,15 @@ impl Plugin for InnerPlugin {
                         .run_if(not(resource_exists::<TouchPressed>))
                         .run_if(not(resource_exists::<MouseButtonPressed>))
                         .run_if(not(resource_exists::<ProjectileObject>)),
+                    setup_guide_gestures.run_if(
+                        resource_added::<MouseButtonPressed>.or(resource_added::<TouchPressed>),
+                    ),
+                    update_guide_gestures.run_if(
+                        resource_exists::<MouseButtonPressed>.or(resource_exists::<TouchPressed>),
+                    ),
+                    cleanup_guide_gestures.run_if(
+                        resource_removed::<MouseButtonPressed>.or(resource_removed::<TouchPressed>),
+                    ),
                 )
                     .run_if(in_state(LevelStates::InGame)),
             )
@@ -1158,5 +1167,82 @@ fn check_collisions(
             }
         }
         _ => { /* empty */ }
+    }
+}
+
+fn setup_guide_gestures(
+    play_side: Res<PlaySide>,
+    other_info: Res<OtherInfo>,
+    mut guide_geatures: Query<(&mut Visibility, &mut GuideGestureTimer)>,
+) {
+    match (*play_side, other_info.left_side) {
+        (PlaySide::Left(_), false) | (PlaySide::Right(_), true) => {
+            if let Ok((mut visibility, mut guide_gesture)) = guide_geatures.single_mut() {
+                *visibility = Visibility::Visible;
+                guide_gesture.reset();
+            }
+        }
+        _ => { /* empty */ }
+    }
+}
+
+fn update_guide_gestures(
+    play_side: Res<PlaySide>,
+    other_info: Res<OtherInfo>,
+    mut guide_gestures: Query<(&mut UiTransform, &mut ImageNode, &mut GuideGestureTimer)>,
+    time: Res<Time>,
+) {
+    if let Ok((mut transform, mut image, mut guide_gesture)) = guide_gestures.single_mut() {
+        match (*play_side, other_info.left_side) {
+            (PlaySide::Left(_), false) => {
+                guide_gesture.tick(time.delta_secs());
+                let (status, percent) = guide_gesture.percent();
+                match status {
+                    GuideGestureStatus::Moved => {
+                        image.color = image.color.with_alpha(1.0);
+                        transform.translation = Val2::new(
+                            Val::VMin(
+                                GUIDE_LEFT_END_VMIN_X * percent
+                                    + GUIDE_LEFT_BEG_VMIN_X * (1.0 - percent),
+                            ),
+                            Val::VMin(
+                                GUIDE_END_VMIN_Y * percent + GUIDE_BEG_VMIN_Y * (1.0 - percent),
+                            ),
+                        );
+                    }
+                    GuideGestureStatus::FadeOut => {
+                        image.color = image.color.with_alpha(1.0 - percent);
+                    }
+                }
+            }
+            (PlaySide::Right(_), true) => {
+                guide_gesture.tick(time.delta_secs());
+                let (status, percent) = guide_gesture.percent();
+                match status {
+                    GuideGestureStatus::Moved => {
+                        image.color = image.color.with_alpha(1.0);
+                        transform.translation = Val2::new(
+                            Val::VMin(
+                                GUIDE_RIGHT_END_VMIN_X * percent
+                                    + GUIDE_RIGHT_BEG_VMIN_X * (1.0 - percent),
+                            ),
+                            Val::VMin(
+                                GUIDE_END_VMIN_Y * percent + GUIDE_BEG_VMIN_Y * (1.0 - percent),
+                            ),
+                        );
+                    }
+                    GuideGestureStatus::FadeOut => {
+                        image.color = image.color.with_alpha(1.0 - percent);
+                    }
+                }
+            }
+            _ => { /* empty */ }
+        };
+    }
+}
+
+fn cleanup_guide_gestures(mut guide_geatures: Query<&mut Visibility, With<GuideGestureTimer>>) {
+    if let Ok(mut visibility) = guide_geatures.single_mut() {
+        *visibility = Visibility::Hidden;
     }
 }

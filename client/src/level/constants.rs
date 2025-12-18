@@ -72,3 +72,11 @@ pub const BALL_WAVE_DURATION: f32 = 0.5;
 pub const UI_POPUP_DURATION: f32 = 0.2;
 
 pub const THROW_RANGE: f32 = 300.0;
+
+pub const GUIDE_CYCLE: f32 = 2.0;
+pub const GUIDE_LEFT_BEG_VMIN_X: f32 = 10.0;
+pub const GUIDE_LEFT_END_VMIN_X: f32 = -10.0;
+pub const GUIDE_RIGHT_BEG_VMIN_X: f32 = -10.0;
+pub const GUIDE_RIGHT_END_VMIN_X: f32 = 10.0;
+pub const GUIDE_BEG_VMIN_Y: f32 = -5.0;
+pub const GUIDE_END_VMIN_Y: f32 = 5.0;
