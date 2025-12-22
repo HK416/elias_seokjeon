@@ -58,6 +58,13 @@ const ELENA_TITLE: &str = "Idle_1";
 const EPICA_TITLE: &str = "Dance_1";
 const ERPIN_TITLE: &str = "Idle_1";
 const ESPI_TITLE: &str = "Idle_1";
+const FESTA_TITLE: &str = "Rock_1";
+const FRICLE_TITLE: &str = "Idle_1";
+const GABIA_TITLE: &str = "Idle_1";
+const HILDE_TITLE: &str = "Idle_1";
+const IFRIT_TITLE: &str = "Sulky_1";
+// const JADE_TITLE: &str = "Idle_1";
+const JUBEE_TITLE: &str = "Idle_1";
 const KIDIAN_TITLE: &str = "Idle_2";
 const KOMMY_TITLE: &str = "Taunt_1";
 const MAYO_TITLE: &str = "Happy_2";
@@ -81,6 +88,13 @@ pub const TITLE_ANIM: [&str; NUM_HEROS] = [
     EPICA_TITLE,
     ERPIN_TITLE,
     ESPI_TITLE,
+    FESTA_TITLE,
+    FRICLE_TITLE,
+    GABIA_TITLE,
+    HILDE_TITLE,
+    IFRIT_TITLE,
+    // JADE_TITLE,
+    JUBEE_TITLE,
     KIDIAN_TITLE,
     KOMMY_TITLE,
     MAYO_TITLE,

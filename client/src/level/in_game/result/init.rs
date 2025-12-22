@@ -664,23 +664,25 @@ fn play_animation(
             .enumerate()
             .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
             .unwrap();
-        commands.spawn((
-            Collider2d::Circle {
-                offset: (0.0, 0.0).into(),
-                radius: 60.0,
-            },
-            ColliderType::Ball,
-            TargetSpine::new(event.entity),
-            TargetSpineBone::new(bone_entity, bone_index),
-            SpineBoneOriginPosition {
-                local: bone.position().into(),
-                world: bone.world_position().into(),
-            },
-            Transform::IDENTITY,
-            GlobalTransform::IDENTITY,
-            InGameResultLevelEntity,
-            InGameLevelRoot,
-        ));
+        commands.entity(bone_entity).with_children(|parent| {
+            parent.spawn((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 60.0,
+                },
+                ColliderType::Ball,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Visibility::Visible,
+                Transform::IDENTITY,
+                InGameResultLevelEntity,
+                InGameLevelRoot,
+            ));
+        });
 
         let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
         let (bone, bone_index) = spine
@@ -689,23 +691,25 @@ fn play_animation(
             .enumerate()
             .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
             .unwrap();
-        commands.entity(bone_entity).insert((
-            Collider2d::Circle {
-                offset: (0.0, 0.0).into(),
-                radius: 80.0,
-            },
-            ColliderType::Head,
-            TargetSpine::new(event.entity),
-            TargetSpineBone::new(bone_entity, bone_index),
-            SpineBoneOriginPosition {
-                local: bone.position().into(),
-                world: bone.world_position().into(),
-            },
-            Transform::IDENTITY,
-            GlobalTransform::IDENTITY,
-            InGameResultLevelEntity,
-            InGameLevelRoot,
-        ));
+        commands.entity(bone_entity).with_children(|parent| {
+            parent.spawn((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 80.0,
+                },
+                ColliderType::Head,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Visibility::Visible,
+                Transform::IDENTITY,
+                InGameResultLevelEntity,
+                InGameLevelRoot,
+            ));
+        });
 
         let Spine(SkeletonController {
             skeleton,

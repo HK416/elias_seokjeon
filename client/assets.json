@@ -148,6 +148,62 @@
                         "Espi.texture"
                     ]
                 },
+                "Festa": {
+                    "target_files": [
+                        "Festa.model",
+                        "Festa.s_atlas",
+                        "Festa.s_skel",
+                        "Festa.texture"
+                    ]
+                },
+                "Fricle": {
+                    "target_files": [
+                        "Fricle.model",
+                        "Fricle.s_atlas",
+                        "Fricle.s_skel",
+                        "Fricle.texture"
+                    ]
+                },
+                "Gabia": {
+                    "target_files": [
+                        "Gabia.model",
+                        "Gabia.s_atlas",
+                        "Gabia.s_skel",
+                        "Gabia.texture"
+                    ]
+                },
+                "Hilde": {
+                    "target_files": [
+                        "Hilde.model",
+                        "Hilde.s_atlas",
+                        "Hilde.s_skel",
+                        "Hilde.texture"
+                    ]
+                },
+                "Ifrit": {
+                    "target_files": [
+                        "Ifrit.model",
+                        "Ifrit.s_atlas",
+                        "Ifrit.s_skel",
+                        "Ifrit.texture"
+                    ]
+                },
+                "Jade": {
+                    "target_files": [
+                        "Jade.model",
+                        "Jade.s_atlas",
+                        "Jade.s_skel",
+                        "Jade.texture"
+                    ]
+                },
+                "Jubee": {
+                    "target_files": [
+                        "Jubee.model",
+                        "Jubee.s_atlas",
+                        "Jubee.s_skel",
+                        "Jubee.texture"
+                    ]
+                },
                 "Kidian": {
                     "target_files": [
                         "Kidian.model",
@@ -646,6 +702,202 @@
                         "Voice_Espi_Touch2.sound",
                         "Voice_Espi_Victory1.sound",
                         "Voice_Espi_Victory2.sound"
+                    ]
+                },
+                "Festa": {
+                    "target_files": [
+                        "Voice_Festa_CallPlayer1.sound",
+                        "Voice_Festa_CallPlayer2.sound",
+                        "Voice_Festa_CallPlayer3.sound",
+                        "Voice_Festa_CallPlayer4.sound",
+                        "Voice_Festa_CallPlayer5.sound",
+                        "Voice_Festa_Defeat1.sound",
+                        "Voice_Festa_Defeat2.sound",
+                        "Voice_Festa_DutchRubEnd1.sound",
+                        "Voice_Festa_DutchRubEnd2.sound",
+                        "Voice_Festa_Greeting.sound",
+                        "Voice_Festa_Hit1.sound",
+                        "Voice_Festa_Hit2.sound",
+                        "Voice_Festa_Hit3.sound",
+                        "Voice_Festa_Hit4.sound",
+                        "Voice_Festa_Hit5.sound",
+                        "Voice_Festa_Shout1.sound",
+                        "Voice_Festa_Shout2.sound",
+                        "Voice_Festa_Shout3.sound",
+                        "Voice_Festa_Shout4.sound",
+                        "Voice_Festa_Shout5.sound",
+                        "Voice_Festa_Touch1.sound",
+                        "Voice_Festa_Touch2.sound",
+                        "Voice_Festa_Victory1.sound",
+                        "Voice_Festa_Victory2.sound"
+                    ]
+                },
+                "Fricle": {
+                    "target_files": [
+                        "Voice_Fricle_CallPlayer1.sound",
+                        "Voice_Fricle_CallPlayer2.sound",
+                        "Voice_Fricle_CallPlayer3.sound",
+                        "Voice_Fricle_CallPlayer4.sound",
+                        "Voice_Fricle_CallPlayer5.sound",
+                        "Voice_Fricle_Defeat1.sound",
+                        "Voice_Fricle_Defeat2.sound",
+                        "Voice_Fricle_DutchRubEnd1.sound",
+                        "Voice_Fricle_DutchRubEnd2.sound",
+                        "Voice_Fricle_Greeting.sound",
+                        "Voice_Fricle_Hit1.sound",
+                        "Voice_Fricle_Hit2.sound",
+                        "Voice_Fricle_Hit3.sound",
+                        "Voice_Fricle_Hit4.sound",
+                        "Voice_Fricle_Hit5.sound",
+                        "Voice_Fricle_Shout1.sound",
+                        "Voice_Fricle_Shout2.sound",
+                        "Voice_Fricle_Shout3.sound",
+                        "Voice_Fricle_Shout4.sound",
+                        "Voice_Fricle_Shout5.sound",
+                        "Voice_Fricle_Touch1.sound",
+                        "Voice_Fricle_Touch2.sound",
+                        "Voice_Fricle_Victory1.sound",
+                        "Voice_Fricle_Victory2.sound"
+                    ]
+                },
+                "Gabia": {
+                    "target_files": [
+                        "Voice_Gabia_CallPlayer1.sound",
+                        "Voice_Gabia_CallPlayer2.sound",
+                        "Voice_Gabia_CallPlayer3.sound",
+                        "Voice_Gabia_CallPlayer4.sound",
+                        "Voice_Gabia_CallPlayer5.sound",
+                        "Voice_Gabia_Defeat1.sound",
+                        "Voice_Gabia_Defeat2.sound",
+                        "Voice_Gabia_DutchRubEnd1.sound",
+                        "Voice_Gabia_DutchRubEnd2.sound",
+                        "Voice_Gabia_Greeting.sound",
+                        "Voice_Gabia_Hit1.sound",
+                        "Voice_Gabia_Hit2.sound",
+                        "Voice_Gabia_Hit3.sound",
+                        "Voice_Gabia_Hit4.sound",
+                        "Voice_Gabia_Hit5.sound",
+                        "Voice_Gabia_Shout1.sound",
+                        "Voice_Gabia_Shout2.sound",
+                        "Voice_Gabia_Shout3.sound",
+                        "Voice_Gabia_Shout4.sound",
+                        "Voice_Gabia_Shout5.sound",
+                        "Voice_Gabia_Touch1.sound",
+                        "Voice_Gabia_Touch2.sound",
+                        "Voice_Gabia_Victory1.sound",
+                        "Voice_Gabia_Victory2.sound"
+                    ]
+                },
+                "Hilde": {
+                    "target_files": [
+                        "Voice_Hilde_CallPlayer1.sound",
+                        "Voice_Hilde_CallPlayer2.sound",
+                        "Voice_Hilde_CallPlayer3.sound",
+                        "Voice_Hilde_CallPlayer4.sound",
+                        "Voice_Hilde_CallPlayer5.sound",
+                        "Voice_Hilde_Defeat1.sound",
+                        "Voice_Hilde_Defeat2.sound",
+                        "Voice_Hilde_DutchRubEnd1.sound",
+                        "Voice_Hilde_DutchRubEnd2.sound",
+                        "Voice_Hilde_Greeting.sound",
+                        "Voice_Hilde_Hit1.sound",
+                        "Voice_Hilde_Hit2.sound",
+                        "Voice_Hilde_Hit3.sound",
+                        "Voice_Hilde_Hit4.sound",
+                        "Voice_Hilde_Hit5.sound",
+                        "Voice_Hilde_Shout1.sound",
+                        "Voice_Hilde_Shout2.sound",
+                        "Voice_Hilde_Shout3.sound",
+                        "Voice_Hilde_Shout4.sound",
+                        "Voice_Hilde_Shout5.sound",
+                        "Voice_Hilde_Touch1.sound",
+                        "Voice_Hilde_Touch2.sound",
+                        "Voice_Hilde_Victory1.sound",
+                        "Voice_Hilde_Victory2.sound"
+                    ]
+                },
+                "Ifrit": {
+                    "target_files": [
+                        "Voice_Ifrit_CallPlayer1.sound",
+                        "Voice_Ifrit_CallPlayer2.sound",
+                        "Voice_Ifrit_CallPlayer3.sound",
+                        "Voice_Ifrit_CallPlayer4.sound",
+                        "Voice_Ifrit_CallPlayer5.sound",
+                        "Voice_Ifrit_Defeat1.sound",
+                        "Voice_Ifrit_Defeat2.sound",
+                        "Voice_Ifrit_DutchRubEnd1.sound",
+                        "Voice_Ifrit_DutchRubEnd2.sound",
+                        "Voice_Ifrit_Greeting.sound",
+                        "Voice_Ifrit_Hit1.sound",
+                        "Voice_Ifrit_Hit2.sound",
+                        "Voice_Ifrit_Hit3.sound",
+                        "Voice_Ifrit_Hit4.sound",
+                        "Voice_Ifrit_Hit5.sound",
+                        "Voice_Ifrit_Shout1.sound",
+                        "Voice_Ifrit_Shout2.sound",
+                        "Voice_Ifrit_Shout3.sound",
+                        "Voice_Ifrit_Shout4.sound",
+                        "Voice_Ifrit_Shout5.sound",
+                        "Voice_Ifrit_Touch1.sound",
+                        "Voice_Ifrit_Touch2.sound",
+                        "Voice_Ifrit_Victory1.sound",
+                        "Voice_Ifrit_Victory2.sound"
+                    ]
+                },
+                "Jade": {
+                    "target_files": [
+                        "Voice_Jade_CallPlayer1.sound",
+                        "Voice_Jade_CallPlayer2.sound",
+                        "Voice_Jade_CallPlayer3.sound",
+                        "Voice_Jade_CallPlayer4.sound",
+                        "Voice_Jade_CallPlayer5.sound",
+                        "Voice_Jade_Defeat1.sound",
+                        "Voice_Jade_Defeat2.sound",
+                        "Voice_Jade_DutchRubEnd1.sound",
+                        "Voice_Jade_DutchRubEnd2.sound",
+                        "Voice_Jade_Greeting.sound",
+                        "Voice_Jade_Hit1.sound",
+                        "Voice_Jade_Hit2.sound",
+                        "Voice_Jade_Hit3.sound",
+                        "Voice_Jade_Hit4.sound",
+                        "Voice_Jade_Hit5.sound",
+                        "Voice_Jade_Shout1.sound",
+                        "Voice_Jade_Shout2.sound",
+                        "Voice_Jade_Shout3.sound",
+                        "Voice_Jade_Shout4.sound",
+                        "Voice_Jade_Shout5.sound",
+                        "Voice_Jade_Touch1.sound",
+                        "Voice_Jade_Touch2.sound",
+                        "Voice_Jade_Victory1.sound",
+                        "Voice_Jade_Victory2.sound"
+                    ]
+                },
+                "Jubee": {
+                    "target_files": [
+                        "Voice_Jubee_CallPlayer1.sound",
+                        "Voice_Jubee_CallPlayer2.sound",
+                        "Voice_Jubee_CallPlayer3.sound",
+                        "Voice_Jubee_CallPlayer4.sound",
+                        "Voice_Jubee_CallPlayer5.sound",
+                        "Voice_Jubee_Defeat1.sound",
+                        "Voice_Jubee_Defeat2.sound",
+                        "Voice_Jubee_DutchRubEnd1.sound",
+                        "Voice_Jubee_DutchRubEnd2.sound",
+                        "Voice_Jubee_Greeting.sound",
+                        "Voice_Jubee_Hit1.sound",
+                        "Voice_Jubee_Hit2.sound",
+                        "Voice_Jubee_Hit3.sound",
+                        "Voice_Jubee_Hit4.sound",
+                        "Voice_Jubee_Hit5.sound",
+                        "Voice_Jubee_Shout1.sound",
+                        "Voice_Jubee_Shout2.sound",
+                        "Voice_Jubee_Shout3.sound",
+                        "Voice_Jubee_Shout4.sound",
+                        "Voice_Jubee_Shout5.sound",
+                        "Voice_Jubee_Touch1.sound",
+                        "Voice_Jubee_Touch2.sound",
+                        "Voice_Jubee_Victory1.sound",
+                        "Voice_Jubee_Victory2.sound"
                     ]
                 },
                 "Kidian": {

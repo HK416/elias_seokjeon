@@ -46,12 +46,6 @@ impl Plugin for InnerPlugin {
                     update_spine_bone_position_for_mobile,
                 )
                     .run_if(in_state(LevelStates::InGameResult)),
-            )
-            .add_systems(
-                PostUpdate,
-                update_collider_transform
-                    .after(TransformSystems::Propagate)
-                    .run_if(in_state(LevelStates::InGameResult)),
             );
 
         #[cfg(target_arch = "wasm32")]
@@ -172,21 +166,6 @@ fn handle_touch_inputs(
                 }
             }
             _ => { /* empty */ }
-        }
-    }
-}
-
-// --- POSTUPDATE SYSTEMS ---
-
-fn update_collider_transform(
-    transform_query: Query<&GlobalTransform>,
-    mut query: Query<(&mut Transform, &TargetSpineBone), With<InGameResultLevelEntity>>,
-) {
-    for (mut transform, target_spine_bone) in query.iter_mut() {
-        if let Ok(bone_transform) = transform_query.get(target_spine_bone.entity) {
-            transform.translation = bone_transform.translation();
-            transform.rotation = bone_transform.rotation();
-            transform.scale = bone_transform.scale();
         }
     }
 }

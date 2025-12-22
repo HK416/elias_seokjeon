@@ -13,7 +13,7 @@ pub use uuid;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub const NUM_HEROS: usize = 22;
+pub const NUM_HEROS: usize = 28;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Hero {
@@ -33,6 +33,13 @@ pub enum Hero {
     Epica,
     Erpin,
     Espi,
+    Festa,
+    Fricle,
+    Gabia,
+    Hilde,
+    Ifrit,
+    // Jade,
+    Jubee,
     Kidian,
     Kommy,
     Mayo,
@@ -60,12 +67,18 @@ impl Hero {
             13 => Some(Hero::Epica),
             14 => Some(Hero::Erpin),
             15 => Some(Hero::Espi),
-            16 => Some(Hero::Kidian),
-            17 => Some(Hero::Kommy),
-            18 => Some(Hero::Mayo),
-            19 => Some(Hero::Rohne),
-            20 => Some(Hero::Speaki),
-            21 => Some(Hero::Xion),
+            16 => Some(Hero::Festa),
+            17 => Some(Hero::Fricle),
+            18 => Some(Hero::Gabia),
+            19 => Some(Hero::Hilde),
+            20 => Some(Hero::Ifrit),
+            21 => Some(Hero::Jubee),
+            22 => Some(Hero::Kidian),
+            23 => Some(Hero::Kommy),
+            24 => Some(Hero::Mayo),
+            25 => Some(Hero::Rohne),
+            26 => Some(Hero::Speaki),
+            27 => Some(Hero::Xion),
             _ => None,
         }
     }
@@ -90,6 +103,13 @@ impl fmt::Display for Hero {
             Hero::Epica => write!(f, "에피카"),
             Hero::Erpin => write!(f, "에르핀"),
             Hero::Espi => write!(f, "에스피"),
+            Hero::Festa => write!(f, "페스타"),
+            Hero::Fricle => write!(f, "프리클"),
+            Hero::Gabia => write!(f, "가비아"),
+            Hero::Hilde => write!(f, "힐데"),
+            Hero::Ifrit => write!(f, "이프리트"),
+            // Hero::Jade => write!(f, "제이드"),
+            Hero::Jubee => write!(f, "쥬비"),
             Hero::Kidian => write!(f, "키디언"),
             Hero::Kommy => write!(f, "코미"),
             Hero::Mayo => write!(f, "마요"),
@@ -252,6 +272,13 @@ lazy_static! {
             (Hero::Epica, Circle::new(40.0, (-4.0, 146.0))),
             (Hero::Erpin, Circle::new(40.0, (0.0, 142.0))),
             (Hero::Espi, Circle::new(40.0, (0.0, 150.0))),
+            (Hero::Festa, Circle::new(40.0, (4.0, 154.0))),
+            (Hero::Fricle, Circle::new(36.0, (0.0, 146.0))),
+            (Hero::Gabia, Circle::new(40.0, (0.0, 164.0))),
+            (Hero::Hilde, Circle::new(40.0, (0.0, 160.0))),
+            (Hero::Ifrit, Circle::new(40.0, (4.0, 146.0))),
+            // (Hero::Jade, Circle::new(40.0, (0.0, 122.0))),
+            (Hero::Jubee, Circle::new(40.0, (8.0, 136.0))),
             (Hero::Kidian, Circle::new(36.0, (0.0, 122.0))),
             (Hero::Kommy, Circle::new(40.0, (0.0, 156.0))),
             (Hero::Mayo, Circle::new(40.0, (0.0, 158.0))),
