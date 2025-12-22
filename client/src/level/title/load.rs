@@ -87,14 +87,12 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     loading_assets.push(handle);
 
     // --- Model Loading ---
-    let path = MODEL_PATH_HEROS.get(&hero).copied().unwrap();
+    let index = hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let handle: Handle<SkeletonData> = asset_server.load(path);
     loading_assets.push(handle);
 
     // --- Sound Loading ---
-    let handle: Handle<AudioSource> = asset_server.load(VOC_PATH_ERPIN);
-    loading_assets.push(handle);
-
     let handle: Handle<AudioSource> = asset_server.load(SFX_PATH_COMMON_PULL_CHEEK);
     loading_assets.push(handle);
 
@@ -114,9 +112,12 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, hero: Hero) 
     loading_assets.push(handle);
 
     // --- Voice Loading ---
-    for &path in HERO_VOICE_SETS[hero as usize].all() {
-        let handle: Handle<AudioSource> = asset_server.load(path);
-        loading_assets.push(handle);
+    let index = hero as usize;
+    if let Some(set) = HERO_VOICE_SETS.get(index) {
+        for &path in set.all() {
+            let handle: Handle<AudioSource> = asset_server.load(path);
+            loading_assets.push(handle);
+        }
     }
 
     // --- Resource Insersion ---

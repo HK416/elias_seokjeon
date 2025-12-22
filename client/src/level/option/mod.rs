@@ -273,6 +273,7 @@ fn handle_volume_button_pressed_for_mobile(
 
 fn handle_volume_button_released(
     mut commands: Commands,
+    player_info: Res<PlayerInfo>,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
@@ -287,13 +288,18 @@ fn handle_volume_button_released(
                 play_effect_sound(&mut commands, &system_volume, source);
             }
             VolumeSlider::Voice => {
-                let source = asset_server.load(VOC_PATH_ERPIN);
-                play_voice_sound(
-                    &mut commands,
-                    &system_volume,
-                    source,
-                    VoiceChannel::default(),
-                );
+                let index = player_info.hero as usize;
+                if let Some(set) = HERO_VOICE_SETS.get(index)
+                    && let Some(path) = set.call_player().choose(&mut rand::rng()).copied()
+                {
+                    let source = asset_server.load(path);
+                    play_voice_sound(
+                        &mut commands,
+                        &system_volume,
+                        source,
+                        VoiceChannel::default(),
+                    );
+                }
             }
             _ => { /* empty */ }
         }
@@ -303,6 +309,7 @@ fn handle_volume_button_released(
 fn handle_volume_button_released_for_mobile(
     mut commands: Commands,
     touches: Res<Touches>,
+    player_info: Res<PlayerInfo>,
     asset_server: Res<AssetServer>,
     system_volume: Res<SystemVolume>,
     mut selected: ResMut<SelectedSliderCursor>,
@@ -317,13 +324,18 @@ fn handle_volume_button_released_for_mobile(
                 play_effect_sound(&mut commands, &system_volume, source);
             }
             VolumeSlider::Voice => {
-                let source = asset_server.load(VOC_PATH_ERPIN);
-                play_voice_sound(
-                    &mut commands,
-                    &system_volume,
-                    source,
-                    VoiceChannel::default(),
-                );
+                let index = player_info.hero as usize;
+                if let Some(set) = HERO_VOICE_SETS.get(index)
+                    && let Some(path) = set.call_player().choose(&mut rand::rng()).copied()
+                {
+                    let source = asset_server.load(path);
+                    play_voice_sound(
+                        &mut commands,
+                        &system_volume,
+                        source,
+                        VoiceChannel::default(),
+                    );
+                }
             }
             _ => { /* empty */ }
         }

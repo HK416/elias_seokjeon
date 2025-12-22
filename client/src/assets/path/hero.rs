@@ -1,6 +1,6 @@
 use super::*;
 
-macro_rules! sound_path {
+macro_rules! hero_assets {
     ($module: tt, $hero: expr) => {
         pub mod $module {
             use super::*;
@@ -10,10 +10,16 @@ macro_rules! sound_path {
             impl HeroVoiceSet for HeroVoice {
                 fn all(&self) -> &[&'static str] {
                     &[
+                        VOC_PATH_CALL_PLAYER_1,
+                        VOC_PATH_CALL_PLAYER_2,
+                        VOC_PATH_CALL_PLAYER_3,
+                        VOC_PATH_CALL_PLAYER_4,
+                        VOC_PATH_CALL_PLAYER_5,
                         VOC_PATH_DEFEAT_1,
                         VOC_PATH_DEFEAT_2,
                         VOC_PATH_DUTCH_RUB_END_1,
                         VOC_PATH_DUTCH_RUB_END_2,
+                        VOC_PATH_GREETING,
                         VOC_PATH_HIT_1,
                         VOC_PATH_HIT_2,
                         VOC_PATH_HIT_3,
@@ -31,6 +37,16 @@ macro_rules! sound_path {
                     ]
                 }
 
+                fn call_player(&self) -> &[&'static str] {
+                    &[
+                        VOC_PATH_CALL_PLAYER_1,
+                        VOC_PATH_CALL_PLAYER_2,
+                        VOC_PATH_CALL_PLAYER_3,
+                        VOC_PATH_CALL_PLAYER_4,
+                        VOC_PATH_CALL_PLAYER_5,
+                    ]
+                }
+
                 fn defeat(&self) -> &[&'static str] {
                     &[
                         VOC_PATH_DEFEAT_1,
@@ -42,6 +58,12 @@ macro_rules! sound_path {
                     &[
                         VOC_PATH_DUTCH_RUB_END_1,
                         VOC_PATH_DUTCH_RUB_END_2,
+                    ]
+                }
+
+                fn greeting(&self) -> &[&'static str] {
+                    &[
+                        VOC_PATH_GREETING
                     ]
                 }
 
@@ -86,10 +108,17 @@ macro_rules! sound_path {
 
             }
 
+            #[rustfmt::skip] pub const MODEL_PATH: &str = concatcp!("models/", $hero, "/", $hero, ".model", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_CALL_PLAYER_1: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_CallPlayer1.sound", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_CALL_PLAYER_2: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_CallPlayer2.sound", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_CALL_PLAYER_3: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_CallPlayer3.sound", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_CALL_PLAYER_4: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_CallPlayer4.sound", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_CALL_PLAYER_5: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_CallPlayer5.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_DEFEAT_1: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Defeat1.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_DEFEAT_2: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Defeat2.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_DUTCH_RUB_END_1: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_DutchRubEnd1.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_DUTCH_RUB_END_2: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_DutchRubEnd2.sound", QUERY, VERSION);
+            #[rustfmt::skip] const VOC_PATH_GREETING: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Greeting.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_HIT_1: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Hit1.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_HIT_2: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Hit2.sound", QUERY, VERSION);
             #[rustfmt::skip] const VOC_PATH_HIT_3: &str = concatcp!("sounds/", $hero, "/Voice_", $hero, "_Hit3.sound", QUERY, VERSION);
@@ -108,13 +137,25 @@ macro_rules! sound_path {
     };
 }
 
-sound_path!(aya, "Aya");
-sound_path!(bigwood, "BigWood");
-sound_path!(butter, "Butter");
-sound_path!(erpin, "Erpin");
-sound_path!(kidian, "Kidian");
-sound_path!(kommy, "Kommy");
-sound_path!(mayo, "Mayo");
-sound_path!(rohne, "Rohne");
-sound_path!(speaki, "Speaki");
-sound_path!(xion, "xXionx");
+hero_assets!(alice, "Alice");
+hero_assets!(amelia, "Amelia");
+hero_assets!(ashur, "Ashur");
+hero_assets!(aya, "Aya");
+hero_assets!(belita, "Belita");
+hero_assets!(beni, "Beni");
+hero_assets!(bigwood, "BigWood");
+hero_assets!(butter, "Butter");
+hero_assets!(canna, "Canna");
+hero_assets!(chloe, "Chloe");
+hero_assets!(daya, "Daya");
+hero_assets!(diana, "Diana");
+hero_assets!(elena, "Elena");
+hero_assets!(epica, "Epica");
+hero_assets!(erpin, "Erpin");
+hero_assets!(espi, "Espi");
+hero_assets!(kidian, "Kidian");
+hero_assets!(kommy, "Kommy");
+hero_assets!(mayo, "Mayo");
+hero_assets!(rohne, "Rohne");
+hero_assets!(speaki, "Speaki");
+hero_assets!(xion, "xXionx");

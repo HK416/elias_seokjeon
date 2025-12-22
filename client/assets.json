@@ -20,7 +20,31 @@
         },
         "models": {
             "directories": {
-                "aya": {
+                "Alice": {
+                    "target_files": [
+                        "Alice.model",
+                        "Alice.s_atlas",
+                        "Alice.s_skel",
+                        "Alice.texture"
+                    ]
+                },
+                "Amelia": {
+                    "target_files": [
+                        "Amelia.model",
+                        "Amelia.s_atlas",
+                        "Amelia.s_skel",
+                        "Amelia.texture"
+                    ]
+                },
+                "Ashur": {
+                    "target_files": [
+                        "Ashur.model",
+                        "Ashur.s_atlas",
+                        "Ashur.s_skel",
+                        "Ashur.texture"
+                    ]
+                },
+                "Aya": {
                     "target_files": [
                         "Aya.model",
                         "Aya.s_atlas",
@@ -28,7 +52,23 @@
                         "Aya.texture"
                     ]
                 },
-                "bigwood": {
+                "Belita": {
+                    "target_files": [
+                        "Belita.model",
+                        "Belita.s_atlas",
+                        "Belita.s_skel",
+                        "Belita.texture"
+                    ]
+                },
+                "Beni": {
+                    "target_files": [
+                        "Beni.model",
+                        "Beni.s_atlas",
+                        "Beni.s_skel",
+                        "Beni.texture"
+                    ]
+                },
+                "BigWood": {
                     "target_files": [
                         "BigWood.model",
                         "BigWood.s_atlas",
@@ -36,7 +76,7 @@
                         "BigWood.texture"
                     ]
                 },
-                "butter": {
+                "Butter": {
                     "target_files": [
                         "Butter.model",
                         "Butter.s_atlas",
@@ -44,7 +84,55 @@
                         "Butter.texture"
                     ]
                 },
-                "erpin": {
+                "Canna": {
+                    "target_files": [
+                        "Canna.model",
+                        "Canna.s_atlas",
+                        "Canna.s_skel",
+                        "Canna.texture"
+                    ]
+                },
+                "Chloe": {
+                    "target_files": [
+                        "Chloe.model",
+                        "Chloe.s_atlas",
+                        "Chloe.s_skel",
+                        "Chloe.texture"
+                    ]
+                },
+                "Daya": {
+                    "target_files": [
+                        "Daya.model",
+                        "Daya.s_atlas",
+                        "Daya.s_skel",
+                        "Daya.texture"
+                    ]
+                },
+                "Diana": {
+                    "target_files": [
+                        "Diana.model",
+                        "Diana.s_atlas",
+                        "Diana.s_skel",
+                        "Diana.texture"
+                    ]
+                },
+                "Elena": {
+                    "target_files": [
+                        "Elena.model",
+                        "Elena.s_atlas",
+                        "Elena.s_skel",
+                        "Elena.texture"
+                    ]
+                },
+                "Epica": {
+                    "target_files": [
+                        "Epica.model",
+                        "Epica.s_atlas",
+                        "Epica.s_skel",
+                        "Epica.texture"
+                    ]
+                },
+                "Erpin": {
                     "target_files": [
                         "Erpin.model",
                         "Erpin.s_atlas",
@@ -52,7 +140,15 @@
                         "Erpin.texture"
                     ]
                 },
-                "kidian": {
+                "Espi": {
+                    "target_files": [
+                        "Espi.model",
+                        "Espi.s_atlas",
+                        "Espi.s_skel",
+                        "Espi.texture"
+                    ]
+                },
+                "Kidian": {
                     "target_files": [
                         "Kidian.model",
                         "Kidian.s_atlas",
@@ -60,7 +156,7 @@
                         "Kidian.texture"
                     ]
                 },
-                "kommy": {
+                "Kommy": {
                     "target_files": [
                         "Kommy.model",
                         "Kommy.s_atlas",
@@ -68,7 +164,7 @@
                         "Kommy.texture"
                     ]
                 },
-                "mayo": {
+                "Mayo": {
                     "target_files": [
                         "Mayo.model",
                         "Mayo.s_atlas",
@@ -76,7 +172,7 @@
                         "Mayo.texture"
                     ]
                 },
-                "rohne": {
+                "Rohne": {
                     "target_files": [
                         "Rohne.model",
                         "Rohne.s_atlas",
@@ -84,7 +180,7 @@
                         "Rohne.texture"
                     ]
                 },
-                "speaki": {
+                "Speaki": {
                     "target_files": [
                         "Speaki.model",
                         "Speaki.s_atlas",
@@ -92,7 +188,7 @@
                         "Speaki.texture"
                     ]
                 },
-                "xion": {
+                "xXionx": {
                     "target_files": [
                         "xXionx.model",
                         "xXionx.s_atlas",
@@ -104,12 +200,102 @@
         },
         "sounds": {
             "directories": {
+                "Alice": {
+                    "target_files": [
+                        "Voice_Alice_CallPlayer1.sound",
+                        "Voice_Alice_CallPlayer2.sound",
+                        "Voice_Alice_CallPlayer3.sound",
+                        "Voice_Alice_CallPlayer4.sound",
+                        "Voice_Alice_CallPlayer5.sound",
+                        "Voice_Alice_Defeat1.sound",
+                        "Voice_Alice_Defeat2.sound",
+                        "Voice_Alice_DutchRubEnd1.sound",
+                        "Voice_Alice_DutchRubEnd2.sound",
+                        "Voice_Alice_Greeting.sound",
+                        "Voice_Alice_Hit1.sound",
+                        "Voice_Alice_Hit2.sound",
+                        "Voice_Alice_Hit3.sound",
+                        "Voice_Alice_Hit4.sound",
+                        "Voice_Alice_Hit5.sound",
+                        "Voice_Alice_Shout1.sound",
+                        "Voice_Alice_Shout2.sound",
+                        "Voice_Alice_Shout3.sound",
+                        "Voice_Alice_Shout4.sound",
+                        "Voice_Alice_Shout5.sound",
+                        "Voice_Alice_Touch1.sound",
+                        "Voice_Alice_Touch2.sound",
+                        "Voice_Alice_Victory1.sound",
+                        "Voice_Alice_Victory2.sound"
+                    ]
+                },
+                "Amelia": {
+                    "target_files": [
+                        "Voice_Amelia_CallPlayer1.sound",
+                        "Voice_Amelia_CallPlayer2.sound",
+                        "Voice_Amelia_CallPlayer3.sound",
+                        "Voice_Amelia_CallPlayer4.sound",
+                        "Voice_Amelia_CallPlayer5.sound",
+                        "Voice_Amelia_Defeat1.sound",
+                        "Voice_Amelia_Defeat2.sound",
+                        "Voice_Amelia_DutchRubEnd1.sound",
+                        "Voice_Amelia_DutchRubEnd2.sound",
+                        "Voice_Amelia_Greeting.sound",
+                        "Voice_Amelia_Hit1.sound",
+                        "Voice_Amelia_Hit2.sound",
+                        "Voice_Amelia_Hit3.sound",
+                        "Voice_Amelia_Hit4.sound",
+                        "Voice_Amelia_Hit5.sound",
+                        "Voice_Amelia_Shout1.sound",
+                        "Voice_Amelia_Shout2.sound",
+                        "Voice_Amelia_Shout3.sound",
+                        "Voice_Amelia_Shout4.sound",
+                        "Voice_Amelia_Shout5.sound",
+                        "Voice_Amelia_Touch1.sound",
+                        "Voice_Amelia_Touch2.sound",
+                        "Voice_Amelia_Victory1.sound",
+                        "Voice_Amelia_Victory2.sound"
+                    ]
+                },
+                "Ashur": {
+                    "target_files": [
+                        "Voice_Ashur_CallPlayer1.sound",
+                        "Voice_Ashur_CallPlayer2.sound",
+                        "Voice_Ashur_CallPlayer3.sound",
+                        "Voice_Ashur_CallPlayer4.sound",
+                        "Voice_Ashur_CallPlayer5.sound",
+                        "Voice_Ashur_Defeat1.sound",
+                        "Voice_Ashur_Defeat2.sound",
+                        "Voice_Ashur_DutchRubEnd1.sound",
+                        "Voice_Ashur_DutchRubEnd2.sound",
+                        "Voice_Ashur_Greeting.sound",
+                        "Voice_Ashur_Hit1.sound",
+                        "Voice_Ashur_Hit2.sound",
+                        "Voice_Ashur_Hit3.sound",
+                        "Voice_Ashur_Hit4.sound",
+                        "Voice_Ashur_Hit5.sound",
+                        "Voice_Ashur_Shout1.sound",
+                        "Voice_Ashur_Shout2.sound",
+                        "Voice_Ashur_Shout3.sound",
+                        "Voice_Ashur_Shout4.sound",
+                        "Voice_Ashur_Shout5.sound",
+                        "Voice_Ashur_Touch1.sound",
+                        "Voice_Ashur_Touch2.sound",
+                        "Voice_Ashur_Victory1.sound",
+                        "Voice_Ashur_Victory2.sound"
+                    ]
+                },
                 "Aya": {
                     "target_files": [
+                        "Voice_Aya_CallPlayer1.sound",
+                        "Voice_Aya_CallPlayer2.sound",
+                        "Voice_Aya_CallPlayer3.sound",
+                        "Voice_Aya_CallPlayer4.sound",
+                        "Voice_Aya_CallPlayer5.sound",
                         "Voice_Aya_Defeat1.sound",
                         "Voice_Aya_Defeat2.sound",
                         "Voice_Aya_DutchRubEnd1.sound",
                         "Voice_Aya_DutchRubEnd2.sound",
+                        "Voice_Aya_Greeting.sound",
                         "Voice_Aya_Hit1.sound",
                         "Voice_Aya_Hit2.sound",
                         "Voice_Aya_Hit3.sound",
@@ -126,12 +312,74 @@
                         "Voice_Aya_Victory2.sound"
                     ]
                 },
+                "Belita": {
+                    "target_files": [
+                        "Voice_Belita_CallPlayer1.sound",
+                        "Voice_Belita_CallPlayer2.sound",
+                        "Voice_Belita_CallPlayer3.sound",
+                        "Voice_Belita_CallPlayer4.sound",
+                        "Voice_Belita_CallPlayer5.sound",
+                        "Voice_Belita_Defeat1.sound",
+                        "Voice_Belita_Defeat2.sound",
+                        "Voice_Belita_DutchRubEnd1.sound",
+                        "Voice_Belita_DutchRubEnd2.sound",
+                        "Voice_Belita_Greeting.sound",
+                        "Voice_Belita_Hit1.sound",
+                        "Voice_Belita_Hit2.sound",
+                        "Voice_Belita_Hit3.sound",
+                        "Voice_Belita_Hit4.sound",
+                        "Voice_Belita_Hit5.sound",
+                        "Voice_Belita_Shout1.sound",
+                        "Voice_Belita_Shout2.sound",
+                        "Voice_Belita_Shout3.sound",
+                        "Voice_Belita_Shout4.sound",
+                        "Voice_Belita_Shout5.sound",
+                        "Voice_Belita_Touch1.sound",
+                        "Voice_Belita_Touch2.sound",
+                        "Voice_Belita_Victory1.sound",
+                        "Voice_Belita_Victory2.sound"
+                    ]
+                },
+                "Beni": {
+                    "target_files": [
+                        "Voice_Beni_CallPlayer1.sound",
+                        "Voice_Beni_CallPlayer2.sound",
+                        "Voice_Beni_CallPlayer3.sound",
+                        "Voice_Beni_CallPlayer4.sound",
+                        "Voice_Beni_CallPlayer5.sound",
+                        "Voice_Beni_Defeat1.sound",
+                        "Voice_Beni_Defeat2.sound",
+                        "Voice_Beni_DutchRubEnd1.sound",
+                        "Voice_Beni_DutchRubEnd2.sound",
+                        "Voice_Beni_Greeting.sound",
+                        "Voice_Beni_Hit1.sound",
+                        "Voice_Beni_Hit2.sound",
+                        "Voice_Beni_Hit3.sound",
+                        "Voice_Beni_Hit4.sound",
+                        "Voice_Beni_Hit5.sound",
+                        "Voice_Beni_Shout1.sound",
+                        "Voice_Beni_Shout2.sound",
+                        "Voice_Beni_Shout3.sound",
+                        "Voice_Beni_Shout4.sound",
+                        "Voice_Beni_Shout5.sound",
+                        "Voice_Beni_Touch1.sound",
+                        "Voice_Beni_Touch2.sound",
+                        "Voice_Beni_Victory1.sound",
+                        "Voice_Beni_Victory2.sound"
+                    ]
+                },
                 "BigWood": {
                     "target_files": [
+                        "Voice_BigWood_CallPlayer1.sound",
+                        "Voice_BigWood_CallPlayer2.sound",
+                        "Voice_BigWood_CallPlayer3.sound",
+                        "Voice_BigWood_CallPlayer4.sound",
+                        "Voice_BigWood_CallPlayer5.sound",
                         "Voice_BigWood_Defeat1.sound",
                         "Voice_BigWood_Defeat2.sound",
                         "Voice_BigWood_DutchRubEnd1.sound",
                         "Voice_BigWood_DutchRubEnd2.sound",
+                        "Voice_BigWood_Greeting.sound",
                         "Voice_BigWood_Hit1.sound",
                         "Voice_BigWood_Hit2.sound",
                         "Voice_BigWood_Hit3.sound",
@@ -150,10 +398,16 @@
                 },
                 "Butter": {
                     "target_files": [
+                        "Voice_Butter_CallPlayer1.sound",
+                        "Voice_Butter_CallPlayer2.sound",
+                        "Voice_Butter_CallPlayer3.sound",
+                        "Voice_Butter_CallPlayer4.sound",
+                        "Voice_Butter_CallPlayer5.sound",
                         "Voice_Butter_Defeat1.sound",
                         "Voice_Butter_Defeat2.sound",
                         "Voice_Butter_DutchRubEnd1.sound",
                         "Voice_Butter_DutchRubEnd2.sound",
+                        "Voice_Butter_Greeting.sound",
                         "Voice_Butter_Hit1.sound",
                         "Voice_Butter_Hit2.sound",
                         "Voice_Butter_Hit3.sound",
@@ -170,12 +424,186 @@
                         "Voice_Butter_Victory2.sound"
                     ]
                 },
+                "Canna": {
+                    "target_files": [
+                        "Voice_Canna_CallPlayer1.sound",
+                        "Voice_Canna_CallPlayer2.sound",
+                        "Voice_Canna_CallPlayer3.sound",
+                        "Voice_Canna_CallPlayer4.sound",
+                        "Voice_Canna_CallPlayer5.sound",
+                        "Voice_Canna_Defeat1.sound",
+                        "Voice_Canna_Defeat2.sound",
+                        "Voice_Canna_DutchRubEnd1.sound",
+                        "Voice_Canna_DutchRubEnd2.sound",
+                        "Voice_Canna_Greeting.sound",
+                        "Voice_Canna_Hit1.sound",
+                        "Voice_Canna_Hit2.sound",
+                        "Voice_Canna_Hit3.sound",
+                        "Voice_Canna_Hit4.sound",
+                        "Voice_Canna_Hit5.sound",
+                        "Voice_Canna_Shout1.sound",
+                        "Voice_Canna_Shout2.sound",
+                        "Voice_Canna_Shout3.sound",
+                        "Voice_Canna_Shout4.sound",
+                        "Voice_Canna_Shout5.sound",
+                        "Voice_Canna_Touch1.sound",
+                        "Voice_Canna_Touch2.sound",
+                        "Voice_Canna_Victory1.sound",
+                        "Voice_Canna_Victory2.sound"
+                    ]
+                },
+                "Chloe": {
+                    "target_files": [
+                        "Voice_Chloe_CallPlayer1.sound",
+                        "Voice_Chloe_CallPlayer2.sound",
+                        "Voice_Chloe_CallPlayer3.sound",
+                        "Voice_Chloe_CallPlayer4.sound",
+                        "Voice_Chloe_CallPlayer5.sound",
+                        "Voice_Chloe_Defeat1.sound",
+                        "Voice_Chloe_Defeat2.sound",
+                        "Voice_Chloe_DutchRubEnd1.sound",
+                        "Voice_Chloe_DutchRubEnd2.sound",
+                        "Voice_Chloe_Greeting.sound",
+                        "Voice_Chloe_Hit1.sound",
+                        "Voice_Chloe_Hit2.sound",
+                        "Voice_Chloe_Hit3.sound",
+                        "Voice_Chloe_Hit4.sound",
+                        "Voice_Chloe_Hit5.sound",
+                        "Voice_Chloe_Shout1.sound",
+                        "Voice_Chloe_Shout2.sound",
+                        "Voice_Chloe_Shout3.sound",
+                        "Voice_Chloe_Shout4.sound",
+                        "Voice_Chloe_Shout5.sound",
+                        "Voice_Chloe_Touch1.sound",
+                        "Voice_Chloe_Touch2.sound",
+                        "Voice_Chloe_Victory1.sound",
+                        "Voice_Chloe_Victory2.sound"
+                    ]
+                },
+                "Daya": {
+                    "target_files": [
+                        "Voice_Daya_CallPlayer1.sound",
+                        "Voice_Daya_CallPlayer2.sound",
+                        "Voice_Daya_CallPlayer3.sound",
+                        "Voice_Daya_CallPlayer4.sound",
+                        "Voice_Daya_CallPlayer5.sound",
+                        "Voice_Daya_Defeat1.sound",
+                        "Voice_Daya_Defeat2.sound",
+                        "Voice_Daya_DutchRubEnd1.sound",
+                        "Voice_Daya_DutchRubEnd2.sound",
+                        "Voice_Daya_Greeting.sound",
+                        "Voice_Daya_Hit1.sound",
+                        "Voice_Daya_Hit2.sound",
+                        "Voice_Daya_Hit3.sound",
+                        "Voice_Daya_Hit4.sound",
+                        "Voice_Daya_Hit5.sound",
+                        "Voice_Daya_Shout1.sound",
+                        "Voice_Daya_Shout2.sound",
+                        "Voice_Daya_Shout3.sound",
+                        "Voice_Daya_Shout4.sound",
+                        "Voice_Daya_Shout5.sound",
+                        "Voice_Daya_Touch1.sound",
+                        "Voice_Daya_Touch2.sound",
+                        "Voice_Daya_Victory1.sound",
+                        "Voice_Daya_Victory2.sound"
+                    ]
+                },
+                "Diana": {
+                    "target_files": [
+                        "Voice_Diana_CallPlayer1.sound",
+                        "Voice_Diana_CallPlayer2.sound",
+                        "Voice_Diana_CallPlayer3.sound",
+                        "Voice_Diana_CallPlayer4.sound",
+                        "Voice_Diana_CallPlayer5.sound",
+                        "Voice_Diana_Defeat1.sound",
+                        "Voice_Diana_Defeat2.sound",
+                        "Voice_Diana_DutchRubEnd1.sound",
+                        "Voice_Diana_DutchRubEnd2.sound",
+                        "Voice_Diana_Greeting.sound",
+                        "Voice_Diana_Hit1.sound",
+                        "Voice_Diana_Hit2.sound",
+                        "Voice_Diana_Hit3.sound",
+                        "Voice_Diana_Hit4.sound",
+                        "Voice_Diana_Hit5.sound",
+                        "Voice_Diana_Shout1.sound",
+                        "Voice_Diana_Shout2.sound",
+                        "Voice_Diana_Shout3.sound",
+                        "Voice_Diana_Shout4.sound",
+                        "Voice_Diana_Shout5.sound",
+                        "Voice_Diana_Touch1.sound",
+                        "Voice_Diana_Touch2.sound",
+                        "Voice_Diana_Victory1.sound",
+                        "Voice_Diana_Victory2.sound"
+                    ]
+                },
+                "Elena": {
+                    "target_files": [
+                        "Voice_Elena_CallPlayer1.sound",
+                        "Voice_Elena_CallPlayer2.sound",
+                        "Voice_Elena_CallPlayer3.sound",
+                        "Voice_Elena_CallPlayer4.sound",
+                        "Voice_Elena_CallPlayer5.sound",
+                        "Voice_Elena_Defeat1.sound",
+                        "Voice_Elena_Defeat2.sound",
+                        "Voice_Elena_DutchRubEnd1.sound",
+                        "Voice_Elena_DutchRubEnd2.sound",
+                        "Voice_Elena_Greeting.sound",
+                        "Voice_Elena_Hit1.sound",
+                        "Voice_Elena_Hit2.sound",
+                        "Voice_Elena_Hit3.sound",
+                        "Voice_Elena_Hit4.sound",
+                        "Voice_Elena_Hit5.sound",
+                        "Voice_Elena_Shout1.sound",
+                        "Voice_Elena_Shout2.sound",
+                        "Voice_Elena_Shout3.sound",
+                        "Voice_Elena_Shout4.sound",
+                        "Voice_Elena_Shout5.sound",
+                        "Voice_Elena_Touch1.sound",
+                        "Voice_Elena_Touch2.sound",
+                        "Voice_Elena_Victory1.sound",
+                        "Voice_Elena_Victory2.sound"
+                    ]
+                },
+                "Epica": {
+                    "target_files": [
+                        "Voice_Epica_CallPlayer1.sound",
+                        "Voice_Epica_CallPlayer2.sound",
+                        "Voice_Epica_CallPlayer3.sound",
+                        "Voice_Epica_CallPlayer4.sound",
+                        "Voice_Epica_CallPlayer5.sound",
+                        "Voice_Epica_Defeat1.sound",
+                        "Voice_Epica_Defeat2.sound",
+                        "Voice_Epica_DutchRubEnd1.sound",
+                        "Voice_Epica_DutchRubEnd2.sound",
+                        "Voice_Epica_Greeting.sound",
+                        "Voice_Epica_Hit1.sound",
+                        "Voice_Epica_Hit2.sound",
+                        "Voice_Epica_Hit3.sound",
+                        "Voice_Epica_Hit4.sound",
+                        "Voice_Epica_Hit5.sound",
+                        "Voice_Epica_Shout1.sound",
+                        "Voice_Epica_Shout2.sound",
+                        "Voice_Epica_Shout3.sound",
+                        "Voice_Epica_Shout4.sound",
+                        "Voice_Epica_Shout5.sound",
+                        "Voice_Epica_Touch1.sound",
+                        "Voice_Epica_Touch2.sound",
+                        "Voice_Epica_Victory1.sound",
+                        "Voice_Epica_Victory2.sound"
+                    ]
+                },
                 "Erpin": {
                     "target_files": [
+                        "Voice_Erpin_CallPlayer1.sound",
+                        "Voice_Erpin_CallPlayer2.sound",
+                        "Voice_Erpin_CallPlayer3.sound",
+                        "Voice_Erpin_CallPlayer4.sound",
+                        "Voice_Erpin_CallPlayer5.sound",
                         "Voice_Erpin_Defeat1.sound",
                         "Voice_Erpin_Defeat2.sound",
                         "Voice_Erpin_DutchRubEnd1.sound",
                         "Voice_Erpin_DutchRubEnd2.sound",
+                        "Voice_Erpin_Greeting.sound",
                         "Voice_Erpin_Hit1.sound",
                         "Voice_Erpin_Hit2.sound",
                         "Voice_Erpin_Hit3.sound",
@@ -192,12 +620,46 @@
                         "Voice_Erpin_Victory2.sound"
                     ]
                 },
+                "Espi": {
+                    "target_files": [
+                        "Voice_Espi_CallPlayer1.sound",
+                        "Voice_Espi_CallPlayer2.sound",
+                        "Voice_Espi_CallPlayer3.sound",
+                        "Voice_Espi_CallPlayer4.sound",
+                        "Voice_Espi_CallPlayer5.sound",
+                        "Voice_Espi_Defeat1.sound",
+                        "Voice_Espi_Defeat2.sound",
+                        "Voice_Espi_DutchRubEnd1.sound",
+                        "Voice_Espi_DutchRubEnd2.sound",
+                        "Voice_Espi_Greeting.sound",
+                        "Voice_Espi_Hit1.sound",
+                        "Voice_Espi_Hit2.sound",
+                        "Voice_Espi_Hit3.sound",
+                        "Voice_Espi_Hit4.sound",
+                        "Voice_Espi_Hit5.sound",
+                        "Voice_Espi_Shout1.sound",
+                        "Voice_Espi_Shout2.sound",
+                        "Voice_Espi_Shout3.sound",
+                        "Voice_Espi_Shout4.sound",
+                        "Voice_Espi_Shout5.sound",
+                        "Voice_Espi_Touch1.sound",
+                        "Voice_Espi_Touch2.sound",
+                        "Voice_Espi_Victory1.sound",
+                        "Voice_Espi_Victory2.sound"
+                    ]
+                },
                 "Kidian": {
                     "target_files": [
+                        "Voice_Kidian_CallPlayer1.sound",
+                        "Voice_Kidian_CallPlayer2.sound",
+                        "Voice_Kidian_CallPlayer3.sound",
+                        "Voice_Kidian_CallPlayer4.sound",
+                        "Voice_Kidian_CallPlayer5.sound",
                         "Voice_Kidian_Defeat1.sound",
                         "Voice_Kidian_Defeat2.sound",
                         "Voice_Kidian_DutchRubEnd1.sound",
                         "Voice_Kidian_DutchRubEnd2.sound",
+                        "Voice_Kidian_Greeting.sound",
                         "Voice_Kidian_Hit1.sound",
                         "Voice_Kidian_Hit2.sound",
                         "Voice_Kidian_Hit3.sound",
@@ -216,10 +678,16 @@
                 },
                 "Kommy": {
                     "target_files": [
+                        "Voice_Kommy_CallPlayer1.sound",
+                        "Voice_Kommy_CallPlayer2.sound",
+                        "Voice_Kommy_CallPlayer3.sound",
+                        "Voice_Kommy_CallPlayer4.sound",
+                        "Voice_Kommy_CallPlayer5.sound",
                         "Voice_Kommy_Defeat1.sound",
                         "Voice_Kommy_Defeat2.sound",
                         "Voice_Kommy_DutchRubEnd1.sound",
                         "Voice_Kommy_DutchRubEnd2.sound",
+                        "Voice_Kommy_Greeting.sound",
                         "Voice_Kommy_Hit1.sound",
                         "Voice_Kommy_Hit2.sound",
                         "Voice_Kommy_Hit3.sound",
@@ -238,10 +706,16 @@
                 },
                 "Mayo": {
                     "target_files": [
+                        "Voice_Mayo_CallPlayer1.sound",
+                        "Voice_Mayo_CallPlayer2.sound",
+                        "Voice_Mayo_CallPlayer3.sound",
+                        "Voice_Mayo_CallPlayer4.sound",
+                        "Voice_Mayo_CallPlayer5.sound",
                         "Voice_Mayo_Defeat1.sound",
                         "Voice_Mayo_Defeat2.sound",
                         "Voice_Mayo_DutchRubEnd1.sound",
                         "Voice_Mayo_DutchRubEnd2.sound",
+                        "Voice_Mayo_Greeting.sound",
                         "Voice_Mayo_Hit1.sound",
                         "Voice_Mayo_Hit2.sound",
                         "Voice_Mayo_Hit3.sound",
@@ -260,10 +734,16 @@
                 },
                 "Rohne": {
                     "target_files": [
+                        "Voice_Rohne_CallPlayer1.sound",
+                        "Voice_Rohne_CallPlayer2.sound",
+                        "Voice_Rohne_CallPlayer3.sound",
+                        "Voice_Rohne_CallPlayer4.sound",
+                        "Voice_Rohne_CallPlayer5.sound",
                         "Voice_Rohne_Defeat1.sound",
                         "Voice_Rohne_Defeat2.sound",
                         "Voice_Rohne_DutchRubEnd1.sound",
                         "Voice_Rohne_DutchRubEnd2.sound",
+                        "Voice_Rohne_Greeting.sound",
                         "Voice_Rohne_Hit1.sound",
                         "Voice_Rohne_Hit2.sound",
                         "Voice_Rohne_Hit3.sound",
@@ -282,10 +762,16 @@
                 },
                 "Speaki": {
                     "target_files": [
+                        "Voice_Speaki_CallPlayer1.sound",
+                        "Voice_Speaki_CallPlayer2.sound",
+                        "Voice_Speaki_CallPlayer3.sound",
+                        "Voice_Speaki_CallPlayer4.sound",
+                        "Voice_Speaki_CallPlayer5.sound",
                         "Voice_Speaki_Defeat1.sound",
                         "Voice_Speaki_Defeat2.sound",
                         "Voice_Speaki_DutchRubEnd1.sound",
                         "Voice_Speaki_DutchRubEnd2.sound",
+                        "Voice_Speaki_Greeting.sound",
                         "Voice_Speaki_Hit1.sound",
                         "Voice_Speaki_Hit2.sound",
                         "Voice_Speaki_Hit3.sound",
@@ -304,10 +790,16 @@
                 },
                 "xXionx": {
                     "target_files": [
+                        "Voice_xXionx_CallPlayer1.sound",
+                        "Voice_xXionx_CallPlayer2.sound",
+                        "Voice_xXionx_CallPlayer3.sound",
+                        "Voice_xXionx_CallPlayer4.sound",
+                        "Voice_xXionx_CallPlayer5.sound",
                         "Voice_xXionx_Defeat1.sound",
                         "Voice_xXionx_Defeat2.sound",
                         "Voice_xXionx_DutchRubEnd1.sound",
                         "Voice_xXionx_DutchRubEnd2.sound",
+                        "Voice_xXionx_Greeting.sound",
                         "Voice_xXionx_Hit1.sound",
                         "Voice_xXionx_Hit2.sound",
                         "Voice_xXionx_Hit3.sound",
@@ -327,7 +819,6 @@
             },
             "target_files": [
                 "BGM_PatchGame.sound",
-                "Erpin.sound",
                 "SFX_Boxing_Bell.sound",
                 "SFX_Cheer.sound",
                 "SFX_Common_ButtonDown.sound",

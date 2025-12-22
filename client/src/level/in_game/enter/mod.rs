@@ -76,8 +76,9 @@ fn load_assets(commands: &mut Commands, asset_server: &AssetServer, heros: &[Her
     loading_assets.push(handle);
 
     // --- Model Loading ---
-    for hero in heros {
-        let path = MODEL_PATH_HEROS.get(hero).copied().unwrap();
+    for &hero in heros {
+        let index = hero as usize;
+        let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
         let handle: Handle<SkeletonData> = asset_server.load(path);
         loading_assets.push(handle);
     }

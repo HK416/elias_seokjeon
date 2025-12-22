@@ -123,7 +123,8 @@ fn setup_game_result_entities(
     player_info: &PlayerInfo,
 ) {
     // Player Hero
-    let path = MODEL_PATH_HEROS.get(&player_info.hero).copied().unwrap();
+    let index = player_info.hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let entity = commands
         .spawn((
             SpineBundle {

@@ -1,6 +1,6 @@
 use super::*;
 
-const MAX_MATCHING_TIME: u16 = 15000;
+const MAX_MATCHING_TIME: u16 = 10000; // 10 seconds
 const MAX_LOOP: usize = 100;
 
 static NEW: SegQueue<Node> = SegQueue::new();

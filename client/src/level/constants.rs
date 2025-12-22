@@ -42,21 +42,45 @@ pub const SMASH_END_2: &str = "Smash_End_2";
 pub const HAPPY_1: &str = "Happy_1";
 pub const SAD_1: &str = "Sad_1";
 
-pub const AYA_TITLE: &str = "Idle_1";
-pub const BIGWOOD_TITLE: &str = "Happy_2";
-pub const BUTTER_TITLE: &str = "Idle_1";
-pub const ERPIN_TITLE: &str = "Idle_1";
-pub const KIDIAN_TITLE: &str = "Idle_2";
-pub const KOMMY_TITLE: &str = "Taunt_1";
-pub const MAYO_TITLE: &str = "Happy_2";
-pub const ROHNE_TITLE: &str = "Idle_1";
-pub const SPEAKI_TITLE: &str = "Idle_1";
-pub const XION_TITLE: &str = "Ganzi_4";
+const ALICE_TITLE: &str = "Happy_5";
+const AMELIA_TITLE: &str = "Idle_1";
+const ASHUR_TITLE: &str = "Idle_1";
+const AYA_TITLE: &str = "Idle_1";
+const BELITA_TITLE: &str = "Idle_1";
+const BENI_TITLE: &str = "Idle_1";
+const BIGWOOD_TITLE: &str = "Happy_2";
+const BUTTER_TITLE: &str = "Idle_1";
+const CANNA_TITLE: &str = "Idle_1";
+const CHLOE_TITLE: &str = "Idle_1";
+const DAYA_TITLE: &str = "Happy_4";
+const DIANA_TITLE: &str = "Idle_1";
+const ELENA_TITLE: &str = "Idle_1";
+const EPICA_TITLE: &str = "Dance_1";
+const ERPIN_TITLE: &str = "Idle_1";
+const ESPI_TITLE: &str = "Idle_1";
+const KIDIAN_TITLE: &str = "Idle_2";
+const KOMMY_TITLE: &str = "Taunt_1";
+const MAYO_TITLE: &str = "Happy_2";
+const ROHNE_TITLE: &str = "Idle_1";
+const SPEAKI_TITLE: &str = "Idle_1";
+const XION_TITLE: &str = "Ganzi_4";
 pub const TITLE_ANIM: [&str; NUM_HEROS] = [
+    ALICE_TITLE,
+    AMELIA_TITLE,
+    ASHUR_TITLE,
     AYA_TITLE,
+    BELITA_TITLE,
+    BENI_TITLE,
     BIGWOOD_TITLE,
     BUTTER_TITLE,
+    CANNA_TITLE,
+    CHLOE_TITLE,
+    DAYA_TITLE,
+    DIANA_TITLE,
+    ELENA_TITLE,
+    EPICA_TITLE,
     ERPIN_TITLE,
+    ESPI_TITLE,
     KIDIAN_TITLE,
     KOMMY_TITLE,
     MAYO_TITLE,

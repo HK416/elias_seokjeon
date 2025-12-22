@@ -5,6 +5,12 @@ use protocol::Hero;
 
 use super::*;
 
+// --- COMPONENTS ---
+
+#[cfg(not(feature = "no-debugging-title"))]
+#[derive(Component)]
+pub struct DebuggingLabel;
+
 // --- PLUGIN ---
 
 pub struct InnerPlugin;
@@ -96,7 +102,8 @@ fn setup_title_screen(
     loading_entities.insert(entity);
 
     // --- MODEL ---
-    let path = MODEL_PATH_HEROS.get(&hero).copied().unwrap();
+    let index = hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let entity = commands
         .spawn((
             SpineBundle {
@@ -112,6 +119,43 @@ fn setup_title_screen(
         ))
         .id();
     loading_entities.insert(entity);
+
+    // --- Debugging Model ---
+    #[cfg(not(feature = "no-debugging-title"))]
+    {
+        use protocol::COLLIDER_DATA;
+
+        let entity = commands
+            .spawn((
+                SpineBundle {
+                    skeleton: asset_server.load(path).into(),
+                    transform: Transform::from_xyz(108.0, 340.0, 1.1)
+                        .with_scale((0.3, 0.3, 0.3).into()),
+                    visibility: Visibility::Hidden,
+                    ..Default::default()
+                },
+                Character::from(hero),
+                VoiceChannel::MySelf,
+                DebuggingLabel,
+                SpineSync,
+            ))
+            .id();
+        loading_entities.insert(entity);
+
+        let circle = COLLIDER_DATA.get(&hero).unwrap();
+        let entity = commands
+            .spawn((
+                Collider2d::Circle {
+                    offset: Vec2::from(circle.center) * Vec2::new(-1.0, 1.0),
+                    radius: circle.radius,
+                },
+                Transform::from_xyz(108.0, 340.0, 1.1),
+                Visibility::Hidden,
+                SpawnRequest,
+            ))
+            .id();
+        loading_entities.insert(entity);
+    }
 }
 
 fn setup_title_interface(
@@ -613,6 +657,7 @@ fn check_loading_progress(
 }
 
 #[allow(unreachable_patterns)]
+#[cfg(feature = "no-debugging-title")]
 fn play_animation(
     mut commands: Commands,
     mut spine_ready_event: MessageReader<SpineReadyEvent>,
@@ -688,5 +733,103 @@ fn play_animation(
         commands
             .entity(event.entity)
             .insert((CharacterAnimState::Idle, SpawnRequest));
+    }
+}
+
+#[cfg(not(feature = "no-debugging-title"))]
+fn play_animation(
+    mut commands: Commands,
+    mut spine_ready_event: MessageReader<SpineReadyEvent>,
+    mut sets: ParamSet<(
+        Query<(&mut Spine, &Character), Without<DebuggingLabel>>,
+        Query<&mut Spine, With<DebuggingLabel>>,
+    )>,
+) {
+    for event in spine_ready_event.read() {
+        if let Ok((mut spine, character)) = sets.p0().get_mut(event.entity) {
+            info!("Character:{:?}, bones:{:?}", character, event.bones.keys());
+
+            let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
+            let (bone, bone_index) = spine
+                .skeleton
+                .bones()
+                .enumerate()
+                .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
+                .unwrap();
+            commands.spawn((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 60.0,
+                },
+                ColliderType::Ball,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Transform::IDENTITY,
+                GlobalTransform::IDENTITY,
+                TitleLevelEntity,
+                TitleLevelRoot,
+            ));
+
+            let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
+            let (bone, bone_index) = spine
+                .skeleton
+                .bones()
+                .enumerate()
+                .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
+                .unwrap();
+            commands.entity(bone_entity).insert((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 80.0,
+                },
+                ColliderType::Head,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Transform::IDENTITY,
+                GlobalTransform::IDENTITY,
+                TitleLevelEntity,
+                TitleLevelRoot,
+            ));
+
+            let Spine(SkeletonController {
+                skeleton,
+                animation_state,
+                ..
+            }) = spine.as_mut();
+
+            let hero: Hero = (*character).into();
+            let animation_name = TITLE_ANIM[hero as usize];
+            skeleton.set_skin_by_name("Normal").unwrap();
+            animation_state
+                .set_animation_by_name(0, animation_name, true)
+                .unwrap();
+
+            commands
+                .entity(event.entity)
+                .insert((CharacterAnimState::Idle, SpawnRequest));
+        } else if let Ok(mut spine) = sets.p1().get_mut(event.entity) {
+            let Spine(SkeletonController {
+                skeleton,
+                animation_state,
+                ..
+            }) = spine.as_mut();
+
+            skeleton.set_skin_by_name("Normal").unwrap();
+            animation_state
+                .set_animation_by_name(0, IDLE, true)
+                .unwrap();
+
+            commands
+                .entity(event.entity)
+                .insert((CharacterAnimState::InGame, SpawnRequest));
+        }
     }
 }

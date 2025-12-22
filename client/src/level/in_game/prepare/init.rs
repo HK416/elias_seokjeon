@@ -76,7 +76,8 @@ fn setup_in_prepare_entities(
     other_info: &OtherInfo,
 ) {
     // Player Hero
-    let path = MODEL_PATH_HEROS.get(&player_info.hero).copied().unwrap();
+    let index = player_info.hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let entity = commands
         .spawn((
             SpineBundle {
@@ -94,7 +95,8 @@ fn setup_in_prepare_entities(
     loading_entities.insert(entity);
 
     // Other Hero
-    let path = MODEL_PATH_HEROS.get(&other_info.hero).copied().unwrap();
+    let index = other_info.hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let entity = commands
         .spawn((
             SpineBundle {

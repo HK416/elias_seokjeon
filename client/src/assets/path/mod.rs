@@ -1,17 +1,19 @@
-mod sound;
+mod hero;
 
-use bevy::platform::collections::HashMap;
 use const_format::concatcp;
-use lazy_static::lazy_static;
-use protocol::{Hero, NUM_HEROS};
-use sound::*;
+use hero::*;
+use protocol::NUM_HEROS;
 
 pub trait HeroVoiceSet {
     fn all(&self) -> &[&'static str];
 
+    fn call_player(&self) -> &[&'static str];
+
     fn defeat(&self) -> &[&'static str];
 
     fn ducth_rub_end(&self) -> &[&'static str];
+
+    fn greeting(&self) -> &[&'static str];
 
     fn hit(&self) -> &[&'static str];
 
@@ -24,19 +26,6 @@ pub trait HeroVoiceSet {
     fn victory(&self) -> &[&'static str];
 }
 
-pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [
-    &aya::HeroVoice,
-    &bigwood::HeroVoice,
-    &butter::HeroVoice,
-    &erpin::HeroVoice,
-    &kidian::HeroVoice,
-    &kommy::HeroVoice,
-    &mayo::HeroVoice,
-    &rohne::HeroVoice,
-    &speaki::HeroVoice,
-    &xion::HeroVoice,
-];
-
 #[rustfmt::skip] pub const QUERY: &str = "?";
 #[rustfmt::skip] pub const VERSION: &str = concat!("v=", env!("CARGO_PKG_VERSION_PATCH"));
 
@@ -46,17 +35,6 @@ pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [
 #[rustfmt::skip] pub const LOCALE_PATH_KO: &str = concatcp!("locale/ko.json", QUERY, VERSION);
 
 #[rustfmt::skip] pub const FONT_PATH: &str = concatcp!("fonts/NotoSans-Bold.otf", QUERY, VERSION);
-
-#[rustfmt::skip] pub const MODEL_PATH_AYA: &str = concatcp!("models/aya/Aya.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_BIGWOOD: &str = concatcp!("models/bigwood/BigWood.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_BUTTER: &str = concatcp!("models/butter/Butter.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_ERPIN: &str = concatcp!("models/erpin/Erpin.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_KIDIAN: &str = concatcp!("models/kidian/Kidian.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_KOMMY: &str = concatcp!("models/kommy/Kommy.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_MAYO: &str = concatcp!("models/mayo/Mayo.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_ROHNE: &str = concatcp!("models/rohne/Rohne.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_SPEAKI: &str = concatcp!("models/speaki/Speaki.model", QUERY, VERSION);
-#[rustfmt::skip] pub const MODEL_PATH_XION: &str = concatcp!("models/xion/xXionx.model", QUERY, VERSION);
 
 #[rustfmt::skip] pub const BGM_PATH_BACKGROUND: &str = concatcp!("sounds/BGM_PatchGame.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const BGM_PATH_INGAME_DEFEAT: &str = concatcp!("sounds/SFX_InGame_Defeat.sound", QUERY, VERSION);
@@ -78,7 +56,6 @@ pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [
 #[rustfmt::skip] pub const SFX_PATH_INGAME_TIME_OVER: &str = concatcp!("sounds/SFX_InGame_TimeOver.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_POPUP_BOBBLE: &str = concatcp!("sounds/SFX_PopupBobble.sound", QUERY, VERSION);
 #[rustfmt::skip] pub const SFX_PATH_SWING: &str = concatcp!("sounds/SFX_Swing.sound", QUERY, VERSION);
-#[rustfmt::skip] pub const VOC_PATH_ERPIN: &str = concatcp!("sounds/Erpin.sound", QUERY, VERSION);
 
 #[rustfmt::skip] pub const IMG_PATH_BACKGROUND: &str = concatcp!("textures/Background.texture", QUERY, VERSION);
 
@@ -123,22 +100,52 @@ pub const IMG_PATH_BG_FAIRY: [&str; 5] = [
 #[rustfmt::skip] pub const IMG_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.texture", QUERY, VERSION);
 #[rustfmt::skip] pub const ATLAS_PATH_LOADING_MINIMI: &str = concatcp!("textures/Loading_minimi.atlas", QUERY, VERSION);
 
-lazy_static! {
-    pub static ref MODEL_PATH_HEROS: HashMap<Hero, &'static str> = {
-        let map = HashMap::from_iter([
-            (Hero::Aya, MODEL_PATH_AYA),
-            (Hero::BigWood, MODEL_PATH_BIGWOOD),
-            (Hero::Butter, MODEL_PATH_BUTTER),
-            (Hero::Erpin, MODEL_PATH_ERPIN),
-            (Hero::Kidian, MODEL_PATH_KIDIAN),
-            (Hero::Kommy, MODEL_PATH_KOMMY),
-            (Hero::Mayo, MODEL_PATH_MAYO),
-            (Hero::Rohne, MODEL_PATH_ROHNE),
-            (Hero::Speaki, MODEL_PATH_SPEAKI),
-            (Hero::Xion, MODEL_PATH_XION),
-        ]);
+pub const HERO_VOICE_SETS: [&dyn HeroVoiceSet; NUM_HEROS] = [
+    &alice::HeroVoice,
+    &amelia::HeroVoice,
+    &ashur::HeroVoice,
+    &aya::HeroVoice,
+    &belita::HeroVoice,
+    &beni::HeroVoice,
+    &bigwood::HeroVoice,
+    &butter::HeroVoice,
+    &canna::HeroVoice,
+    &chloe::HeroVoice,
+    &daya::HeroVoice,
+    &diana::HeroVoice,
+    &elena::HeroVoice,
+    &epica::HeroVoice,
+    &erpin::HeroVoice,
+    &espi::HeroVoice,
+    &kidian::HeroVoice,
+    &kommy::HeroVoice,
+    &mayo::HeroVoice,
+    &rohne::HeroVoice,
+    &speaki::HeroVoice,
+    &xion::HeroVoice,
+];
 
-        assert_eq!(map.len(), NUM_HEROS);
-        map
-    };
-}
+pub const MODEL_PATH_HEROS: [&'static str; NUM_HEROS] = [
+    alice::MODEL_PATH,
+    amelia::MODEL_PATH,
+    ashur::MODEL_PATH,
+    aya::MODEL_PATH,
+    belita::MODEL_PATH,
+    beni::MODEL_PATH,
+    bigwood::MODEL_PATH,
+    butter::MODEL_PATH,
+    canna::MODEL_PATH,
+    chloe::MODEL_PATH,
+    daya::MODEL_PATH,
+    diana::MODEL_PATH,
+    elena::MODEL_PATH,
+    epica::MODEL_PATH,
+    erpin::MODEL_PATH,
+    espi::MODEL_PATH,
+    kidian::MODEL_PATH,
+    kommy::MODEL_PATH,
+    mayo::MODEL_PATH,
+    rohne::MODEL_PATH,
+    speaki::MODEL_PATH,
+    xion::MODEL_PATH,
+];

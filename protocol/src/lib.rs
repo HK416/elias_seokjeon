@@ -13,14 +13,26 @@ pub use uuid;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub const NUM_HEROS: usize = 10;
+pub const NUM_HEROS: usize = 22;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Hero {
+    Alice,
+    Amelia,
+    Ashur,
     Aya,
+    Belita,
+    Beni,
     BigWood,
     Butter,
+    Canna,
+    Chloe,
+    Daya,
+    Diana,
+    Elena,
+    Epica,
     Erpin,
+    Espi,
     Kidian,
     Kommy,
     Mayo,
@@ -29,13 +41,55 @@ pub enum Hero {
     Xion,
 }
 
+impl Hero {
+    pub fn new(index: usize) -> Option<Self> {
+        match index {
+            0 => Some(Hero::Alice),
+            1 => Some(Hero::Amelia),
+            2 => Some(Hero::Ashur),
+            3 => Some(Hero::Aya),
+            4 => Some(Hero::Belita),
+            5 => Some(Hero::Beni),
+            6 => Some(Hero::BigWood),
+            7 => Some(Hero::Butter),
+            8 => Some(Hero::Canna),
+            9 => Some(Hero::Chloe),
+            10 => Some(Hero::Daya),
+            11 => Some(Hero::Diana),
+            12 => Some(Hero::Elena),
+            13 => Some(Hero::Epica),
+            14 => Some(Hero::Erpin),
+            15 => Some(Hero::Espi),
+            16 => Some(Hero::Kidian),
+            17 => Some(Hero::Kommy),
+            18 => Some(Hero::Mayo),
+            19 => Some(Hero::Rohne),
+            20 => Some(Hero::Speaki),
+            21 => Some(Hero::Xion),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Display for Hero {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Hero::Alice => write!(f, "앨리스"),
+            Hero::Amelia => write!(f, "아멜리아"),
+            Hero::Ashur => write!(f, "에슈르"),
             Hero::Aya => write!(f, "야아"),
+            Hero::Belita => write!(f, "벨리타"),
+            Hero::Beni => write!(f, "베니"),
             Hero::BigWood => write!(f, "빅우드"),
             Hero::Butter => write!(f, "버터"),
+            Hero::Canna => write!(f, "칸나"),
+            Hero::Chloe => write!(f, "클로에"),
+            Hero::Daya => write!(f, "다야"),
+            Hero::Diana => write!(f, "디아나"),
+            Hero::Elena => write!(f, "엘레나"),
+            Hero::Epica => write!(f, "에피카"),
             Hero::Erpin => write!(f, "에르핀"),
+            Hero::Espi => write!(f, "에스피"),
             Hero::Kidian => write!(f, "키디언"),
             Hero::Kommy => write!(f, "코미"),
             Hero::Mayo => write!(f, "마요"),
@@ -48,19 +102,7 @@ impl fmt::Display for Hero {
 
 impl Distribution<Hero> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Hero {
-        match rng.random_range(0..NUM_HEROS) {
-            0 => Hero::Aya,
-            1 => Hero::BigWood,
-            2 => Hero::Butter,
-            3 => Hero::Erpin,
-            4 => Hero::Kidian,
-            5 => Hero::Kommy,
-            6 => Hero::Mayo,
-            7 => Hero::Rohne,
-            8 => Hero::Speaki,
-            9 => Hero::Xion,
-            _ => unreachable!(),
-        }
+        Hero::new(rng.random_range(0..NUM_HEROS)).unwrap()
     }
 }
 
@@ -194,16 +236,28 @@ pub const GRAVITY: f32 = -9.80665 * 84.0;
 lazy_static! {
     pub static ref COLLIDER_DATA: HashMap<Hero, Circle> = {
         let map = HashMap::from_iter([
-            (Hero::Aya, Circle::new(40.0, (0.0, 172.0))),
+            (Hero::Alice, Circle::new(40.0, (0.0, 160.0))),
+            (Hero::Amelia, Circle::new(40.0, (0.0, 162.0))),
+            (Hero::Ashur, Circle::new(40.0, (2.0, 156.0))),
+            (Hero::Aya, Circle::new(40.0, (-4.0, 172.0))),
+            (Hero::Belita, Circle::new(40.0, (-6.0, 164.0))),
+            (Hero::Beni, Circle::new(40.0, (8.0, 156.0))),
             (Hero::BigWood, Circle::new(45.0, (16.0, 216.0))),
-            (Hero::Butter, Circle::new(40.0, (0.0, 142.0))),
+            (Hero::Butter, Circle::new(36.0, (8.0, 148.0))),
+            (Hero::Canna, Circle::new(40.0, (-2.0, 156.0))),
+            (Hero::Chloe, Circle::new(36.0, (-8.0, 140.0))),
+            (Hero::Daya, Circle::new(34.0, (-12.0, 148.0))),
+            (Hero::Diana, Circle::new(40.0, (10.0, 146.0))),
+            (Hero::Elena, Circle::new(40.0, (8.0, 160.0))),
+            (Hero::Epica, Circle::new(40.0, (-4.0, 146.0))),
             (Hero::Erpin, Circle::new(40.0, (0.0, 142.0))),
-            (Hero::Kidian, Circle::new(36.0, (0.0, 126.0))),
-            (Hero::Kommy, Circle::new(40.0, (0.0, 152.0))),
-            (Hero::Mayo, Circle::new(40.0, (0.0, 152.0))),
-            (Hero::Rohne, Circle::new(40.0, (0.0, 152.0))),
-            (Hero::Speaki, Circle::new(36.0, (0.0, 146.0))),
-            (Hero::Xion, Circle::new(40.0, (0.0, 142.0))),
+            (Hero::Espi, Circle::new(40.0, (0.0, 150.0))),
+            (Hero::Kidian, Circle::new(36.0, (0.0, 122.0))),
+            (Hero::Kommy, Circle::new(40.0, (0.0, 156.0))),
+            (Hero::Mayo, Circle::new(40.0, (0.0, 158.0))),
+            (Hero::Rohne, Circle::new(40.0, (4.0, 152.0))),
+            (Hero::Speaki, Circle::new(36.0, (0.0, 148.0))),
+            (Hero::Xion, Circle::new(36.0, (0.0, 142.0))),
         ]);
         
         assert_eq!(map.len(), NUM_HEROS);

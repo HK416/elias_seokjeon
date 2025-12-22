@@ -158,25 +158,16 @@ fn change_hero(
     mut next_state: ResMut<NextState<LevelStates>>,
     query: Query<Entity, With<TitleLevelRoot>>,
 ) {
+    use protocol::NUM_HEROS;
     if keyboard_input.just_pressed(KeyCode::F3) {
         commands.remove_resource::<TitleAssets>();
         for entity in query.iter() {
             commands.entity(entity).despawn();
         }
 
-        let next = match player_info.hero {
-            Hero::Aya => Hero::BigWood,
-            Hero::BigWood => Hero::Butter,
-            Hero::Butter => Hero::Erpin,
-            Hero::Erpin => Hero::Kidian,
-            Hero::Kidian => Hero::Kommy,
-            Hero::Kommy => Hero::Mayo,
-            Hero::Mayo => Hero::Rohne,
-            Hero::Rohne => Hero::Speaki,
-            Hero::Speaki => Hero::Xion,
-            Hero::Xion => Hero::Aya,
-        };
-        player_info.hero = next;
+        let index = player_info.hero as usize;
+        let next = (index + 1) % NUM_HEROS;
+        player_info.hero = Hero::new(next).unwrap();
         next_state.set(LevelStates::LoadTitle);
     }
 }

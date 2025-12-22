@@ -165,7 +165,8 @@ fn setup_in_game_entities(
         )
     };
 
-    let path = MODEL_PATH_HEROS.get(&left).copied().unwrap();
+    let index = left as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let left_entity = commands
         .spawn((
             SpineBundle {
@@ -181,7 +182,8 @@ fn setup_in_game_entities(
         .id();
     loading_entities.insert(left_entity);
 
-    let path = MODEL_PATH_HEROS.get(&right).copied().unwrap();
+    let index = right as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
     let right_entity = commands
         .spawn((
             SpineBundle {
