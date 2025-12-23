@@ -403,3 +403,6 @@ impl RankingData {
         Self { my_rank, top_list }
     }
 }
+
+#[derive(Resource)]
+pub struct GreetingFlag;

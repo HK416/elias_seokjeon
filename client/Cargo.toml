@@ -1,6 +1,6 @@
 [package]
 name = "elias_seokjeon"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["HK416 <powerspirit127@gmail.com>"]
 description = "A fan-made game based on Trickcal: Chibi Go."

@@ -137,6 +137,7 @@ fn handle_received_packets(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn setup_leaderboard_interfaces(
     mut commands: Commands,
     ranking_data: Res<RankingData>,
@@ -150,7 +151,7 @@ fn setup_leaderboard_interfaces(
 ) {
     for (mut text, entry) in sets.p0().iter_mut() {
         if let Some(item) = ranking_data.top_list.get(entry.0) {
-            *text = Text::new(format!("{}", item.uuid));
+            *text = Text::new(item.uuid.to_string());
         } else {
             *text = Text::new("-");
         }

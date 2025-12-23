@@ -32,6 +32,7 @@ impl Plugin for InnerPlugin {
                     show_title_entities,
                     setup_camera,
                     play_background_sound,
+                    play_gretting_voice.run_if(not(resource_exists::<GreetingFlag>)),
                 ),
             )
             .add_systems(OnExit(LevelStates::InTitle), hide_title_entities)
@@ -122,6 +123,23 @@ fn play_background_sound(
             BackgroundSound,
         ));
     }
+}
+
+fn play_gretting_voice(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    system_volume: Res<SystemVolume>,
+    player_info: ResMut<PlayerInfo>,
+) {
+    let index = player_info.hero as usize;
+    if let Some(set) = HERO_VOICE_SETS.get(index)
+        && let Some(path) = set.greeting().first().copied()
+    {
+        let source = asset_server.load(path);
+        play_voice_sound(&mut commands, &system_volume, source, VoiceChannel::MySelf);
+    }
+
+    commands.insert_resource(GreetingFlag);
 }
 
 // --- CLEANUP SYSTEMS ---

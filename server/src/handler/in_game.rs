@@ -30,8 +30,8 @@ impl BotLevel {
 
     pub fn power_offset(&self) -> f32 {
         let range = match self {
-            BotLevel::Low => -THROW_POWER * 0.15..=THROW_POWER * 0.15,
-            BotLevel::Medium => -THROW_POWER * 0.1..=THROW_POWER * 0.1,
+            BotLevel::Low => -THROW_POWER * 0.1..=THROW_POWER * 0.1,
+            BotLevel::Medium => -THROW_POWER * 0.07..=THROW_POWER * 0.07,
             BotLevel::High => -THROW_POWER * 0.03..=THROW_POWER * 0.03,
         };
         rand::random_range(range)
@@ -39,8 +39,8 @@ impl BotLevel {
 
     pub fn angle_offset(&self) -> f32 {
         let range = match self {
-            BotLevel::Low => -PI / 15.0..=PI / 15.0,
-            BotLevel::Medium => -PI / 20.0..=PI / 20.0,
+            BotLevel::Low => -PI / 20.0..=PI / 20.0,
+            BotLevel::Medium => -PI / 25.0..=PI / 25.0,
             BotLevel::High => -PI / 30.0..=PI / 30.0,
         };
         rand::random_range(range)

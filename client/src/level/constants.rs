@@ -67,9 +67,29 @@ const IFRIT_TITLE: &str = "Sulky_1";
 const JUBEE_TITLE: &str = "Idle_1";
 const KIDIAN_TITLE: &str = "Idle_2";
 const KOMMY_TITLE: &str = "Taunt_1";
+const LEETS_TITLE: &str = "Idle_1";
+const LEVI_TITLE: &str = "Idle_1";
+const MAESTRO_MK2_TITLE: &str = "Happy_3";
+const MARIE_TITLE: &str = "Idle_3";
 const MAYO_TITLE: &str = "Happy_2";
+// const MELUNA_TITLE: &str = "Idle_3";
+const NAIA_TITLE: &str = "Idle_1";
+const NER_TITLE: &str = "Idle_1";
+const POSHER_TITLE: &str = "Idle_1";
+const RIM_TITLE: &str = "Happy_4";
 const ROHNE_TITLE: &str = "Idle_1";
+const RUDE_TITLE: &str = "Happy_1";
+const RUFO_TITLE: &str = "Idle_1";
+const SELLINE_TITLE: &str = "Idle_2";
+const SHADY_TITLE: &str = "Idle_1";
+const SILPHIR_TITLE: &str = "Idle_1";
+const SIST_TITLE: &str = "Idle_3";
 const SPEAKI_TITLE: &str = "Idle_1";
+const SYLLA_TITLE: &str = "Blank_1";
+const TIG_TITLE: &str = "Idle_1";
+const UI_TITLE: &str = "Idle_2";
+// const VELVET_TITLE: &str = "Idle_1";
+const VIVI_TITLE: &str = "Idle_1";
 const XION_TITLE: &str = "Ganzi_4";
 pub const TITLE_ANIM: [&str; NUM_HEROS] = [
     ALICE_TITLE,
@@ -97,9 +117,29 @@ pub const TITLE_ANIM: [&str; NUM_HEROS] = [
     JUBEE_TITLE,
     KIDIAN_TITLE,
     KOMMY_TITLE,
+    LEETS_TITLE,
+    LEVI_TITLE,
+    MAESTRO_MK2_TITLE,
+    MARIE_TITLE,
     MAYO_TITLE,
+    // MELUNA_TITLE,
+    NAIA_TITLE,
+    NER_TITLE,
+    POSHER_TITLE,
+    RIM_TITLE,
     ROHNE_TITLE,
+    RUDE_TITLE,
+    RUFO_TITLE,
+    SELLINE_TITLE,
+    SHADY_TITLE,
+    SILPHIR_TITLE,
+    SIST_TITLE,
     SPEAKI_TITLE,
+    SYLLA_TITLE,
+    TIG_TITLE,
+    UI_TITLE,
+    // VELVET_TITLE,
+    VIVI_TITLE,
     XION_TITLE,
 ];
 

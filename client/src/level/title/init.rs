@@ -728,6 +728,7 @@ fn play_animation(
     }
 }
 
+#[allow(clippy::type_complexity)]
 #[cfg(not(feature = "no-debugging-title"))]
 fn play_animation(
     mut commands: Commands,
