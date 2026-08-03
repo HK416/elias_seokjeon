@@ -1,6 +1,6 @@
 use super::*;
 
-pub async fn update(mut player: Box<Player>, mut redis_conn: MultiplexedConnection) {
+pub async fn update(mut player: Box<Player>, mut redis_conn: ConnectionManager) {
     #[cfg(not(feature = "no-debugging-log"))]
     println!("{:?} - Current State: Title", player);
 
@@ -43,7 +43,7 @@ pub async fn update(mut player: Box<Player>, mut redis_conn: MultiplexedConnecti
 }
 
 pub async fn get_leaderboard_and_my_rank(
-    redis_conn: &mut MultiplexedConnection,
+    redis_conn: &mut ConnectionManager,
     my_uuid: &Uuid,
 ) -> redis::RedisResult<Packet> {
     let my_key = format!("user:{my_uuid}");

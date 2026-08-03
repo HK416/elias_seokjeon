@@ -21,14 +21,14 @@ impl Node {
     }
 }
 
-pub async fn update(redis_conn: MultiplexedConnection) {
+pub async fn update(redis_conn: ConnectionManager) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let n = COUNTER.fetch_add(1, MemOrdering::AcqRel);
     assert!(n < 1, "This function must be called only once!");
     update_internal(redis_conn).await;
 }
 
-async fn update_internal(redis_conn: MultiplexedConnection) {
+async fn update_internal(redis_conn: ConnectionManager) {
     const TICK: u64 = 1000 / 15;
     const PERIOD: Duration = Duration::from_millis(TICK);
     let mut interval = time::interval(PERIOD);
@@ -61,8 +61,14 @@ async fn update_internal(redis_conn: MultiplexedConnection) {
                         {
                             match packet {
                                 Packet::TryCancelGame => {
+                                    // The write task exits on its first send failure, which
+                                    // drops the receiver. Treat that as a disconnect: a panic
+                                    // here would kill the one process-wide matching task.
+                                    if node.player.tx.send(Packet::CancelSuccess).is_err() {
+                                        println!("WebSocket disconnected ({:?})", node.player);
+                                        continue 'update; // Session is removed due to closure.
+                                    }
                                     let redis_conn_cloned = redis_conn.clone();
-                                    node.player.tx.send(Packet::CancelSuccess).unwrap();
                                     next_state(State::Title, node.player, redis_conn_cloned);
                                     continue 'update; // Session is removed from matching.
                                 }
@@ -123,12 +129,19 @@ async fn update_internal(redis_conn: MultiplexedConnection) {
                 continue;
             }
 
-            node.player
+            // Same as above: the reader may still be Pending on a tick where the
+            // write task has already died, so this send can legitimately fail.
+            if node
+                .player
                 .tx
                 .send(Packet::MatchingStatus {
                     millis: node.millis,
                 })
-                .unwrap();
+                .is_err()
+            {
+                println!("WebSocket disconnected ({:?})", node.player);
+                continue; // Session is removed due to closure.
+            }
 
             temp.push_back(node);
         }

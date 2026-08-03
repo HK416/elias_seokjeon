@@ -3,9 +3,9 @@ use super::*;
 const MAX_UUID_RETRIES: u32 = 10;
 
 pub async fn setup(
-    addr: SocketAddr,
+    addr: String,
     ws_stream: WebSocketStream<TcpStream>,
-    mut redis_conn: MultiplexedConnection,
+    mut redis_conn: ConnectionManager,
 ) {
     #[cfg(not(feature = "no-debugging-log"))]
     println!("Addr:{addr} - Current State: Init");
@@ -19,9 +19,8 @@ pub async fn setup(
     for _ in 0..MAX_UUID_RETRIES {
         let uuid = Uuid::new_v4();
         let key = format!("user:{uuid}");
-        let value = addr.to_string();
 
-        let is_created: bool = match redis_conn.hset_nx(&key, "ip", &value).await {
+        let is_created: bool = match redis_conn.hset_nx(&key, "ip", &addr).await {
             Ok(created) => created,
             Err(e) => {
                 eprintln!("Redis Error on HSETNX: {e}");
@@ -60,8 +59,7 @@ pub async fn setup(
             // If we couldn't find a unique UUID after all retries, log it and drop the connection.
             eprintln!(
                 "Failed to create a unique user for IP {} after {} retries.",
-                addr.ip(),
-                MAX_UUID_RETRIES
+                addr, MAX_UUID_RETRIES
             );
             return;
         }

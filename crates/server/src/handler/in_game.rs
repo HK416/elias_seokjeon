@@ -73,7 +73,7 @@ pub async fn play(
     mut left: Box<dyn Session>,
     mut right: Box<dyn Session>,
     mut num_player: usize,
-    mut redis_conn: MultiplexedConnection,
+    mut redis_conn: ConnectionManager,
 ) {
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
@@ -807,7 +807,7 @@ fn update_right_bot_parameter(
 }
 
 pub async fn record_game_result(
-    redis_conn: &mut MultiplexedConnection,
+    redis_conn: &mut ConnectionManager,
     uuid: &Uuid,
     win_inc: i32,
     loss_inc: i32,

@@ -18,7 +18,7 @@ pub async fn wait(
     mut left: Box<dyn Session>,
     mut right: Box<dyn Session>,
     mut num_player: usize,
-    redis_conn: MultiplexedConnection,
+    redis_conn: ConnectionManager,
 ) {
     let message = Packet::PrepareInGame;
     left = send_message(left, &message, &mut num_player);

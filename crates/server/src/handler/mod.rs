@@ -10,7 +10,6 @@ use std::{
     collections::VecDeque,
     f32::consts::{PI, TAU},
     fmt, mem,
-    net::SocketAddr,
     ops::RangeInclusive,
     sync::atomic::{AtomicUsize, Ordering as MemOrdering},
 };
@@ -30,7 +29,7 @@ use protocol::{
     rand, serde_json, uuid::Uuid,
 };
 use rand::seq::IndexedRandom;
-use redis::{AsyncTypedCommands, Script, aio::MultiplexedConnection};
+use redis::{AsyncTypedCommands, Script, aio::ConnectionManager};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{UnboundedSender, unbounded_channel},
@@ -72,7 +71,7 @@ pub struct Player {
     win: u16,
     lose: u16,
     draw: u16,
-    addr: SocketAddr,
+    addr: String,
     read: SplitStream<WebSocketStream<TcpStream>>,
     tx: UnboundedSender<Packet>,
     write_task: JoinHandle<SplitSink<WebSocketStream<TcpStream>, Message>>,
@@ -83,17 +82,18 @@ impl Player {
         uuid: Uuid,
         hero: Hero,
         name: String,
-        addr: SocketAddr,
+        addr: String,
         ws_stream: WebSocketStream<TcpStream>,
     ) -> Self {
         let (tx, mut rx) = unbounded_channel::<Packet>();
         let (mut write, read) = ws_stream.split();
+        let log_addr = addr.clone();
         let write_task = tokio::spawn(async move {
             while let Some(s) = rx.recv().await {
                 let s = serde_json::to_string(&s).unwrap();
                 let result = write.send(Message::text(s)).await;
                 if let Err(e) = result {
-                    eprintln!("Failed to send message to WebSocket (Address:{addr}): {e}");
+                    eprintln!("Failed to send message to WebSocket (Address:{log_addr}): {e}");
                     return write;
                 }
             }
@@ -268,7 +268,7 @@ impl Session for Bot {
     }
 }
 
-fn next_state(state: State, player: Box<Player>, redis_conn: MultiplexedConnection) {
+fn next_state(state: State, player: Box<Player>, redis_conn: ConnectionManager) {
     match state {
         State::Title => tokio::spawn(title::update(player, redis_conn)),
         State::Matching => tokio::spawn(matching::regist(player)),
