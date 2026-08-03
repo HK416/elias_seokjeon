@@ -1,0 +1,593 @@
+use std::num::NonZeroUsize;
+
+// Import necessary Bevy modules.
+use bevy::prelude::*;
+use bevy_spine::{SkeletonController, SpineBundle, SpineReadyEvent, SpineSync};
+
+use super::*;
+
+// --- PLUGIN ---
+
+pub struct InnerPlugin;
+
+impl Plugin for InnerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            OnEnter(LevelStates::InitPrepareGame),
+            (debug_label, setup_in_prepare, setup_loading_minimi),
+        )
+        .add_systems(
+            Update,
+            (
+                update_spawn_progress,
+                observe_entiey_creation,
+                check_loading_progress,
+                play_animation,
+                update_loading_minimi,
+            )
+                .run_if(in_state(LevelStates::InitPrepareGame)),
+        );
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_systems(
+            PreUpdate,
+            handle_received_packets.run_if(in_state(LevelStates::InitPrepareGame)),
+        );
+    }
+}
+
+// --- SETUP SYSTEMS ---
+
+fn debug_label() {
+    info!("Current Level: InitPrepareGame");
+}
+
+fn setup_in_prepare(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    player_info: Res<PlayerInfo>,
+    other_info: Res<OtherInfo>,
+) {
+    let mut loading_entities = LoadingEntities::default();
+    setup_in_prepare_entities(
+        &mut commands,
+        &asset_server,
+        &mut loading_entities,
+        &player_info,
+        &other_info,
+    );
+    setup_in_prepare_interface(
+        &mut commands,
+        &asset_server,
+        &mut loading_entities,
+        &player_info,
+        &other_info,
+    );
+
+    // --- Resource Insertion ---
+    commands.insert_resource(loading_entities);
+}
+
+fn setup_in_prepare_entities(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    loading_entities: &mut LoadingEntities,
+    player_info: &PlayerInfo,
+    other_info: &OtherInfo,
+) {
+    // Player Hero
+    let index = player_info.hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
+    let entity = commands
+        .spawn((
+            SpineBundle {
+                skeleton: asset_server.load(path).into(),
+                transform: Transform::from_xyz(-480.0, 160.0, 1.0)
+                    .with_scale(Vec3::new(-1.0, 1.0, 1.0)),
+                visibility: Visibility::Hidden,
+                ..Default::default()
+            },
+            Character::from(player_info.hero),
+            VoiceChannel::MySelf,
+            SpineSync,
+        ))
+        .id();
+    loading_entities.insert(entity);
+
+    // Other Hero
+    let index = other_info.hero as usize;
+    let path = MODEL_PATH_HEROS.get(index).copied().unwrap();
+    let entity = commands
+        .spawn((
+            SpineBundle {
+                skeleton: asset_server.load(path).into(),
+                transform: Transform::from_xyz(480.0, 160.0, 1.0),
+                visibility: Visibility::Hidden,
+                ..Default::default()
+            },
+            Character::from(other_info.hero),
+            VoiceChannel::Other,
+            SpineSync,
+        ))
+        .id();
+    loading_entities.insert(entity);
+}
+
+fn setup_in_prepare_interface(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    loading_entities: &mut LoadingEntities,
+    player_info: &PlayerInfo,
+    other_info: &OtherInfo,
+) {
+    let entity = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            Visibility::Hidden,
+            SpawnRequest,
+        ))
+        .with_children(|parent| {
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(26.0),
+                        height: Val::Percent(80.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::FlexEnd,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    UiAnimationTarget,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(30.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                border_radius: BorderRadius::all(Val::Percent(30.0)),
+                                ..Default::default()
+                            },
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(90.0),
+                                        height: Val::Percent(26.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        border_radius: BorderRadius::all(Val::Percent(50.0)),
+                                        ..Default::default()
+                                    },
+                                    BackgroundColor(BG_GREEN_COLOR_3),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(&player_info.name),
+                                            TextFont::from(asset_server.load(FONT_PATH))
+                                                .with_font_size(FontSize::Vh(
+                                                    32.0 / 1280.0 * 100.0,
+                                                )),
+                                            TextLayout::justify(Justify::Center),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+
+                            add_vertical_space(loading_entities, parent, Val::Percent(4.0));
+
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(90.0),
+                                        height: Val::Percent(60.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        border_radius: BorderRadius::all(Val::Percent(30.0)),
+                                        ..Default::default()
+                                    },
+                                    BackgroundColor(BG_GREEN_COLOR_3),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(format!(
+                                                "Win:{} Lose:{}",
+                                                player_info.win, player_info.lose
+                                            )),
+                                            TextFont::from(asset_server.load(FONT_PATH))
+                                                .with_font_size(FontSize::Vh(
+                                                    48.0 / 1280.0 * 100.0,
+                                                )),
+                                            TextLayout::justify(Justify::Center),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(22.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    UiAnimationTarget,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let image = asset_server.load(IMG_PATH_FX_FIRECARTOON);
+                    let layout = asset_server.load(ATLAS_PATH_FX_FIRECARTOON);
+                    let entity = parent
+                        .spawn((
+                            ImageNode::from_atlas_image(image, TextureAtlas { index: 0, layout }),
+                            AnimationTimer::new(1.0, NonZeroUsize::new(10).unwrap(), true),
+                            Node {
+                                bottom: Val::VMin(-15.0),
+                                width: Val::Percent(100.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(26.0 / 51.0),
+                                position_type: PositionType::Absolute,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+
+                    let entity = parent
+                        .spawn((
+                            ImageNode::new(asset_server.load(IMG_PATH_PVP_INGAME_VS)),
+                            Node {
+                                width: Val::Percent(60.0),
+                                height: Val::Auto,
+                                aspect_ratio: Some(165.0 / 152.0),
+                                position_type: PositionType::Absolute,
+                                ..Default::default()
+                            },
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+
+            let entity = parent
+                .spawn((
+                    Node {
+                        width: Val::Percent(26.0),
+                        height: Val::Percent(80.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::FlexEnd,
+                        ..Default::default()
+                    },
+                    Visibility::Inherited,
+                    UiAnimationTarget,
+                    SpawnRequest,
+                ))
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(30.0),
+                                border: UiRect::all(Val::VMin(1.25)),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                border_radius: BorderRadius::all(Val::Percent(30.0)),
+                                ..Default::default()
+                            },
+                            BorderColor::all(BORDER_GREEN_COLOR_0),
+                            BackgroundColor(BG_GREEN_COLOR_0),
+                            Visibility::Inherited,
+                            SpawnRequest,
+                        ))
+                        .with_children(|parent| {
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(90.0),
+                                        height: Val::Percent(24.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        border_radius: BorderRadius::all(Val::Percent(50.0)),
+                                        ..Default::default()
+                                    },
+                                    BackgroundColor(BG_GREEN_COLOR_3),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(&other_info.name),
+                                            TextFont::from(asset_server.load(FONT_PATH))
+                                                .with_font_size(FontSize::Vh(
+                                                    32.0 / 1280.0 * 100.0,
+                                                )),
+                                            TextLayout::justify(Justify::Center),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+
+                            add_vertical_space(loading_entities, parent, Val::Percent(4.0));
+
+                            let entity = parent
+                                .spawn((
+                                    Node {
+                                        width: Val::Percent(90.0),
+                                        height: Val::Percent(60.0),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        border_radius: BorderRadius::all(Val::Percent(30.0)),
+                                        ..Default::default()
+                                    },
+                                    BackgroundColor(BG_GREEN_COLOR_3),
+                                    Visibility::Inherited,
+                                    SpawnRequest,
+                                ))
+                                .with_children(|parent| {
+                                    let entity = parent
+                                        .spawn((
+                                            Node::default(),
+                                            Text::new(format!(
+                                                "Win:{} Lose:{}",
+                                                other_info.win, other_info.lose
+                                            )),
+                                            TextFont::from(asset_server.load(FONT_PATH))
+                                                .with_font_size(FontSize::Vh(
+                                                    48.0 / 1280.0 * 100.0,
+                                                )),
+                                            TextLayout::justify(Justify::Center),
+                                            TextColor::BLACK,
+                                            Visibility::Inherited,
+                                            SpawnRequest,
+                                        ))
+                                        .id();
+                                    loading_entities.insert(entity);
+                                })
+                                .id();
+                            loading_entities.insert(entity);
+                        })
+                        .id();
+                    loading_entities.insert(entity);
+                })
+                .id();
+            loading_entities.insert(entity);
+        })
+        .id();
+    loading_entities.insert(entity);
+}
+
+fn setup_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.reset();
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
+    }
+}
+
+// --- PREUPDATE SYSTEMS ---
+
+#[cfg(target_arch = "wasm32")]
+fn handle_received_packets(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<LevelStates>>,
+    network: Res<Network>,
+) {
+    for result in network.try_iter() {
+        match result {
+            Ok(packet) => match packet {
+                Packet::GameLoadTimeout => {
+                    commands.insert_resource(ErrorMessage::new(
+                        "game_load_timeout",
+                        "Failed to enter the game due to a connection timeout.",
+                    ));
+                    next_state.set(LevelStates::SwitchToTitleMessage);
+                }
+                _ => { /* empty */ }
+            },
+            Err(e) => {
+                commands.insert_resource(ErrorMessage::from(e));
+                next_state.set(LevelStates::Error);
+            }
+        }
+    }
+}
+
+// --- UPDATE SYSTEMS ---
+
+#[allow(clippy::type_complexity)]
+fn update_spawn_progress(
+    loading_assets: Res<LoadingEntities>,
+    mut set: ParamSet<(
+        Query<&mut Node, With<EnterGameLoadingBar>>,
+        Query<&mut Node, With<EnterGameLoadingCursor>>,
+    )>,
+) {
+    let progress = loading_assets.percent();
+
+    if let Ok(mut node) = set.p0().single_mut() {
+        node.width = Val::Percent(progress * 100.0);
+    }
+
+    if let Ok(mut node) = set.p1().single_mut() {
+        node.left = Val::Percent(progress * 100.0);
+    }
+}
+
+fn observe_entiey_creation(
+    mut commands: Commands,
+    mut loading_entities: ResMut<LoadingEntities>,
+    query: Query<(Entity, Option<&ChildOf>), Added<SpawnRequest>>,
+) {
+    for (entity, child_of) in query.iter() {
+        let mut commands = commands.entity(entity);
+        commands.remove::<SpawnRequest>();
+
+        commands.insert(InPrepareLevelEntity);
+        if child_of.is_none() {
+            commands.insert(InGameLevelRoot);
+        }
+
+        loading_entities.remove(entity);
+    }
+}
+
+fn check_loading_progress(
+    loading_entities: Res<LoadingEntities>,
+    mut next_state: ResMut<NextState<LevelStates>>,
+) {
+    if loading_entities.is_empty() {
+        next_state.set(LevelStates::InitGameResult);
+    }
+}
+
+#[allow(unreachable_patterns)]
+fn play_animation(
+    mut commands: Commands,
+    mut spine_ready_event: MessageReader<SpineReadyEvent>,
+    mut spine_query: Query<(&mut Spine, &Character)>,
+) {
+    for event in spine_ready_event.read() {
+        let (mut spine, character) = spine_query.get_mut(event.entity).unwrap();
+
+        let bone_entity = event.bones.get(BALL_BONE_NAME).copied().unwrap();
+        let (bone, bone_index) = spine
+            .skeleton
+            .bones()
+            .enumerate()
+            .find_map(|(i, b)| (b.data().name() == BALL_BONE_NAME).then_some((b, i)))
+            .unwrap();
+        commands.entity(bone_entity).with_children(|parent| {
+            parent.spawn((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 60.0,
+                },
+                ColliderType::Ball,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Visibility::Visible,
+                Transform::IDENTITY,
+                InPrepareLevelEntity,
+                TitleLevelRoot,
+            ));
+        });
+
+        let bone_entity = event.bones.get(HEAD_BONE_NAME).copied().unwrap();
+        let (bone, bone_index) = spine
+            .skeleton
+            .bones()
+            .enumerate()
+            .find_map(|(i, b)| (b.data().name() == HEAD_BONE_NAME).then_some((b, i)))
+            .unwrap();
+        commands.entity(bone_entity).with_children(|parent| {
+            parent.spawn((
+                Collider2d::Circle {
+                    offset: (0.0, 0.0).into(),
+                    radius: 80.0,
+                },
+                ColliderType::Head,
+                TargetSpine::new(event.entity),
+                TargetSpineBone::new(bone_entity, bone_index),
+                SpineBoneOriginPosition {
+                    local: bone.position().into(),
+                    world: bone.world_position().into(),
+                },
+                Visibility::Visible,
+                Transform::IDENTITY,
+                InPrepareLevelEntity,
+                TitleLevelRoot,
+            ));
+        });
+
+        let Spine(SkeletonController {
+            skeleton,
+            animation_state,
+            ..
+        }) = spine.as_mut();
+
+        let hero: Hero = (*character).into();
+        let animation_name = TITLE_ANIM[hero as usize];
+        skeleton.set_skin_by_name("Normal").unwrap();
+        animation_state
+            .set_animation_by_name(0, animation_name, true)
+            .unwrap();
+
+        commands
+            .entity(event.entity)
+            .insert((CharacterAnimState::Idle, SpawnRequest));
+    }
+}
+
+fn update_loading_minimi(
+    mut query: Query<(&mut ImageNode, &mut AnimationTimer), With<EnterGameLevelEntity>>,
+    time: Res<Time>,
+) {
+    for (mut image_node, mut timer) in query.iter_mut() {
+        timer.tick(time.delta_secs());
+        if let Some(atlas) = image_node.texture_atlas.as_mut() {
+            atlas.index = timer.frame_index();
+        }
+    }
+}

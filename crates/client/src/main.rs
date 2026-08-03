@@ -1,0 +1,59 @@
+mod assets;
+mod collider;
+mod level;
+mod translatable_text;
+mod web;
+
+use std::num::NonZeroU32;
+
+// Import necessary Bevy modules.
+use bevy::{
+    asset::AssetMetaCheck,
+    log::{Level, LogPlugin},
+    prelude::*,
+};
+use bevy_spine::SpinePlugin;
+use bevy_vector_shapes::Shape2dPlugin;
+
+const WND_WIDTH: u32 = 1920;
+const WND_HEIGHT: u32 = 1080;
+
+fn main() {
+    App::new()
+        .add_plugins((
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Elias: Seokjeon".into(),
+                        resolution: (WND_WIDTH, WND_HEIGHT).into(),
+                        resizable: true,
+                        fit_canvas_to_parent: true,
+                        prevent_default_event_handling: true,
+                        desired_maximum_frame_latency: Some(NonZeroU32::new(3).unwrap()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                })
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..Default::default()
+                })
+                .set(LogPlugin {
+                    level: if cfg!(feature = "no-debugging-log") {
+                        Level::WARN
+                    } else {
+                        Level::INFO
+                    },
+                    ..Default::default()
+                }),
+            #[cfg(target_arch = "wasm32")]
+            web::WebAudioPlugin,
+        ))
+        .add_plugins(SpinePlugin)
+        .add_plugins(Shape2dPlugin::default())
+        .add_plugins(assets::InnerPlugin)
+        .add_plugins(collider::InnerPlugin)
+        .add_plugins(level::InnerPlugin)
+        .add_plugins(translatable_text::InnerPlugin)
+        .run();
+}
