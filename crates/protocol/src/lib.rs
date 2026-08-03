@@ -1,9 +1,8 @@
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, sync::LazyLock};
 
-use lazy_static::lazy_static;
 pub use rand;
 use rand::{
-    Rng,
+    Rng, RngExt,
     distr::{Distribution, StandardUniform},
 };
 pub use serde;
@@ -265,7 +264,7 @@ pub enum Packet {
     RankingResult {
         my_rank: Option<u32>,
         top_list: Vec<RankItem>,
-    }
+    },
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -311,64 +310,62 @@ pub const WIND_POWER: f32 = THROW_POWER * 0.125;
 pub const PROJECTILE_SIZE: f32 = 64.0;
 pub const GRAVITY: f32 = -9.80665 * 84.0;
 
-lazy_static! {
-    pub static ref COLLIDER_DATA: HashMap<Hero, Circle> = {
-        let map = HashMap::from_iter([
-            (Hero::Alice, Circle::new(40.0, (0.0, 160.0))),
-            (Hero::Amelia, Circle::new(40.0, (0.0, 162.0))),
-            (Hero::Ashur, Circle::new(40.0, (2.0, 156.0))),
-            (Hero::Aya, Circle::new(40.0, (-4.0, 172.0))),
-            (Hero::Belita, Circle::new(40.0, (-6.0, 164.0))),
-            (Hero::Beni, Circle::new(40.0, (8.0, 156.0))),
-            (Hero::BigWood, Circle::new(45.0, (16.0, 216.0))),
-            (Hero::Butter, Circle::new(36.0, (8.0, 148.0))),
-            (Hero::Canna, Circle::new(40.0, (-2.0, 156.0))),
-            (Hero::Chloe, Circle::new(36.0, (-8.0, 140.0))),
-            (Hero::Daya, Circle::new(34.0, (-12.0, 148.0))),
-            (Hero::Diana, Circle::new(40.0, (10.0, 146.0))),
-            (Hero::Elena, Circle::new(40.0, (8.0, 160.0))),
-            (Hero::Epica, Circle::new(40.0, (-4.0, 146.0))),
-            (Hero::Erpin, Circle::new(40.0, (0.0, 142.0))),
-            (Hero::Espi, Circle::new(40.0, (0.0, 150.0))),
-            (Hero::Festa, Circle::new(40.0, (4.0, 154.0))),
-            (Hero::Fricle, Circle::new(36.0, (0.0, 146.0))),
-            (Hero::Gabia, Circle::new(40.0, (0.0, 164.0))),
-            (Hero::Hilde, Circle::new(40.0, (0.0, 160.0))),
-            (Hero::Ifrit, Circle::new(40.0, (4.0, 146.0))),
-            // (Hero::Jade, Circle::new(40.0, (0.0, 122.0))),
-            (Hero::Jubee, Circle::new(40.0, (8.0, 136.0))),
-            (Hero::Kidian, Circle::new(36.0, (0.0, 122.0))),
-            (Hero::Kommy, Circle::new(40.0, (0.0, 156.0))),
-            (Hero::Leets, Circle::new(40.0, (16.0, 130.0))),
-            (Hero::Levi, Circle::new(40.0, (0.0, 160.0))),
-            (Hero::MaestroMK2, Circle::new(40.0, (16.0, 168.0))),
-            (Hero::Marie, Circle::new(40.0, (-8.0, 140.0))),
-            (Hero::Mayo, Circle::new(40.0, (0.0, 158.0))),
-            // (Hero::Meluna, Circle::new(40.0, (0.0, 142.0))),
-            (Hero::Naia, Circle::new(40.0, (10.0, 142.0))),
-            (Hero::Ner, Circle::new(40.0, (6.0, 152.0))),
-            (Hero::Posher, Circle::new(40.0, (0.0, 156.0))),
-            (Hero::Rim, Circle::new(36.0, (0.0, 152.0))),
-            (Hero::Rohne, Circle::new(40.0, (4.0, 152.0))),
-            (Hero::Rude, Circle::new(40.0, (22.0, 116.0))),
-            (Hero::Rufo, Circle::new(40.0, (4.0, 156.0))),
-            (Hero::Selline, Circle::new(38.0, (16.0, 146.0))),
-            (Hero::Shady, Circle::new(40.0, (-4.0, 152.0))),
-            (Hero::Silphir, Circle::new(40.0, (0.0, 132.0))),
-            (Hero::Sist, Circle::new(44.0, (12.0, 128.0))),
-            (Hero::Speaki, Circle::new(36.0, (0.0, 148.0))),
-            (Hero::Sylla, Circle::new(40.0, (-4.0, 174.0))),
-            (Hero::Tig, Circle::new(40.0, (-4.0, 156.0))),
-            (Hero::Ui, Circle::new(36.0, (0.0, 168.0))),
-            // (Hero::Velvet, Circle::new(40.0, (0.0, 146.0))),
-            (Hero::Vivi, Circle::new(36.0, (-4.0, 158.0))),
-            (Hero::Xion, Circle::new(36.0, (0.0, 142.0))),
-        ]);
-        
-        assert_eq!(map.len(), NUM_HEROS);
-        map
-    };
-}
+pub static COLLIDER_DATA: LazyLock<HashMap<Hero, Circle>> = LazyLock::new(|| {
+    let map = HashMap::from_iter([
+        (Hero::Alice, Circle::new(40.0, (0.0, 160.0))),
+        (Hero::Amelia, Circle::new(40.0, (0.0, 162.0))),
+        (Hero::Ashur, Circle::new(40.0, (2.0, 156.0))),
+        (Hero::Aya, Circle::new(40.0, (-4.0, 172.0))),
+        (Hero::Belita, Circle::new(40.0, (-6.0, 164.0))),
+        (Hero::Beni, Circle::new(40.0, (8.0, 156.0))),
+        (Hero::BigWood, Circle::new(45.0, (16.0, 216.0))),
+        (Hero::Butter, Circle::new(36.0, (8.0, 148.0))),
+        (Hero::Canna, Circle::new(40.0, (-2.0, 156.0))),
+        (Hero::Chloe, Circle::new(36.0, (-8.0, 140.0))),
+        (Hero::Daya, Circle::new(34.0, (-12.0, 148.0))),
+        (Hero::Diana, Circle::new(40.0, (10.0, 146.0))),
+        (Hero::Elena, Circle::new(40.0, (8.0, 160.0))),
+        (Hero::Epica, Circle::new(40.0, (-4.0, 146.0))),
+        (Hero::Erpin, Circle::new(40.0, (0.0, 142.0))),
+        (Hero::Espi, Circle::new(40.0, (0.0, 150.0))),
+        (Hero::Festa, Circle::new(40.0, (4.0, 154.0))),
+        (Hero::Fricle, Circle::new(36.0, (0.0, 146.0))),
+        (Hero::Gabia, Circle::new(40.0, (0.0, 164.0))),
+        (Hero::Hilde, Circle::new(40.0, (0.0, 160.0))),
+        (Hero::Ifrit, Circle::new(40.0, (4.0, 146.0))),
+        // (Hero::Jade, Circle::new(40.0, (0.0, 122.0))),
+        (Hero::Jubee, Circle::new(40.0, (8.0, 136.0))),
+        (Hero::Kidian, Circle::new(36.0, (0.0, 122.0))),
+        (Hero::Kommy, Circle::new(40.0, (0.0, 156.0))),
+        (Hero::Leets, Circle::new(40.0, (16.0, 130.0))),
+        (Hero::Levi, Circle::new(40.0, (0.0, 160.0))),
+        (Hero::MaestroMK2, Circle::new(40.0, (16.0, 168.0))),
+        (Hero::Marie, Circle::new(40.0, (-8.0, 140.0))),
+        (Hero::Mayo, Circle::new(40.0, (0.0, 158.0))),
+        // (Hero::Meluna, Circle::new(40.0, (0.0, 142.0))),
+        (Hero::Naia, Circle::new(40.0, (10.0, 142.0))),
+        (Hero::Ner, Circle::new(40.0, (6.0, 152.0))),
+        (Hero::Posher, Circle::new(40.0, (0.0, 156.0))),
+        (Hero::Rim, Circle::new(36.0, (0.0, 152.0))),
+        (Hero::Rohne, Circle::new(40.0, (4.0, 152.0))),
+        (Hero::Rude, Circle::new(40.0, (22.0, 116.0))),
+        (Hero::Rufo, Circle::new(40.0, (4.0, 156.0))),
+        (Hero::Selline, Circle::new(38.0, (16.0, 146.0))),
+        (Hero::Shady, Circle::new(40.0, (-4.0, 152.0))),
+        (Hero::Silphir, Circle::new(40.0, (0.0, 132.0))),
+        (Hero::Sist, Circle::new(44.0, (12.0, 128.0))),
+        (Hero::Speaki, Circle::new(36.0, (0.0, 148.0))),
+        (Hero::Sylla, Circle::new(40.0, (-4.0, 174.0))),
+        (Hero::Tig, Circle::new(40.0, (-4.0, 156.0))),
+        (Hero::Ui, Circle::new(36.0, (0.0, 168.0))),
+        // (Hero::Velvet, Circle::new(40.0, (0.0, 146.0))),
+        (Hero::Vivi, Circle::new(36.0, (-4.0, 158.0))),
+        (Hero::Xion, Circle::new(36.0, (0.0, 142.0))),
+    ]);
+
+    assert_eq!(map.len(), NUM_HEROS);
+    map
+});
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Circle {

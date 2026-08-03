@@ -1,6 +1,6 @@
 [package]
 name = "protocol"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["HK416 <powerspirit127@gmail.com>"]
 description = "A fan-made game based on Trickcal: Chibi Go."
@@ -10,8 +10,7 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-lazy_static = "1.5"
-rand = "0.9"
+rand = "0.10"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-uuid = { version = "1.18", features = ["fast-rng", "v4", "serde"] }
+uuid = { version = "1.24", features = ["fast-rng", "v4", "serde"] }
