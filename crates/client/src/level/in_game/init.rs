@@ -736,6 +736,10 @@ fn setup_in_game_interface(
                             layout: atlas.clone(),
                             index: 1,
                         }),
+                        // The middle slice is a thin image meant to be stretched. `Auto`
+                        // installs a measure func that falls back to the image's own
+                        // aspect ratio, collapsing the panel to a sliver.
+                        image_mode: NodeImageMode::Stretch,
                         ..Default::default()
                     },
                     Node {
@@ -841,6 +845,10 @@ fn setup_in_game_interface(
                             layout: atlas.clone(),
                             index: 1,
                         }),
+                        // The middle slice is a thin image meant to be stretched. `Auto`
+                        // installs a measure func that falls back to the image's own
+                        // aspect ratio, collapsing the panel to a sliver.
+                        image_mode: NodeImageMode::Stretch,
                         ..Default::default()
                     },
                     Node {

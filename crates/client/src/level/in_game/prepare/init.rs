@@ -82,7 +82,10 @@ fn setup_in_prepare_entities(
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
-                transform: Transform::from_xyz(-480.0, 160.0, 1.0)
+                // Must stay above the background pattern sprites, which sit at
+                // z = 1.0. At an equal z the 2D transparent phase has no defined
+                // tie-break, so the tiles could be drawn over the characters.
+                transform: Transform::from_xyz(-480.0, 160.0, 2.0)
                     .with_scale(Vec3::new(-1.0, 1.0, 1.0)),
                 visibility: Visibility::Hidden,
                 ..Default::default()
@@ -101,7 +104,7 @@ fn setup_in_prepare_entities(
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
-                transform: Transform::from_xyz(480.0, 160.0, 1.0),
+                transform: Transform::from_xyz(480.0, 160.0, 2.0),
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },

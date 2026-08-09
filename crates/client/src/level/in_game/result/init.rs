@@ -129,7 +129,9 @@ fn setup_game_result_entities(
         .spawn((
             SpineBundle {
                 skeleton: asset_server.load(path).into(),
-                transform: Transform::from_xyz(0.0, 160.0, 1.0),
+                // Above the result background pattern sprites at z = 1.0; an equal
+                // z leaves the draw order between them undefined.
+                transform: Transform::from_xyz(0.0, 160.0, 2.0),
                 visibility: Visibility::Hidden,
                 ..Default::default()
             },

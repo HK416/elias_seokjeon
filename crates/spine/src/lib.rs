@@ -10,6 +10,7 @@ use std::{
 
 use bevy::{
     asset::{RenderAssetUsages, load_internal_binary_asset},
+    camera::visibility::NoFrustumCulling,
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
     mesh::{Indices, MeshVertexAttribute},
     prelude::*,
@@ -743,6 +744,15 @@ fn spine_spawn(
                                                 Visibility::default(),
                                                 InheritedVisibility::default(),
                                                 ViewVisibility::default(),
+                                                // Bevy can never compute a correct `Aabb` for these
+                                                // meshes: `empty_mesh` writes `ATTRIBUTE_POSITION` as
+                                                // Float32x3, so `calculate_bounds_2d` latches a
+                                                // degenerate point `Aabb` at the origin here, and the
+                                                // real geometry written later uses Float32x2, which
+                                                // makes `compute_aabb` return `None` forever after.
+                                                // Frustum culling would then test a zero-sized point
+                                                // at the skeleton's origin instead of its artwork.
+                                                NoFrustumCulling,
                                             ));
                                             z += 0.001;
                                         }
