@@ -128,10 +128,10 @@ fn handle_pn_button_pressed(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &PNButton, &Interaction),
+        (Entity, &PNButton, &UiInteraction),
         (
             With<OptionLevelEntity>,
-            Changed<Interaction>,
+            Changed<UiInteraction>,
             With<UiButton>,
         ),
     >,
@@ -146,12 +146,12 @@ fn handle_pn_button_pressed(
         );
 
         match (pn_button, interaction) {
-            (PNButton::Positive, Interaction::Pressed) => {
+            (PNButton::Positive, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::InTitle);
             }
-            (PNButton::Positive, Interaction::Hovered) => {
+            (PNButton::Positive, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }
@@ -171,10 +171,10 @@ fn handle_locale_button_pressed(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &LocaleButton, &Interaction),
+        (Entity, &LocaleButton, &UiInteraction),
         (
             With<OptionLevelEntity>,
-            Changed<Interaction>,
+            Changed<UiInteraction>,
             With<UiButton>,
         ),
     >,
@@ -189,24 +189,24 @@ fn handle_locale_button_pressed(
         );
 
         match (locale_button, interaction) {
-            (LocaleButton::En, Interaction::Pressed) => {
+            (LocaleButton::En, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::En;
             }
-            (LocaleButton::Ja, Interaction::Pressed) => {
+            (LocaleButton::Ja, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::Ja;
             }
-            (LocaleButton::Ko, Interaction::Pressed) => {
+            (LocaleButton::Ko, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 *locale = Locale::Ko;
             }
-            (LocaleButton::En, Interaction::Hovered)
-            | (LocaleButton::Ja, Interaction::Hovered)
-            | (LocaleButton::Ko, Interaction::Hovered) => {
+            (LocaleButton::En, UiInteraction::Hovered)
+            | (LocaleButton::Ja, UiInteraction::Hovered)
+            | (LocaleButton::Ko, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }
@@ -223,15 +223,15 @@ fn handle_volume_button_pressed(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
-        (Entity, &VolumeSlider, &Interaction),
-        (With<OptionLevelEntity>, Changed<Interaction>),
+        (Entity, &VolumeSlider, &UiInteraction),
+        (With<OptionLevelEntity>, Changed<UiInteraction>),
     >,
 ) {
     for (entity, &volume_slider, &interaction) in interaction_query.iter() {
         match (volume_slider, interaction) {
-            (VolumeSlider::Background, Interaction::Pressed)
-            | (VolumeSlider::Effect, Interaction::Pressed)
-            | (VolumeSlider::Voice, Interaction::Pressed) => {
+            (VolumeSlider::Background, UiInteraction::Pressed)
+            | (VolumeSlider::Effect, UiInteraction::Pressed)
+            | (VolumeSlider::Voice, UiInteraction::Pressed) => {
                 if mouse_buttons.just_pressed(MouseButton::Left) {
                     let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                     play_effect_sound(&mut commands, &system_volume, source);
@@ -239,9 +239,9 @@ fn handle_volume_button_pressed(
                     break;
                 }
             }
-            (VolumeSlider::Background, Interaction::Hovered)
-            | (VolumeSlider::Effect, Interaction::Hovered)
-            | (VolumeSlider::Voice, Interaction::Hovered) => {
+            (VolumeSlider::Background, UiInteraction::Hovered)
+            | (VolumeSlider::Effect, UiInteraction::Hovered)
+            | (VolumeSlider::Voice, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_POPUP_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }
@@ -258,16 +258,16 @@ fn handle_volume_button_pressed_for_mobile(
     system_volume: Res<SystemVolume>,
     mut selected: ResMut<SelectedSliderCursor>,
     interaction_query: Query<
-        (Entity, &VolumeSlider, &Interaction),
-        (With<OptionLevelEntity>, Changed<Interaction>),
+        (Entity, &VolumeSlider, &UiInteraction),
+        (With<OptionLevelEntity>, Changed<UiInteraction>),
     >,
 ) {
     if let Some(touch) = touches.iter_just_pressed().last() {
         for (entity, &volume_slider, &interaction) in interaction_query.iter() {
             match (volume_slider, interaction) {
-                (VolumeSlider::Background, Interaction::Pressed)
-                | (VolumeSlider::Effect, Interaction::Pressed)
-                | (VolumeSlider::Voice, Interaction::Pressed) => {
+                (VolumeSlider::Background, UiInteraction::Pressed)
+                | (VolumeSlider::Effect, UiInteraction::Pressed)
+                | (VolumeSlider::Voice, UiInteraction::Pressed) => {
                     let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                     play_effect_sound(&mut commands, &system_volume, source);
                     selected.set(volume_slider, entity, touch.id());

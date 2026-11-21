@@ -57,6 +57,7 @@ features = [
     "bevy_text",
     "bevy_ui",
     "bevy_ui_render",
+    "ui_picking",
     "bevy_window",
     "bevy_winit",
     "multi_threaded",

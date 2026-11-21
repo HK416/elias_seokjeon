@@ -80,8 +80,8 @@ fn handle_pn_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &PNButton, &Interaction),
-        (With<MatchingLevelEntity>, Changed<Interaction>),
+        (Entity, &PNButton, &UiInteraction),
+        (With<MatchingLevelEntity>, Changed<UiInteraction>),
     >,
 ) {
     for (entity, &button, interaction) in interaction_query.iter_mut() {
@@ -94,12 +94,12 @@ fn handle_pn_button_interaction(
         );
 
         match (button, interaction) {
-            (PNButton::Negative, Interaction::Pressed) => {
+            (PNButton::Negative, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatchingCancel);
             }
-            (PNButton::Negative, Interaction::Hovered) => {
+            (PNButton::Negative, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }

@@ -81,10 +81,10 @@ fn handle_pn_button_pressed(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &PNButton, &Interaction),
+        (Entity, &PNButton, &UiInteraction),
         (
             With<LeaderBoardLevelEntity>,
-            Changed<Interaction>,
+            Changed<UiInteraction>,
             With<UiButton>,
         ),
     >,
@@ -99,12 +99,12 @@ fn handle_pn_button_pressed(
         );
 
         match (pn_button, interaction) {
-            (PNButton::Positive, Interaction::Pressed) => {
+            (PNButton::Positive, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::InTitle);
             }
-            (PNButton::Positive, Interaction::Hovered) => {
+            (PNButton::Positive, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }

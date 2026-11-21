@@ -92,8 +92,8 @@ fn handle_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &PNButton, &Interaction),
-        (With<TitleMessageLevelEntity>, Changed<Interaction>),
+        (Entity, &PNButton, &UiInteraction),
+        (With<TitleMessageLevelEntity>, Changed<UiInteraction>),
     >,
 ) {
     for (entity, &ui, interaction) in interaction_query.iter_mut() {
@@ -106,7 +106,7 @@ fn handle_button_interaction(
         );
 
         match (ui, interaction) {
-            (PNButton::Positive, Interaction::Pressed) => {
+            (PNButton::Positive, UiInteraction::Pressed) => {
                 next_state.set(LevelStates::InTitle);
             }
             _ => { /* empty */ }

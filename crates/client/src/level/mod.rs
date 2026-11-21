@@ -1,8 +1,3 @@
-// shortcut: `Interaction` is deprecated in Bevy 0.20 but still driven by `ui_focus_system`,
-// so button behavior is exactly what 0.19 shipped. Move to picking's `Hovered` + ui's
-// `Pressed` when bumping past 0.20, where it is removed.
-#![allow(deprecated)]
-
 mod core;
 mod in_game;
 mod matching;
@@ -16,7 +11,13 @@ mod types;
 mod utils;
 
 // Import necessary Bevy modules.
-use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
+use bevy::{
+    core_pipeline::tonemapping::Tonemapping,
+    input::InputSystems,
+    picking::{PickingSystems, hover::Hovered},
+    prelude::*,
+    ui::{Pressed, picking_backend::UiPickingSettings},
+};
 use bevy_spine::{Spine, SpineEvent};
 use protocol::Hero;
 use rand::seq::IndexedRandom;
@@ -40,6 +41,25 @@ pub struct InnerPlugin;
 impl Plugin for InnerPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<LevelStates>()
+            // Only `UiButton`s take part in picking. Without this every UI node is a
+            // hit target and the panels drawn over a screen would swallow its clicks.
+            .insert_resource(UiPickingSettings {
+                require_markers: true,
+            })
+            .add_observer(press_ui_button)
+            .add_systems(
+                PreUpdate,
+                (
+                    clear_mouse_pointer_on_cursor_left
+                        .after(PickingSystems::ProcessInput)
+                        .before(PickingSystems::Backend),
+                    // `Hover` is the set that dispatches `PointerPress`, so the press
+                    // lands in the same frame as the input that caused it.
+                    update_ui_interaction
+                        .after(InputSystems)
+                        .after(PickingSystems::Hover),
+                ),
+            )
             .add_plugins(core::InnerPlugin)
             .add_plugins(in_game::InnerPlugin)
             .add_plugins(matching::InnerPlugin)

@@ -1,14 +1,29 @@
 use std::{marker::PhantomData, num::NonZeroUsize};
 
 // Import necessary Bevy modules.
-use bevy::{prelude::*, ui::FocusPolicy};
+use bevy::{
+    picking::{Pickable, hover::Hovered},
+    prelude::*,
+};
 use protocol::Hero;
 
-/// Bevy 0.20 made its `Button` marker unnameable; this carries the same required
-/// components 0.19's did, so buttons spawn exactly as before.
+/// A clickable UI node. Picking keeps `Hovered` current and `press_ui_button` /
+/// `update_ui_interaction` maintain `Pressed`; the latter folds both into
+/// [`UiInteraction`], which is what the handlers react to.
 #[derive(Component)]
-#[require(Node, FocusPolicy::Block, Interaction)]
+#[require(Node, Pickable, Hovered, UiInteraction)]
 pub struct UiButton;
+
+/// The three states Bevy's removed `Interaction` component reported. Handlers play
+/// sounds and act on the transitions between them (press, release back to hover,
+/// leave), which `Hovered` and `Pressed` on their own do not expose.
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
+pub enum UiInteraction {
+    #[default]
+    None,
+    Hovered,
+    Pressed,
+}
 
 #[derive(Component)]
 pub struct LoadingStateRoot;

@@ -1,5 +1,10 @@
 // Import necessary Bevy modules.
-use bevy::{audio::PlaybackMode, prelude::*};
+use bevy::{
+    audio::PlaybackMode,
+    picking::pointer::{PointerId, PointerLocation},
+    prelude::*,
+    window::CursorLeft,
+};
 use protocol::Hero;
 use rand::seq::IndexedRandom;
 
@@ -14,10 +19,67 @@ pub fn setup_timeout_retry(mut commands: Commands) {
     commands.insert_resource(RetryCounter::default());
 }
 
+/// Picking is never told that the cursor left the canvas, so its mouse pointer would stay
+/// where it last was and keep hovering whatever is there. `Interaction` let go of it.
+pub fn clear_mouse_pointer_on_cursor_left(
+    mut cursor_left: MessageReader<CursorLeft>,
+    mut pointers: Query<(&PointerId, &mut PointerLocation)>,
+) {
+    if cursor_left.read().last().is_some() {
+        for (id, mut location) in pointers.iter_mut() {
+            if id.is_mouse() {
+                location.location = None;
+            }
+        }
+    }
+}
+
+/// Marks a button pressed on a left click or a touch, like `Interaction` did. Bevy's own
+/// `ui_widgets::Button` also reacts to the right and middle buttons.
+pub fn press_ui_button(
+    press: On<PointerPress>,
+    buttons: Query<(), With<UiButton>>,
+    mut commands: Commands,
+) {
+    if press.button == PointerButton::Primary && buttons.contains(press.entity) {
+        commands.entity(press.entity).insert(Pressed);
+    }
+}
+
+pub fn update_ui_interaction(
+    mut commands: Commands,
+    mouse: Res<ButtonInput<MouseButton>>,
+    touches: Res<Touches>,
+    mut query: Query<(Entity, &Hovered, Option<Ref<Pressed>>, &mut UiInteraction)>,
+) {
+    // Held anywhere, not just over the button: a press ends when the pointer is let go.
+    let held = mouse.pressed(MouseButton::Left) || touches.iter().next().is_some();
+    for (entity, hovered, pressed, mut interaction) in query.iter_mut() {
+        // `is_added` keeps a press and release that land in the same frame visible for
+        // that one frame, so a quick tap still triggers the button.
+        let is_pressed = pressed.as_ref().is_some_and(|p| held || p.is_added());
+        if pressed.is_some() && !is_pressed {
+            commands.entity(entity).remove::<Pressed>();
+        }
+        interaction.set_if_neq(if is_pressed {
+            UiInteraction::Pressed
+        } else if hovered.get() {
+            UiInteraction::Hovered
+        } else {
+            UiInteraction::None
+        });
+    }
+}
+
 pub fn setup_loading_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Bevy 0.20's 2D default (`Linear`) runs color grading on every fragment. With the
     // default grading that is an identity, so `None` draws the same pixels for less.
-    commands.spawn((Camera2d, Tonemapping::None, LoadingStateRoot));
+    commands.spawn((
+        Camera2d,
+        Tonemapping::None,
+        UiPickingCamera,
+        LoadingStateRoot,
+    ));
 
     commands
         .spawn((

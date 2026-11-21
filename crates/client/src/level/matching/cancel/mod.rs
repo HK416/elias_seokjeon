@@ -83,8 +83,8 @@ fn handle_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &PNButton, &Interaction),
-        (With<MatchingCancelLevelEntity>, Changed<Interaction>),
+        (Entity, &PNButton, &UiInteraction),
+        (With<MatchingCancelLevelEntity>, Changed<UiInteraction>),
     >,
 ) {
     for (entity, &button, interaction) in interaction_query.iter_mut() {
@@ -97,20 +97,20 @@ fn handle_button_interaction(
         );
 
         match (button, interaction) {
-            (PNButton::Positive, Interaction::Pressed) => {
+            (PNButton::Positive, UiInteraction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_cancel_game_message(&network);
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 commands.insert_resource(CancelFlag);
             }
-            (PNButton::Negative, Interaction::Pressed) => {
+            (PNButton::Negative, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatching);
             }
-            (PNButton::Positive, Interaction::Hovered)
-            | (PNButton::Negative, Interaction::Hovered) => {
+            (PNButton::Positive, UiInteraction::Hovered)
+            | (PNButton::Negative, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }

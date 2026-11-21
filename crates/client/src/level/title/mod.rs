@@ -91,6 +91,7 @@ fn setup_camera(mut commands: Commands, camera_query: Query<(), With<Camera2d>>)
         commands.spawn((
             Camera2d,
             Tonemapping::None, // see `setup_loading_screen`
+            UiPickingCamera,
             Transform::from_xyz(0.0, 540.0, 0.0),
             Projection::Orthographic(OrthographicProjection {
                 area: Rect::from_center_half_size(Vec2::ZERO, Vec2::ONE),
@@ -212,8 +213,12 @@ fn handle_button_interaction(
     mut text_color_query: Query<(&mut TextColor, &OriginColor<TextColor>)>,
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
-        (Entity, &TitleButton, &Interaction),
-        (Changed<Interaction>, With<TitleLevelEntity>, With<UiButton>),
+        (Entity, &TitleButton, &UiInteraction),
+        (
+            Changed<UiInteraction>,
+            With<TitleLevelEntity>,
+            With<UiButton>,
+        ),
     >,
 ) {
     for (entity, button, interaction) in interaction_query.iter_mut() {
@@ -226,35 +231,35 @@ fn handle_button_interaction(
         );
 
         match (button, interaction) {
-            (TitleButton::GameStart, Interaction::Pressed) => {
+            (TitleButton::GameStart, UiInteraction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_enter_game_message(&network);
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInMatching);
             }
-            (TitleButton::Option, Interaction::Pressed) => {
+            (TitleButton::Option, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToInOption);
             }
-            (TitleButton::Ranking, Interaction::Pressed) => {
+            (TitleButton::Ranking, UiInteraction::Pressed) => {
                 #[cfg(target_arch = "wasm32")]
                 send_ranking_query(&network);
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 next_state.set(LevelStates::SwitchToLeaderBoard);
             }
-            (TitleButton::HowToPlay, Interaction::Pressed) => {
+            (TitleButton::HowToPlay, UiInteraction::Pressed) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_DOWN);
                 play_effect_sound(&mut commands, &system_volume, source);
                 #[cfg(target_arch = "wasm32")]
                 start_game_tutorial(&locale.to_string());
             }
-            (TitleButton::GameStart, Interaction::Hovered)
-            | (TitleButton::Option, Interaction::Hovered)
-            | (TitleButton::Ranking, Interaction::Hovered)
-            | (TitleButton::HowToPlay, Interaction::Hovered) => {
+            (TitleButton::GameStart, UiInteraction::Hovered)
+            | (TitleButton::Option, UiInteraction::Hovered)
+            | (TitleButton::Ranking, UiInteraction::Hovered)
+            | (TitleButton::HowToPlay, UiInteraction::Hovered) => {
                 let source = asset_server.load(SFX_PATH_COMMON_BUTTON_TOUCH);
                 play_effect_sound(&mut commands, &system_volume, source);
             }

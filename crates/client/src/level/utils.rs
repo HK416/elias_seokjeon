@@ -42,24 +42,24 @@ pub fn add_horizontal_space(
 
 pub fn update_button_visual(
     entity: Entity,
-    interaction: &Interaction,
+    interaction: &UiInteraction,
     children_query: &Query<&Children>,
     text_color_query: &mut Query<(&mut TextColor, &OriginColor<TextColor>)>,
     button_color_query: &mut Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
 ) {
     if let Ok((mut text_color, origin_color)) = text_color_query.get_mut(entity) {
         let color = match interaction {
-            Interaction::None => origin_color.none,
-            Interaction::Hovered => origin_color.hovered,
-            Interaction::Pressed => origin_color.pressed,
+            UiInteraction::None => origin_color.none,
+            UiInteraction::Hovered => origin_color.hovered,
+            UiInteraction::Pressed => origin_color.pressed,
         };
 
         *text_color = TextColor(color);
     } else if let Ok((mut background_color, origin_color)) = button_color_query.get_mut(entity) {
         let color = match interaction {
-            Interaction::None => origin_color.none,
-            Interaction::Hovered => origin_color.hovered,
-            Interaction::Pressed => origin_color.pressed,
+            UiInteraction::None => origin_color.none,
+            UiInteraction::Hovered => origin_color.hovered,
+            UiInteraction::Pressed => origin_color.pressed,
         };
 
         *background_color = BackgroundColor(color);
