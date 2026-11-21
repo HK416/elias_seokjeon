@@ -245,6 +245,13 @@
 
         // 시작 오버레이를 한 번만 클릭할 수 있도록 이벤트 리스너 추가
         startOverlay.addEventListener('click', unlockAudioAndStartGame, { once: true });
+
+        // 새로고침, 탭 닫기, 뒤로 가기 전에 브라우저의 확인창을 띄웁니다.
+        // 문구는 브라우저가 정하며, 사용자가 페이지를 한 번이라도 클릭한 뒤에만 표시됩니다.
+        window.addEventListener('beforeunload', (event) => {
+            event.preventDefault();
+            event.returnValue = ''; // 구형 Chrome/Edge 호환
+        });
     </script>
     
     <script type="module">
