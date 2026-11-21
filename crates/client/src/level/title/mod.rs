@@ -90,6 +90,7 @@ fn setup_camera(mut commands: Commands, camera_query: Query<(), With<Camera2d>>)
     if camera_query.is_empty() {
         commands.spawn((
             Camera2d,
+            Tonemapping::None, // see `setup_loading_screen`
             Transform::from_xyz(0.0, 540.0, 0.0),
             Projection::Orthographic(OrthographicProjection {
                 area: Rect::from_center_half_size(Vec2::ZERO, Vec2::ONE),
@@ -212,7 +213,7 @@ fn handle_button_interaction(
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &TitleButton, &Interaction),
-        (Changed<Interaction>, With<TitleLevelEntity>, With<Button>),
+        (Changed<Interaction>, With<TitleLevelEntity>, With<UiButton>),
     >,
 ) {
     for (entity, button, interaction) in interaction_query.iter_mut() {

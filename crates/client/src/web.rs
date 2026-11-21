@@ -115,10 +115,10 @@ pub struct WebAudioPlugin;
 impl Plugin for WebAudioPlugin {
     fn build(&self, app: &mut App) {
         let context = WebAudioContext::new().expect("Web browser does not support AudioContext");
-        app.insert_non_send_resource(context)
-            .init_non_send_resource::<WebAudioSources>()
-            .init_non_send_resource::<WebAudioBufferCache>()
-            .init_non_send_resource::<WebAudioDecodedChannel>()
+        app.insert_non_send(context)
+            .init_non_send::<WebAudioSources>()
+            .init_non_send::<WebAudioBufferCache>()
+            .init_non_send::<WebAudioDecodedChannel>()
             .add_systems(
                 Update,
                 (

@@ -1,8 +1,14 @@
 use std::{marker::PhantomData, num::NonZeroUsize};
 
 // Import necessary Bevy modules.
-use bevy::prelude::*;
+use bevy::{prelude::*, ui::FocusPolicy};
 use protocol::Hero;
+
+/// Bevy 0.20 made its `Button` marker unnameable; this carries the same required
+/// components 0.19's did, so buttons spawn exactly as before.
+#[derive(Component)]
+#[require(Node, FocusPolicy::Block, Interaction)]
+pub struct UiButton;
 
 #[derive(Component)]
 pub struct LoadingStateRoot;

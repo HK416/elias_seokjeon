@@ -45,7 +45,10 @@ fn main() {
                         Level::INFO
                     },
                     ..Default::default()
-                }),
+                })
+                // All sound goes through `web::WebAudioPlugin`. Bevy's own output would
+                // only keep a second, silent audio stream running on the main thread.
+                .disable::<bevy::audio::AudioPlugin>(),
             #[cfg(target_arch = "wasm32")]
             web::WebAudioPlugin,
         ))

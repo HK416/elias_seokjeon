@@ -267,7 +267,7 @@ fn setup_option_interface(
                             Visibility::Inherited,
                             PNButton::Positive,
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent
@@ -402,7 +402,7 @@ fn add_volume_controller<LabelFn, VolumeFn>(
                                             BackgroundColor(BG_GREEN_COLOR_0),
                                             Visibility::Inherited,
                                             SpawnRequest,
-                                            Button,
+                                            UiButton,
                                             slider_handle,
                                         ))
                                         .id();
@@ -491,7 +491,7 @@ fn add_locale_buttons(
                     Visibility::Inherited,
                     LocaleButton::En,
                     SpawnRequest,
-                    Button,
+                    UiButton,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -532,7 +532,7 @@ fn add_locale_buttons(
                     Visibility::Inherited,
                     LocaleButton::Ja,
                     SpawnRequest,
-                    Button,
+                    UiButton,
                 ))
                 .with_children(|parent| {
                     let entity = parent
@@ -573,7 +573,7 @@ fn add_locale_buttons(
                     Visibility::Inherited,
                     LocaleButton::Ko,
                     SpawnRequest,
-                    Button,
+                    UiButton,
                 ))
                 .with_children(|parent| {
                     let entity = parent

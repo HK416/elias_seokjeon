@@ -124,7 +124,8 @@ fn handle_received_packets(
             Ok(packet) => match packet {
                 Packet::MatchingStatus { millis } => {
                     if let Ok(mut text) = query.single_mut() {
-                        *text = Text::new(match *locale {
+                        // Sent 15 times a second, changes once a second.
+                        text.set_if_neq(Text::new(match *locale {
                             Locale::En => {
                                 format!("Remaining time: {}", millis / 1000)
                             }
@@ -134,7 +135,7 @@ fn handle_received_packets(
                             Locale::Ko => {
                                 format!("남은 시간: {}", millis / 1000)
                             }
-                        });
+                        }));
                     }
                 }
                 Packet::MatchingSuccess { left, right } => {

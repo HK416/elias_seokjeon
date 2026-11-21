@@ -129,7 +129,11 @@ fn handle_pn_button_pressed(
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &PNButton, &Interaction),
-        (With<OptionLevelEntity>, Changed<Interaction>, With<Button>),
+        (
+            With<OptionLevelEntity>,
+            Changed<Interaction>,
+            With<UiButton>,
+        ),
     >,
 ) {
     for (entity, &pn_button, interaction) in interaction_query.iter_mut() {
@@ -168,7 +172,11 @@ fn handle_locale_button_pressed(
     mut button_color_query: Query<(&mut BackgroundColor, &OriginColor<BackgroundColor>)>,
     mut interaction_query: Query<
         (Entity, &LocaleButton, &Interaction),
-        (With<OptionLevelEntity>, Changed<Interaction>, With<Button>),
+        (
+            With<OptionLevelEntity>,
+            Changed<Interaction>,
+            With<UiButton>,
+        ),
     >,
 ) {
     for (entity, &locale_button, interaction) in interaction_query.iter_mut() {
@@ -352,15 +360,15 @@ fn update_volume_text(
         match volume {
             VolumeLevelTextId::Background => {
                 let percentage = system_volume.get_background().to_linear() * 100.0;
-                *text = Text::new(format!("{}", percentage as u8));
+                text.set_if_neq(Text::new(format!("{}", percentage as u8)));
             }
             VolumeLevelTextId::Effect => {
                 let percentage = system_volume.get_effect().to_linear() * 100.0;
-                *text = Text::new(format!("{}", percentage as u8));
+                text.set_if_neq(Text::new(format!("{}", percentage as u8)));
             }
             VolumeLevelTextId::Voice => {
                 let percentage = system_volume.get_voice().to_linear() * 100.0;
-                *text = Text::new(format!("{}", percentage as u8));
+                text.set_if_neq(Text::new(format!("{}", percentage as u8)));
             }
         }
     }
@@ -427,8 +435,12 @@ fn update_background_volumes(
     system_volume: Res<SystemVolume>,
     mut query: Query<&mut WebPlaybackSettings, With<BackgroundSound>>,
 ) {
+    // `Changed<WebPlaybackSettings>` makes web.rs call into JS for every playing sound.
+    let volume = system_volume.get_background();
     for mut settings in query.iter_mut() {
-        settings.volume = system_volume.get_background();
+        if settings.volume.to_linear() != volume.to_linear() {
+            settings.volume = volume;
+        }
     }
 }
 
@@ -437,8 +449,12 @@ fn update_effect_volumes(
     system_volume: Res<SystemVolume>,
     mut query: Query<&mut WebPlaybackSettings, With<EffectSound>>,
 ) {
+    // `Changed<WebPlaybackSettings>` makes web.rs call into JS for every playing sound.
+    let volume = system_volume.get_effect();
     for mut settings in query.iter_mut() {
-        settings.volume = system_volume.get_effect();
+        if settings.volume.to_linear() != volume.to_linear() {
+            settings.volume = volume;
+        }
     }
 }
 
@@ -447,7 +463,11 @@ fn update_voice_volumes(
     system_volume: Res<SystemVolume>,
     mut query: Query<&mut WebPlaybackSettings, With<VoiceSound>>,
 ) {
+    // `Changed<WebPlaybackSettings>` makes web.rs call into JS for every playing sound.
+    let volume = system_volume.get_voice();
     for mut settings in query.iter_mut() {
-        settings.volume = system_volume.get_voice();
+        if settings.volume.to_linear() != volume.to_linear() {
+            settings.volume = volume;
+        }
     }
 }

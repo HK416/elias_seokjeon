@@ -15,7 +15,9 @@ pub fn setup_timeout_retry(mut commands: Commands) {
 }
 
 pub fn setup_loading_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((Camera2d, LoadingStateRoot));
+    // Bevy 0.20's 2D default (`Linear`) runs color grading on every fragment. With the
+    // default grading that is an identity, so `None` draws the same pixels for less.
+    commands.spawn((Camera2d, Tonemapping::None, LoadingStateRoot));
 
     commands
         .spawn((

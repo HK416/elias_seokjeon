@@ -136,7 +136,7 @@ fn setup_in_title_message_interface(
                             Visibility::Inherited,
                             PNButton::Positive,
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent

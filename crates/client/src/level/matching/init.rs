@@ -165,7 +165,7 @@ fn setup_matching_interface(
                             Visibility::Inherited,
                             PNButton::Negative,
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent

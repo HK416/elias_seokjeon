@@ -5,7 +5,7 @@
 use std::marker::PhantomData;
 
 use bevy::{
-    asset::{Asset, uuid_handle},
+    asset::{Asset, AssetPath, embedded_path},
     ecs::system::{StaticSystemParam, SystemParam},
     mesh::{MeshVertexAttribute, MeshVertexBufferLayoutRef},
     prelude::*,
@@ -15,7 +15,7 @@ use bevy::{
         RenderPipelineDescriptor, SpecializedMeshPipelineError, VertexFormat,
     },
     shader::ShaderRef,
-    sprite_render::{AlphaMode2d, Material2d, Material2dKey},
+    sprite_render::{AlphaMode2d, Material2d, Material2dKey, Material2dPipeline},
 };
 use rusty_spine::BlendMode;
 
@@ -131,7 +131,11 @@ pub const DARK_COLOR_ATTRIBUTE: MeshVertexAttribute = MeshVertexAttribute::new(
     VertexFormat::Float32x4,
 );
 
-pub const SHADER_HANDLE: Handle<Shader> = uuid_handle!("be3a8a7a-6d1e-4e94-b8a7-6a57c32d2fbe");
+/// Loaded through the asset server like Bevy's own material shaders, so its WESL
+/// imports are resolved by the regular shader loader.
+fn shader() -> ShaderRef {
+    ShaderRef::Path(AssetPath::from_path_buf(embedded_path!("spine.wesl")).with_source("embedded"))
+}
 
 /// A [`SystemParam`] to query [`SpineSettings`].
 ///
@@ -159,11 +163,11 @@ macro_rules! material {
 
         impl Material2d for $name {
             fn vertex_shader() -> ShaderRef {
-                SHADER_HANDLE.into()
+                shader()
             }
 
             fn fragment_shader() -> ShaderRef {
-                SHADER_HANDLE.into()
+                shader()
             }
 
             fn alpha_mode(&self) -> AlphaMode2d {
@@ -171,6 +175,7 @@ macro_rules! material {
             }
 
             fn specialize(
+                _pipeline: &Material2dPipeline,
                 descriptor: &mut RenderPipelineDescriptor,
                 layout: &MeshVertexBufferLayoutRef,
                 _key: Material2dKey<Self>,

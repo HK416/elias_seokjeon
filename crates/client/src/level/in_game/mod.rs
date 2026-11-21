@@ -65,13 +65,16 @@ impl Plugin for InnerPlugin {
                         .run_if(not(resource_exists::<MouseButtonPressed>))
                         .run_if(not(resource_exists::<ProjectileObject>)),
                     setup_guide_gestures.run_if(
-                        resource_added::<MouseButtonPressed>.or(resource_added::<TouchPressed>),
+                        resource_added::<MouseButtonPressed>
+                            .or_else(resource_added::<TouchPressed>),
                     ),
                     update_guide_gestures.run_if(
-                        resource_exists::<MouseButtonPressed>.or(resource_exists::<TouchPressed>),
+                        resource_exists::<MouseButtonPressed>
+                            .or_else(resource_exists::<TouchPressed>),
                     ),
                     cleanup_guide_gestures.run_if(
-                        resource_removed::<MouseButtonPressed>.or(resource_removed::<TouchPressed>),
+                        resource_removed::<MouseButtonPressed>
+                            .or_else(resource_removed::<TouchPressed>),
                     ),
                 )
                     .run_if(in_state(LevelStates::InGame)),
@@ -415,10 +418,14 @@ fn handle_cursor_movement(
                     (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
                 let angle = (delta * 255.0) as u8;
 
-                *play_side = PlaySide::Left(Some((angle, power)));
-                network
-                    .send(&Packet::UpdateThrowParams { angle, power })
-                    .unwrap();
+                // The server keeps the last value it was sent, so only report changes.
+                let next = PlaySide::Left(Some((angle, power)));
+                if *play_side != next {
+                    *play_side = next;
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+                }
             }
         }
         (PlaySide::Right(_), true) => {
@@ -444,10 +451,14 @@ fn handle_cursor_movement(
                     (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
                 let angle = (delta * 255.0) as u8;
 
-                *play_side = PlaySide::Right(Some((angle, power)));
-                network
-                    .send(&Packet::UpdateThrowParams { angle, power })
-                    .unwrap();
+                // The server keeps the last value it was sent, so only report changes.
+                let next = PlaySide::Right(Some((angle, power)));
+                if *play_side != next {
+                    *play_side = next;
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+                }
             }
         }
         _ => { /* empty */ }
@@ -585,10 +596,14 @@ fn handle_touch_movement(
                     (clamped_angle - LEFT_START_ANGLE) / (LEFT_END_ANGLE - LEFT_START_ANGLE);
                 let angle = (delta * 255.0) as u8;
 
-                *play_side = PlaySide::Left(Some((angle, power)));
-                network
-                    .send(&Packet::UpdateThrowParams { angle, power })
-                    .unwrap();
+                // The server keeps the last value it was sent, so only report changes.
+                let next = PlaySide::Left(Some((angle, power)));
+                if *play_side != next {
+                    *play_side = next;
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+                }
             }
         }
         (PlaySide::Right(_), true) => {
@@ -613,10 +628,14 @@ fn handle_touch_movement(
                     (clamped_angle - RIGHT_START_ANGLE) / (RIGHT_END_ANGLE - RIGHT_START_ANGLE);
                 let angle = (delta * 255.0) as u8;
 
-                *play_side = PlaySide::Right(Some((angle, power)));
-                network
-                    .send(&Packet::UpdateThrowParams { angle, power })
-                    .unwrap();
+                // The server keeps the last value it was sent, so only report changes.
+                let next = PlaySide::Right(Some((angle, power)));
+                if *play_side != next {
+                    *play_side = next;
+                    network
+                        .send(&Packet::UpdateThrowParams { angle, power })
+                        .unwrap();
+                }
             }
         }
         _ => { /* empty */ }
@@ -629,9 +648,11 @@ fn update_hud_ingame_timer(
     timer: Res<InGameTimer>,
     mut query: Query<&mut Text, With<RemainingTimer>>,
 ) {
+    // `set_if_neq` everywhere below: an unconditional write flags the component as
+    // changed, which re-shapes text / re-runs layout every frame for an unchanged value.
+    let seconds = (timer.miliis as f32 / 1000.0).ceil() as u32;
     for mut text in query.iter_mut() {
-        let seconds = (timer.miliis as f32 / 1000.0).ceil() as u32;
-        *text = Text::new(format!("{:0>3}", seconds));
+        text.set_if_neq(Text::new(format!("{:0>3}", seconds)));
     }
 }
 
@@ -651,9 +672,12 @@ fn update_hud_player_timer(
 
     match (*side, other_info.left_side) {
         (PlaySide::Left(_), false) | (PlaySide::Right(_), true) => {
-            *visibility = Visibility::Visible;
+            visibility.set_if_neq(Visibility::Visible);
             let p = (timer.miliis as f32 / MAX_CTRL_TIME as f32).clamp(0.0, 1.0);
-            node.width = Val::Percent(p * 100.0);
+            let width = Val::Percent(p * 100.0);
+            if node.width != width {
+                node.width = width;
+            }
 
             const MIN_VAL: f32 = 0.2;
             const MAX_VAL: f32 = 0.8;
@@ -666,10 +690,10 @@ fn update_hud_player_timer(
                 let green = MAX_VAL;
                 (red, green)
             };
-            *color = BackgroundColor(Color::srgb(red, green, MIN_VAL));
+            color.set_if_neq(BackgroundColor(Color::srgb(red, green, MIN_VAL)));
         }
         _ => {
-            *visibility = Visibility::Hidden;
+            visibility.set_if_neq(Visibility::Hidden);
         }
     }
 }

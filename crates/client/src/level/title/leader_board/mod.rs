@@ -85,7 +85,7 @@ fn handle_pn_button_pressed(
         (
             With<LeaderBoardLevelEntity>,
             Changed<Interaction>,
-            With<Button>,
+            With<UiButton>,
         ),
     >,
 ) {

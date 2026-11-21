@@ -747,7 +747,7 @@ fn setup_leader_board_interface(
                             Visibility::Inherited,
                             PNButton::Positive,
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent

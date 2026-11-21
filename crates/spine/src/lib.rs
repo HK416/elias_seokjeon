@@ -9,7 +9,7 @@ use std::{
 };
 
 use bevy::{
-    asset::{RenderAssetUsages, load_internal_binary_asset},
+    asset::{RenderAssetUsages, embedded_asset},
     camera::visibility::NoFrustumCulling,
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
     mesh::{Indices, MeshVertexAttribute},
@@ -32,7 +32,7 @@ use textures::SpineTextureConfig;
 
 use crate::{
     assets::{AtlasLoader, SkeletonJsonLoader},
-    materials::{DARK_COLOR_ATTRIBUTE, SHADER_HANDLE, SpineMaterialPlugin},
+    materials::{DARK_COLOR_ATTRIBUTE, SpineMaterialPlugin},
     rusty_spine::{
         AnimationStateData, BoneHandle, controller::SkeletonControllerSettings, draw::CullDirection,
     },
@@ -167,15 +167,7 @@ impl Plugin for SpinePlugin {
             adjust_spine_textures.in_set(SpineSystem::AdjustSpineTextures),
         );
 
-        load_internal_binary_asset!(
-            app,
-            SHADER_HANDLE,
-            "spine.wgsl",
-            |bytes: &[u8], path: String| Shader::from_wgsl(
-                std::str::from_utf8(bytes).unwrap().to_owned(),
-                path
-            )
-        );
+        embedded_asset!(app, "spine.wesl");
     }
 }
 
@@ -1045,7 +1037,10 @@ fn spine_update_meshes(
                     z += 0.001;
                     empty = false;
                 }
-                if empty {
+                // An `Empty` slot already holds `empty_mesh` data. Rewriting it marks the
+                // asset modified and re-uploads it to the GPU, every frame, for every
+                // slot that draws nothing (all but one per skeleton with the combined drawer).
+                if empty && !matches!(spine_mesh.state, SpineMeshState::Empty) {
                     spine_mesh.state = SpineMeshState::Empty;
                     empty_mesh(&mut mesh);
                 }

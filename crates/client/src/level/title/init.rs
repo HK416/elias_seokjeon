@@ -332,7 +332,7 @@ fn setup_title_interface(
                                 Val::Px(1.0),
                             ),
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent
@@ -380,7 +380,7 @@ fn setup_title_interface(
                                 Val::Px(1.0),
                             ),
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent
@@ -428,7 +428,7 @@ fn setup_title_interface(
                                 Val::Px(1.0),
                             ),
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent
@@ -476,7 +476,7 @@ fn setup_title_interface(
                                 Val::Px(1.0),
                             ),
                             SpawnRequest,
-                            Button,
+                            UiButton,
                         ))
                         .with_children(|parent| {
                             let entity = parent

@@ -1,3 +1,8 @@
+// shortcut: `Interaction` is deprecated in Bevy 0.20 but still driven by `ui_focus_system`,
+// so button behavior is exactly what 0.19 shipped. Move to picking's `Hovered` + ui's
+// `Pressed` when bumping past 0.20, where it is removed.
+#![allow(deprecated)]
+
 mod core;
 mod in_game;
 mod matching;
@@ -11,7 +16,7 @@ mod types;
 mod utils;
 
 // Import necessary Bevy modules.
-use bevy::prelude::*;
+use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 use bevy_spine::{Spine, SpineEvent};
 use protocol::Hero;
 use rand::seq::IndexedRandom;

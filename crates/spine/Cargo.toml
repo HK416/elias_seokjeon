@@ -9,7 +9,7 @@ publish = false
 [dependencies]
 # Must match the glam version bevy uses, otherwise the `mint` conversion impls
 # land on a different `Vec2` than bevy's and `bone.position().into()` won't compile.
-glam = { version = "0.32", features = ["mint"] }
+glam = { version = "0.33", features = ["mint"] }
 # Pinned to 0.7 = Spine 4.1 runtime. Do NOT bump to 0.8 (= Spine 4.2): spine
 # runtimes are version-locked to the exported asset format, and every skeleton
 # under assets/models/ is a 4.1 export. It compiles, then fails to load at runtime.
@@ -17,6 +17,6 @@ rusty_spine = "0.7"
 thiserror = "2"
 
 [dependencies.bevy]
-version = "0.19"
+version = "0.20"
 default-features = false
 features = ["bevy_render", "bevy_asset", "bevy_sprite", "bevy_sprite_render"]
