@@ -40,6 +40,8 @@ pub async fn update(mut player: Box<Player>, mut redis_conn: ConnectionManager) 
             }
         }
     }
+
+    println!("WebSocket disconnected ({:?})", player);
 }
 
 pub async fn get_leaderboard_and_my_rank(
@@ -47,41 +49,52 @@ pub async fn get_leaderboard_and_my_rank(
     my_uuid: &Uuid,
 ) -> redis::RedisResult<Packet> {
     let my_key = format!("user:{my_uuid}");
-    let (top_keys, my_rank_idx): (Vec<String>, Option<u32>) = redis::pipe()
-        .zrevrange(LEADER_BOARD_KEY, 0, 9)
-        .zrevrank(LEADER_BOARD_KEY, &my_key)
-        .query_async(redis_conn)
-        .await?;
+    // A user hash expires after EXPIRE_SECONDS but its leaderboard entry does not.
+    // Drop entries whose hash is gone and read again, so the top 10 is always ten
+    // live users. Terminates: every extra pass removes at least one entry.
+    loop {
+        let (top_keys, my_rank_idx): (Vec<String>, Option<u32>) = redis::pipe()
+            .zrevrange(LEADER_BOARD_KEY, 0, 9)
+            .zrevrank(LEADER_BOARD_KEY, &my_key)
+            .query_async(redis_conn)
+            .await?;
 
-    let my_rank = my_rank_idx.map(|r| r + 1);
+        let my_rank = my_rank_idx.map(|r| r + 1);
 
-    if top_keys.is_empty() {
-        return Ok(Packet::RankingResult {
-            my_rank,
-            top_list: Vec::new(),
-        });
-    }
-
-    let mut pipe = redis::pipe();
-    for key in &top_keys {
-        pipe.hmget(key, &[NAME_KEY, WINS_KEY, LOSSES_KEY]);
-    }
-
-    let details: Vec<(Option<String>, Option<u32>, Option<u32>)> =
-        pipe.query_async(redis_conn).await?;
-    let mut top_list = Vec::with_capacity(top_keys.len());
-    for (i, ((name, wins, losses), key)) in details.into_iter().zip(top_keys).enumerate() {
-        if let (Some(name), Some(wins), Some(losses)) = (name, wins, losses) {
-            let uuid = key.strip_prefix("user:").unwrap_or(&key).to_string();
-            top_list.push(RankItem {
-                rank: i as u32 + 1,
-                uuid,
-                name,
-                wins,
-                losses,
+        if top_keys.is_empty() {
+            return Ok(Packet::RankingResult {
+                my_rank,
+                top_list: Vec::new(),
             });
         }
-    }
 
-    Ok(Packet::RankingResult { my_rank, top_list })
+        let mut pipe = redis::pipe();
+        for key in &top_keys {
+            pipe.hmget(key, &[NAME_KEY, WINS_KEY, LOSSES_KEY]);
+        }
+
+        let details: Vec<(Option<String>, Option<u32>, Option<u32>)> =
+            pipe.query_async(redis_conn).await?;
+        let mut top_list = Vec::with_capacity(top_keys.len());
+        let mut stale = Vec::new();
+        for (i, ((name, wins, losses), key)) in details.into_iter().zip(top_keys).enumerate() {
+            if let (Some(name), Some(wins), Some(losses)) = (name, wins, losses) {
+                let uuid = key.strip_prefix("user:").unwrap_or(&key).to_string();
+                top_list.push(RankItem {
+                    rank: i as u32 + 1,
+                    uuid,
+                    name,
+                    wins,
+                    losses,
+                });
+            } else {
+                stale.push(key);
+            }
+        }
+
+        if stale.is_empty() {
+            return Ok(Packet::RankingResult { my_rank, top_list });
+        }
+        redis_conn.zrem(LEADER_BOARD_KEY, stale).await?;
+    }
 }

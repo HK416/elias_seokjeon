@@ -73,7 +73,7 @@ pub async fn play(
     mut left: Box<dyn Session>,
     mut right: Box<dyn Session>,
     mut num_player: usize,
-    mut redis_conn: ConnectionManager,
+    redis_conn: ConnectionManager,
 ) {
     let mut left_health = MAX_HEALTH_COUNT;
     let mut right_health = MAX_HEALTH_COUNT;
@@ -269,7 +269,7 @@ pub async fn play(
                             println!("WebSocket disconnected ({:?}): {e}", right);
 
                             #[cfg(not(feature = "no-debugging-log"))]
-                            println!("Right player({:?}) replaced by Bot", left);
+                            println!("Right player({:?}) replaced by Bot", right);
 
                             right = Box::new(Bot::from(right));
                             num_player -= 1;
@@ -279,7 +279,7 @@ pub async fn play(
                             println!("WebSocket disconnected ({:?})", right);
 
                             #[cfg(not(feature = "no-debugging-log"))]
-                            println!("Right player({:?}) replaced by Bot", left);
+                            println!("Right player({:?}) replaced by Bot", right);
 
                             right = Box::new(Bot::from(right));
                             num_player -= 1;
@@ -623,128 +623,57 @@ pub async fn play(
             println!("Right player won!");
 
             left.increase_lose();
-            let message = Packet::GameResult {
-                win: left.win(),
-                lose: left.lose(),
-                victory: false,
-            };
-            left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
-            if let Ok(player) = result {
-                let mut redis_conn_cloned = redis_conn.clone();
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn_cloned.hincr(&key, LOSSES_KEY, 1).await;
-                let result =
-                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 1, 0).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn_cloned);
-            }
-
             right.increase_win();
-            let message = Packet::GameResult {
-                win: right.win(),
-                lose: right.lose(),
-                victory: true,
-            };
-            right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
-            if let Ok(player) = result {
-                let mut redis_conn_cloned = redis_conn.clone();
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
-                let result =
-                    record_game_result(&mut redis_conn_cloned, &player.uuid, 1, 0, 0).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn_cloned);
-            }
+            finish(left, Some(false), (0, 1, 0), &redis_conn).await;
+            finish(right, Some(true), (1, 0, 0), &redis_conn).await;
         }
         std::cmp::Ordering::Equal => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Draw!");
 
-            let message = Packet::GameResultDraw;
             left.increase_draw();
-            left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
-            if let Ok(player) = result {
-                let mut redis_conn_cloned = redis_conn.clone();
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
-                let result =
-                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 0, 1).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn_cloned);
-            }
-
             right.increase_draw();
-            right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
-            if let Ok(player) = result {
-                let mut redis_conn_cloned = redis_conn.clone();
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn_cloned.hincr(key, DRAWS_KEY, 1).await;
-                let result =
-                    record_game_result(&mut redis_conn_cloned, &player.uuid, 0, 0, 1).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn_cloned);
-            }
+            finish(left, None, (0, 0, 1), &redis_conn).await;
+            finish(right, None, (0, 0, 1), &redis_conn).await;
         }
         std::cmp::Ordering::Greater => {
             #[cfg(not(feature = "no-debugging-log"))]
             println!("Left player won!");
 
             left.increase_win();
-            let message = Packet::GameResult {
-                win: left.win(),
-                lose: left.lose(),
-                victory: true,
-            };
-            left = send_message(left, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = left.into_any().downcast();
-            if let Ok(player) = result {
-                let mut redis_conn_cloned = redis_conn.clone();
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn_cloned.hincr(key, WINS_KEY, 1).await;
-                let result =
-                    record_game_result(&mut redis_conn_cloned, &player.uuid, 1, 0, 0).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn_cloned);
-            }
-
             right.increase_lose();
-            let message = Packet::GameResult {
-                win: right.win(),
-                lose: right.lose(),
-                victory: false,
-            };
-            right = send_message(right, &message, &mut num_player);
-            let result: Result<Box<Player>, Box<dyn Any + Send>> = right.into_any().downcast();
-            if let Ok(player) = result {
-                // let key = format!("user:{}", player.uuid);
-                // let result = redis_conn.hincr(key, LOSSES_KEY, 1).await;
-                let result = record_game_result(&mut redis_conn, &player.uuid, 0, 1, 0).await;
-                if let Err(e) = result {
-                    eprintln!("Redis Error: {e}");
-                    return;
-                }
-                next_state(State::Title, player, redis_conn);
-            }
+            finish(left, Some(true), (1, 0, 0), &redis_conn).await;
+            finish(right, Some(false), (0, 1, 0), &redis_conn).await;
         }
+    }
+}
+
+/// Sends the result to one side and, if it is still a connected player, records it
+/// and returns them to the title. `victory` is `None` for a draw.
+async fn finish(
+    session: Box<dyn Session>,
+    victory: Option<bool>,
+    (win, loss, draw): (i32, i32, i32),
+    redis_conn: &ConnectionManager,
+) {
+    let message = match victory {
+        Some(victory) => Packet::GameResult {
+            win: session.win(),
+            lose: session.lose(),
+            victory,
+        },
+        None => Packet::GameResultDraw,
+    };
+    let session = send_message(session, &message, &mut 1);
+    let result: Result<Box<Player>, Box<dyn Any + Send>> = session.into_any().downcast();
+    if let Ok(player) = result {
+        let mut redis_conn = redis_conn.clone();
+        // A Redis failure only loses this one record. Returning here instead would
+        // drop this player's socket and skip the opponent's result entirely.
+        if let Err(e) = record_game_result(&mut redis_conn, &player.uuid, win, loss, draw).await {
+            eprintln!("Redis Error: {e}");
+        }
+        next_state(State::Title, player, redis_conn);
     }
 }
 

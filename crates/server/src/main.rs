@@ -9,8 +9,11 @@ use tokio::{
     time::{self, Duration},
 };
 use tokio_tungstenite::{
-    accept_hdr_async,
-    tungstenite::handshake::server::{Request, Response},
+    accept_hdr_async_with_config,
+    tungstenite::{
+        handshake::server::{Request, Response},
+        protocol::WebSocketConfig,
+    },
 };
 
 #[global_allocator]
@@ -28,6 +31,10 @@ const LEADER_BOARD_KEY: &str = "leaderboard";
 /// `X-Forwarded-For`, nginx *overwrites* this header rather than appending to
 /// whatever the client sent, so its value can't be spoofed by the client.
 const CLIENT_IP_HEADER: &str = "x-real-ip";
+
+/// Every client -> server packet is a few dozen bytes of JSON. tungstenite's default
+/// lets a single client make us buffer a 64 MiB message, which this box cannot afford.
+const MAX_MESSAGE_BYTES: usize = 1024;
 
 const NAMES: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/name.txt"));
 static NAME_TABLE: OnceLock<Vec<String>> = OnceLock::new();
@@ -88,6 +95,10 @@ async fn main() {
             }
         };
 
+        // Packets are tiny and often sent two per tick; with Nagle on, the second one
+        // waits for the first to be ACKed.
+        let _ = stream.set_nodelay(true);
+
         let redis_conn = manager.clone();
         // The WebSocket handshake must be awaited inside the spawned task. Awaiting
         // it here lets a single client that connects but never completes it stall
@@ -97,14 +108,21 @@ async fn main() {
             // proxy's loopback address. The real client IP only reaches us as a
             // header on the WebSocket handshake request.
             let mut client_ip = None;
-            let result = accept_hdr_async(stream, |req: &Request, res: Response| {
-                client_ip = req
-                    .headers()
-                    .get(CLIENT_IP_HEADER)
-                    .and_then(|value| value.to_str().ok())
-                    .map(str::to_owned);
-                Ok(res)
-            })
+            let config = WebSocketConfig::default()
+                .max_message_size(Some(MAX_MESSAGE_BYTES))
+                .max_frame_size(Some(MAX_MESSAGE_BYTES));
+            let result = accept_hdr_async_with_config(
+                stream,
+                |req: &Request, res: Response| {
+                    client_ip = req
+                        .headers()
+                        .get(CLIENT_IP_HEADER)
+                        .and_then(|value| value.to_str().ok())
+                        .map(str::to_owned);
+                    Ok(res)
+                },
+                Some(config),
+            )
             .await;
 
             match result {
